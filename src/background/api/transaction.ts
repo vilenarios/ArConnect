@@ -24,7 +24,8 @@ export const signTransaction = (message: MessageFormat, tabURL: string) =>
         message: "No transaction submitted."
       });
 
-    const sandbox = !!message.transaction.sandbox;
+    const sandbox = !!message.signatureOptions.sandbox;
+    delete message.transaction.sandbox;
 
     try {
       const arweave = new Arweave(await getArweaveConfig()),
