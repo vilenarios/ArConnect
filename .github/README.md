@@ -108,6 +108,16 @@ Sign a transaction. Raw version of what is used in the `arweave-js` [API](#api).
 
 Requires the `SIGN_TRANSACTION` [permission](#permissions).
 
+#### Sandboxing
+
+To test if your implementation of the signing API is correct, you can use sandboxing. If use `sign()` in sandbox mode, the transaction will not be signed, but the extension will still go over the signing procedure.
+
+Important: **fees are disabled in sandbox mode**. The extension will not create fee transactions. To use this feature, just set `sandbox` to `true`, in the signing options:
+
+```
+await window.arweaveWallet.sign(tx, { sandbox: true });
+```
+
 ### `encrypt(data, options): Promise<Uint8Array>`
 
 Encrypt a string, using the user's wallet.

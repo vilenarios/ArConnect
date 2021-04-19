@@ -7,6 +7,8 @@
 *.local
 *.log
 *.DS_Store
+*.crx
+*.pem
 
 # Build artifacts
 arconnect.zip

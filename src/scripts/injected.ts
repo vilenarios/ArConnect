@@ -122,13 +122,18 @@ const WalletAPI = {
   },
   async sign(
     transaction: Transaction,
-    options?: SignatureOptions
+    options?: SignatureOptions & { sandbox?: boolean }
   ): Promise<Transaction> {
     const arweave = new Arweave({
       host: "arweave.net",
       port: 443,
       protocol: "https"
     });
+
+    if (options?.sandbox)
+      console.warn(
+        "[ArConnect] Warning: Sandbox mode is on for transactions. The returned transaction will not be signed!"
+      );
 
     try {
       const data = await callAPI({

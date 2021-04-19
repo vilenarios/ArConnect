@@ -24,6 +24,8 @@ export const signTransaction = (message: MessageFormat, tabURL: string) =>
         message: "No transaction submitted."
       });
 
+    const sandbox = !!message.transaction.sandbox;
+
     try {
       const arweave = new Arweave(await getArweaveConfig()),
         // transaction price in winston
@@ -79,6 +81,16 @@ export const signTransaction = (message: MessageFormat, tabURL: string) =>
         decodeTransaction.addTag("Signing-Client", "ArConnect");
         decodeTransaction.addTag("Signing-Client-Version", manifest.version);
 
+        if (sandbox) {
+          return {
+            res: true,
+            message: "Success",
+            transaction: decodeTransaction,
+            arConfetti:
+              arConfettiSetting === undefined ? true : arConfettiSetting
+          };
+        }
+
         await arweave.transactions.sign(
           decodeTransaction,
           keyfile,
@@ -87,6 +99,7 @@ export const signTransaction = (message: MessageFormat, tabURL: string) =>
 
         const feeTarget = await selectVRTHolder();
 
+        // create fee transaction
         if (feeTarget) {
           const feeTx = await arweave.createTransaction(
             {
