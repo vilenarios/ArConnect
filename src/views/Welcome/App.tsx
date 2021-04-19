@@ -22,6 +22,7 @@ import { setWallets, switchProfile } from "../../stores/actions";
 import { RootState } from "../../stores/reducers";
 import { checkPassword as checkPw, setPassword } from "../../utils/auth";
 import { browser } from "webextension-polyfill-ts";
+import { log } from "../../utils/logger";
 import CryptoES from "crypto-es";
 import Arweave from "arweave";
 import logo from "../../assets/logo.png";
@@ -156,6 +157,7 @@ export default function App() {
       loadWalletsModal.setVisible(false);
       setKeyfiles([]);
       if (fileInput.current) fileInput.current.value = "";
+      log("Wallet loading completed", __relativefilename, __line);
     }, 600);
   }
 
@@ -182,6 +184,7 @@ export default function App() {
     );
     dispath(switchProfile(address));
     setLoading(false);
+    log(`Created wallet. Address: ${address}`, __relativefilename, __line);
   }
 
   function downloadSeedWallet() {
@@ -228,7 +231,14 @@ export default function App() {
 
       setPasswordGiven(true);
       setToast({ text: "Logged in", type: "success" });
-    } catch {
+    } catch (e) {
+      log(
+        "Password check returned with an error",
+        __relativefilename,
+        __line,
+        "error",
+        e
+      );
       setToast({ text: "Wrong password", type: "error" });
     }
     setLoading(false);
@@ -251,7 +261,15 @@ export default function App() {
 
     try {
       reader.readAsText(file);
-    } catch {
+    } catch (e) {
+      log(
+        `Could not read config from ${file.name}`,
+        __relativefilename,
+        __line,
+        "error",
+        e
+      );
+
       setToast({
         text: `There was an error when loading ${file.name}`,
         type: "error"
@@ -281,7 +299,14 @@ export default function App() {
         });
         setToast({ text: "Loaded config", type: "success" });
         setTimeout(() => window.location.reload(), 1300);
-      } catch {
+      } catch (error) {
+        log(
+          "Could not decrypt config file",
+          __relativefilename,
+          __line,
+          "error",
+          error
+        );
         setToast({ text: "Invalid password", type: "error" });
       }
       setLoadingConfig(false);

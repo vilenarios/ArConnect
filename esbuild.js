@@ -3,7 +3,8 @@ const esbuild = require("esbuild"),
   postCssPlugin = require("esbuild-plugin-postcss2"),
   {
     NodeModulesPolyfillPlugin
-  } = require("@esbuild-plugins/node-modules-polyfill");
+  } = require("@esbuild-plugins/node-modules-polyfill"),
+  { filelocPlugin } = require("esbuild-plugin-fileloc");
 
 esbuild
   .build({
@@ -35,7 +36,8 @@ esbuild
       NodeModulesPolyfillPlugin(),
       postCssPlugin.default({
         plugins: [autoprefixer]
-      })
+      }),
+      filelocPlugin()
     ]
   })
   .catch(() => process.exit(1));

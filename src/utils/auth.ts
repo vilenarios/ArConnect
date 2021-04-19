@@ -1,5 +1,6 @@
 import { browser } from "webextension-polyfill-ts";
 import { walletsStored } from "./background";
+import { log } from "./logger";
 import bcrypt from "bcryptjs";
 
 /**
@@ -25,6 +26,7 @@ export async function setPassword(password: string) {
   await browser.storage.local.set({
     hash: await bcrypt.hash(password, 10)
   });
+  log("Updated password", __relativefilename, __line);
 }
 
 /**
@@ -44,6 +46,7 @@ export async function fixupPasswords() {
       decryptionKey: false,
       hash: await bcrypt.hash(data.decryptionKey, 10)
     });
+    log("Fixed up password", __relativefilename, __line);
   }
 }
 
@@ -53,5 +56,6 @@ export async function fixupPasswords() {
  */
 export async function logOut() {
   await browser.storage.local.clear();
-  browser.tabs.create({ url: browser.runtime.getURL("/welcome.html") });
+  await browser.tabs.create({ url: browser.runtime.getURL("/welcome.html") });
+  log("Logged out", __relativefilename, __line, "warn");
 }

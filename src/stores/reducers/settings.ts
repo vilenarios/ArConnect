@@ -5,6 +5,7 @@ export interface ISettings {
   currency: Currency;
   arConfetti: boolean;
   arVerifyTreshold: Threshold;
+  logging: boolean;
 }
 
 export interface ISettingsAction {
@@ -15,7 +16,8 @@ export interface ISettingsAction {
 const defaultConfig: ISettings = {
   currency: "USD",
   arConfetti: true,
-  arVerifyTreshold: Threshold.MEDIUM
+  arVerifyTreshold: Threshold.MEDIUM,
+  logging: false
 };
 
 export default function settingsReducer(

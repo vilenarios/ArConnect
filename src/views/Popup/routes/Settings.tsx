@@ -406,6 +406,22 @@ export default function Settings() {
                 />
               </div>
             </div>
+            <div className={styles.Setting}>
+              <div>
+                <h1>Debugging</h1>
+                <p>Log actions and events to the console</p>
+              </div>
+              <div className={styles.Arrow}>
+                <Toggle
+                  checked={otherSettings.logging}
+                  onChange={() =>
+                    dispatch(
+                      updateSettings({ logging: !otherSettings.logging })
+                    )
+                  }
+                />
+              </div>
+            </div>
             <div
               className={styles.Setting}
               onClick={() => setCurrSetting("config_file")}

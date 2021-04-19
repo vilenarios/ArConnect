@@ -5,6 +5,7 @@ import { useColorScheme } from "use-color-scheme";
 import { PersistGate } from "redux-persist/integration/react";
 import { fixupPasswords } from "../utils/auth";
 import setupStores from "../stores";
+import { log } from "../utils/logger";
 
 const lightTheme = {
   palette: {
@@ -46,6 +47,7 @@ export default function Provider({ children }: Props) {
     { store, persistor } = setupStores();
 
   useEffect(() => {
+    log("React provider initialized", __relativefilename, __line);
     fixupPasswords();
   }, []);
 
