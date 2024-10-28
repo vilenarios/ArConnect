@@ -87,7 +87,6 @@ export default function Popup() {
             )}
           </Route>
           <Route path="/explore" component={Explore} />
-          <Route path="/unlock" component={Unlock} />
           <Route path="/subscriptions" component={Subscriptions} />
           <Route path="/quick-settings" component={QuickSettings} />
           <Route path="/quick-settings/wallets" component={Wallets} />

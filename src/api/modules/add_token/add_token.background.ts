@@ -1,6 +1,6 @@
 import { isAddress, isTokenType, isValidURL } from "~utils/assertions";
 import type { BackgroundModuleFunction } from "~api/background/background-modules";
-import authenticate from "../connect/auth";
+import { requestUserAuthorization } from "../../../utils/auth/auth.utils";
 import { getTokens } from "~tokens";
 
 const background: BackgroundModuleFunction<void> = async (
@@ -23,7 +23,7 @@ const background: BackgroundModuleFunction<void> = async (
   }
 
   // request "add token" popup
-  await authenticate({
+  await requestUserAuthorization({
     type: "token",
     url: appData.appURL,
     tokenID: id,

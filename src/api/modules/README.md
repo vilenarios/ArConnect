@@ -13,3 +13,19 @@ Each module has to be added separately in the two module files (`background.ts` 
 ### Examples
 
 For basic examples on how to create a module, refer to the [example module](example/).
+
+## Message Passing
+
+### ArConnect Browser Extension
+
+There are 3 contexts here:
+
+- Background scripts (service worker).
+- Content scripts (injected into the page but with its own isolated context).
+- Injected scripts (injected into the page in a `<script>` tag to have the same context).
+
+### ArConnect Embedded
+
+The iframe context listens for... and sends messages to parent with...
+
+The parent context listens for... and sends messages to the iframe with...

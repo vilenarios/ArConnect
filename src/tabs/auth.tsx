@@ -1,7 +1,5 @@
 import Route, { Page } from "~components/popup/Route";
-import { useHashLocation } from "~utils/hash_router";
 import { useSetUp } from "~wallets";
-import { useEffect } from "react";
 import { Router } from "wouter";
 
 import { ArConnectThemeProvider } from "~components/hardware/HardwareWalletTheme";
@@ -17,11 +15,23 @@ import Subscription from "~routes/auth/subscription";
 import SignKeystone from "~routes/auth/signKeystone";
 import BatchSignDataItem from "~routes/auth/batchSignDataItem";
 import { AnimatePresence } from "framer-motion";
+import { AuthRequestsProvider } from "~utils/auth/auth.provider";
+import {
+  useAuthRequests,
+  useAuthRequestsLocation
+} from "~utils/auth/auth.hooks";
 
-export default function Auth() {
+// TODO: initExtensionMessageForwarder();
+
+export function AuthApp() {
   const initialScreenType = useSetUp();
+  const { authRequests } = useAuthRequests();
 
   let content: React.ReactElement = null;
+
+  // TODO: Handle special case if authRequest has type = "unlock".
+
+  // TODO: Show loader if signDataItem !params (no next auth reques or no data other than default?)
 
   if (initialScreenType === "locked") {
     content = (
@@ -29,12 +39,13 @@ export default function Auth() {
         <Unlock />
       </Page>
     );
+  } else if (!authRequests || authRequests.length <= 0) {
+    content = <p>Loading...</p>;
   } else if (initialScreenType === "default") {
     content = (
-      <Router hook={useHashLocation}>
+      <Router hook={useAuthRequestsLocation}>
         <Route path="/connect" component={Connect} />
         <Route path="/allowance" component={Allowance} />
-        <Route path="/unlock" component={Unlock} />
         <Route path="/token" component={Token} />
         <Route path="/sign" component={Sign} />
         <Route path="/signKeystone" component={SignKeystone} />
@@ -47,8 +58,22 @@ export default function Auth() {
   }
 
   return (
+    <>
+      <pre>{JSON.stringify(authRequests, null, "  ")}</pre>
+
+      {content}
+    </>
+  );
+}
+
+export default function AuthAppRoot() {
+  return (
     <ArConnectThemeProvider>
-      <AnimatePresence initial={false}>{content}</AnimatePresence>
+      <AuthRequestsProvider>
+        <AnimatePresence initial={false}>
+          <AuthApp />
+        </AnimatePresence>
+      </AuthRequestsProvider>
     </ArConnectThemeProvider>
   );
 }

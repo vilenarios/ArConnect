@@ -1,10 +1,9 @@
 import {
-  type Allowance,
   type AllowanceBigNumber,
   defaultAllowance
 } from "~applications/allowance";
 import Application from "~applications/application";
-import authenticate from "../connect/auth";
+import { requestUserAuthorization } from "../../../utils/auth/auth.utils";
 import BigNumber from "bignumber.js";
 
 /**
@@ -74,7 +73,7 @@ export async function allowanceAuth(
   if (hasEnoughAllowance || override) return;
 
   // try to authenticate to raise the allowance amount
-  await authenticate({
+  await requestUserAuthorization({
     type: "allowance",
     url: tabURL,
     spendingLimitReached: !hasEnoughAllowance

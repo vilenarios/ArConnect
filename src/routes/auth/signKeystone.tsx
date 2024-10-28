@@ -1,4 +1,3 @@
-import { replyToAuthRequest, useAuthParams, useAuthUtils } from "~utils/auth";
 import {
   dataItemToUR,
   decodeSignature,
@@ -22,16 +21,17 @@ import Progress from "~components/Progress";
 import browser from "webextension-polyfill";
 import Head from "~components/popup/Head";
 import Message from "~components/auth/Message";
-import type { AuthKeystoneType } from "~api/modules/sign/sign_auth";
 import { onMessage, sendMessage } from "@arconnect/webext-bridge";
 import type { Chunk } from "~api/modules/sign/chunks";
 import { bytesFromChunks } from "~api/modules/sign/transaction_builder";
+import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
+
 export default function SignKeystone() {
-  // sign params
-  const params = useAuthParams<{
-    collectionId: string;
-    keystoneSignType: string;
-  }>();
+  const { authRequest, acceptRequest, rejectRequest } =
+    useCurrentAuthRequest("signKeystone");
+
+  const { collectionID, keystoneSignType } = authRequest;
+
   // reconstructed transaction
   const [dataToSign, setDataToSign] = useState<Buffer>();
   const [dataType, setDataType] = useState("Message");
@@ -39,35 +39,33 @@ export default function SignKeystone() {
   useEffect(() => {
     (async () => {
       // request chunks
-      if (params) {
-        setDataType(params?.keystoneSignType);
-        sendMessage("auth_listening", null, "background");
+      setDataType(keystoneSignType);
+      sendMessage("auth_listening", null, "background");
 
-        const chunks: Chunk[] = [];
+      const chunks: Chunk[] = [];
 
-        // listen for chunks
-        onMessage("auth_chunk", ({ sender, data }) => {
-          // check data type
-          if (
-            data.collectionID !== params.collectionID ||
-            sender.context !== "background" ||
-            data.type === "start"
-          ) {
-            return;
-          }
-          // end chunk stream
-          if (data.type === "end") {
-            const bytes = bytesFromChunks(chunks);
-            const signData = Buffer.from(bytes);
-            setDataToSign(signData);
-          } else if (data.type === "bytes") {
-            // add chunk
-            chunks.push(data);
-          }
-        });
-      }
+      // listen for chunks
+      onMessage("auth_chunk", ({ sender, data }) => {
+        // check data type
+        if (
+          data.collectionID !== collectionID ||
+          sender.context !== "background" ||
+          data.type === "start"
+        ) {
+          return;
+        }
+        // end chunk stream
+        if (data.type === "end") {
+          const bytes = bytesFromChunks(chunks);
+          const signData = Buffer.from(bytes);
+          setDataToSign(signData);
+        } else if (data.type === "bytes") {
+          // add chunk
+          chunks.push(data);
+        }
+      });
     })();
-  }, [params]);
+  }, [collectionID, keystoneSignType]);
 
   useEffect(() => {
     (async () => {
@@ -77,18 +75,6 @@ export default function SignKeystone() {
       }
     })();
   }, [dataType, dataToSign]);
-
-  // get auth utils
-  const { closeWindow, cancel } = useAuthUtils("signKeystone", params?.authID);
-
-  // authorize
-  async function authorize(data?: any) {
-    // reply to request
-    await replyToAuthRequest("signKeystone", params.authID, undefined, data);
-
-    // close the window
-    closeWindow();
-  }
 
   /**
    * Hardware wallet logic
@@ -136,7 +122,7 @@ export default function SignKeystone() {
       const data = await decodeSignature(res);
 
       // reply
-      await authorize(data);
+      await acceptRequest(data);
     } catch (e) {
       // log error
       console.error(
@@ -144,14 +130,7 @@ export default function SignKeystone() {
       );
 
       // reply to request
-      await replyToAuthRequest(
-        "signKeystone",
-        params.authID,
-        "Failed to decode signature from keystone"
-      );
-
-      // close the window
-      closeWindow();
+      await rejectRequest("Failed to decode signature from keystone");
     }
 
     setLoading(false);
@@ -160,15 +139,13 @@ export default function SignKeystone() {
   // toast
   const { setToast } = useToasts();
 
-  if (!params) return <></>;
-
   return (
     <Wrapper>
       <div>
         <Head
           title={browser.i18n.getMessage("titles_sign")}
           showOptions={false}
-          back={cancel}
+          back={rejectRequest}
           allowOpen={false}
         />
         <Spacer y={0.75} />
@@ -220,7 +197,7 @@ export default function SignKeystone() {
 
                   // update page
                   setPage((val) => (!val ? "qr" : "scanner"));
-                } else await authorize();
+                } else await acceptRequest();
               }}
             >
               {browser.i18n.getMessage("sign_authorize")}
@@ -228,7 +205,7 @@ export default function SignKeystone() {
             <Spacer y={0.75} />
           </>
         )}
-        <ButtonV2 fullWidth secondary onClick={cancel}>
+        <ButtonV2 fullWidth secondary onClick={() => rejectRequest()}>
           {browser.i18n.getMessage("cancel")}
         </ButtonV2>
       </Section>

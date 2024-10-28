@@ -3,7 +3,7 @@ import type { PlasmoCSConfig } from "plasmo";
 import type { ApiCall } from "shim";
 import injectedScript from "url:./injected/setup-wallet-sdk.injected-script.ts";
 
-console.log("contents/api.ts 2");
+console.log("api.content-script.ts");
 
 export const config: PlasmoCSConfig = {
   matches: ["file://*/*", "http://*/*", "https://*/*"],

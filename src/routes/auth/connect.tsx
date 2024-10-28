@@ -12,9 +12,8 @@ import {
   useToasts
 } from "@arconnect/components";
 import { permissionData, type PermissionType } from "~applications/permissions";
-import { replyToAuthRequest, useAuthParams, useAuthUtils } from "~utils/auth";
+import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { CloseLayer } from "~components/popup/WalletHeader";
-import type { AppInfo } from "~applications/application";
 import { AnimatePresence, motion } from "framer-motion";
 import { unlock as globalUnlock } from "~wallets/auth";
 import { useEffect, useMemo, useState } from "react";
@@ -52,6 +51,16 @@ export default function Connect() {
 
   const arweave = new Arweave(defaultGateway);
 
+  const { authRequest, acceptRequest, rejectRequest } =
+    useCurrentAuthRequest("connect");
+
+  const {
+    url = "",
+    permissions: authRequestPermissions = [],
+    appInfo = {},
+    gateway
+  } = authRequest;
+
   // wallet switcher open
   const [switcherOpen, setSwitcherOpen] = useState(false);
 
@@ -59,28 +68,6 @@ export default function Connect() {
   const [page, setPage] = useState<"unlock" | "permissions">("unlock");
 
   const allowanceInput = useInput();
-
-  // connect params
-  const params = useAuthParams<{
-    url: string;
-    permissions: PermissionType[];
-    appInfo: AppInfo;
-    gateway?: Gateway;
-  }>();
-
-  // app data
-  const appData = useMemo<AppInfo>(() => {
-    if (!params) return {};
-
-    return params.appInfo;
-  }, [params]);
-
-  // app url
-  const appUrl = useMemo(() => {
-    if (!params) return "";
-
-    return params.url;
-  }, [params]);
 
   // requested permissions
   const [requestedPermissions, setRequestedPermissions] = useState<
@@ -95,13 +82,11 @@ export default function Connect() {
 
   useEffect(() => {
     (async () => {
-      if (!params) return;
-
-      const requested: PermissionType[] = params.permissions;
+      const requested: PermissionType[] = authRequestPermissions;
 
       // add existing permissions
-      if (params.url && params.url !== "") {
-        const app = new Application(params.url);
+      if (url) {
+        const app = new Application(url);
         const existing = await app.getPermissions();
 
         for (const existingP of existing) {
@@ -117,7 +102,7 @@ export default function Connect() {
         requested.filter((p) => Object.keys(permissionData).includes(p))
       );
     })();
-  }, [params]);
+  }, [url, authRequestPermissions]);
 
   const [requestedPermCopy, setRequetedPermCopy] = useState<PermissionType[]>(
     []
@@ -133,9 +118,6 @@ export default function Connect() {
 
   // toasts
   const { setToast } = useToasts();
-
-  // get auth utils
-  const { closeWindow, cancel } = useAuthUtils("connect", params?.authID);
 
   // unlock
   async function unlock() {
@@ -161,7 +143,7 @@ export default function Connect() {
 
   // connect
   async function connect(alwaysAsk: boolean = false) {
-    if (appUrl === "") return;
+    if (!url) return;
 
     if (
       allowanceEnabled &&
@@ -176,16 +158,16 @@ export default function Connect() {
     }
 
     // get existing permissions
-    const app = new Application(appUrl);
+    const app = new Application(url);
     const existingPermissions = await app.getPermissions();
 
     if (existingPermissions.length === 0) {
       // add the app
       await addApp({
-        url: appUrl,
+        url,
         permissions,
-        name: appData.name,
-        logo: appData.logo,
+        name: appInfo.name,
+        logo: appInfo.logo,
         // alwaysAsk,
         allowance: {
           enabled: alwaysAsk || allowanceEnabled,
@@ -197,7 +179,7 @@ export default function Connect() {
           spent: "0" // in winstons
         },
         // TODO: wayfinder
-        gateway: params.gateway || defaultGateway
+        gateway: gateway || defaultGateway
       });
     } else {
       // update existing permissions, if the app
@@ -219,17 +201,13 @@ export default function Connect() {
       });
     }
 
-    // send response
-    await replyToAuthRequest("connect", params.authID);
-
     // track connected app.
     await trackEvent(EventType.CONNECTED_APP, {
-      appName: appData.name,
-      appUrl
+      appName: appInfo.name,
+      appUrl: url
     });
 
-    // close the window
-    closeWindow();
+    acceptRequest();
   }
 
   useEffect(() => {
@@ -248,15 +226,15 @@ export default function Connect() {
         <HeadV2
           title={!edit ? browser.i18n.getMessage("sign_in") : "Permissions"}
           showOptions={false}
-          back={edit ? () => setEdit(false) : cancel}
+          back={edit ? () => setEdit(false) : rejectRequest}
         />
         <App
-          appName={appData.name || appUrl}
-          appUrl={appUrl}
+          appName={appInfo.name || url}
+          appUrl={url}
           showTitle={false}
           // TODO: wayfinder
-          gateway={params?.gateway || defaultGateway}
-          appIcon={appData.logo}
+          gateway={gateway || defaultGateway}
+          appIcon={appInfo.logo}
         />
 
         <ContentWrapper>
@@ -311,10 +289,10 @@ export default function Connect() {
                       <Description>
                         {browser.i18n.getMessage(
                           "allow_these_permissions",
-                          appData.name || appUrl
+                          appInfo.name || url
                         )}
                       </Description>
-                      <Url>{params.url}</Url>
+                      <Url>{url}</Url>
                       <StyledPermissions>
                         <PermissionsTitle>
                           <Description>
@@ -431,7 +409,10 @@ export default function Connect() {
             <ButtonV2
               fullWidth
               secondary
-              onClick={page === "unlock" ? cancel : () => connect(true)}
+              // onClick={() => page === "unlock" ? rejectRequest() : connect(true)}
+              onClick={
+                page === "unlock" ? () => rejectRequest() : () => connect(true)
+              }
             >
               {browser.i18n.getMessage(
                 page === "unlock" ? "cancel" : "always_ask_permission"

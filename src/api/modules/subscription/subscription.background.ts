@@ -3,9 +3,9 @@ import {
   isLocalWallet,
   isSubscriptionType
 } from "~utils/assertions";
-import { getActiveAddress, getActiveKeyfile, getWallets } from "~wallets";
+import { getActiveAddress, getActiveKeyfile } from "~wallets";
 import type { BackgroundModuleFunction } from "~api/background/background-modules";
-import authenticate from "../connect/auth";
+import { requestUserAuthorization } from "../../../utils/auth/auth.utils";
 import { getSubscriptionData } from "~subscriptions";
 import {
   RecurringPaymentFrequency,
@@ -44,7 +44,7 @@ const background: BackgroundModuleFunction<SubscriptionData> = async (
     throw new Error("Account is already subscribed");
   }
 
-  await authenticate({
+  await requestUserAuthorization({
     type: "subscription",
     url: appData.appURL,
     arweaveAccountAddress: subscriptionData.arweaveAccountAddress,

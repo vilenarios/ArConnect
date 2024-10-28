@@ -1,6 +1,8 @@
 import type { PlasmoCSConfig } from "plasmo";
 import { replaceArProtocolLinks } from "~api/foreground/foreground-setup-ar-protocol-links";
 
+console.log("ar-protocol.content-script.ts");
+
 export const config: PlasmoCSConfig = {
   matches: ["file://*/*", "http://*/*", "https://*/*"],
   run_at: "document_start",

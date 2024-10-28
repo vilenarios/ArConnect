@@ -1,4 +1,3 @@
-import { replyToAuthRequest, useAuthParams, useAuthUtils } from "~utils/auth";
 import { unlock } from "~wallets/auth";
 import {
   ButtonV2,
@@ -14,12 +13,6 @@ import browser from "webextension-polyfill";
 import Head from "~components/popup/Head";
 
 export default function Unlock() {
-  // connect params
-  const params = useAuthParams();
-
-  // get auth utils
-  const { closeWindow, cancel } = useAuthUtils("unlock", params?.authID);
-
   // password input
   const passwordInput = useInput();
 
@@ -39,12 +32,6 @@ export default function Unlock() {
         duration: 2200
       });
     }
-
-    // reply to request
-    await replyToAuthRequest("unlock", params.authID);
-
-    // close the window
-    closeWindow();
   }
 
   return (
@@ -53,7 +40,8 @@ export default function Unlock() {
         <Head
           title={browser.i18n.getMessage("unlock")}
           showOptions={false}
-          back={cancel}
+          back={() => {}}
+          showBack={false}
         />
         <Spacer y={0.75} />
         <Section>
@@ -78,10 +66,6 @@ export default function Unlock() {
       <Section>
         <ButtonV2 fullWidth onClick={unlockWallet}>
           {browser.i18n.getMessage("unlock")}
-        </ButtonV2>
-        <Spacer y={0.75} />
-        <ButtonV2 fullWidth secondary onClick={cancel}>
-          {browser.i18n.getMessage("cancel")}
         </ButtonV2>
       </Section>
     </Wrapper>

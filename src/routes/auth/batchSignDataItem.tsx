@@ -1,4 +1,4 @@
-import { replyToAuthRequest, useAuthParams, useAuthUtils } from "~utils/auth";
+import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import {
   ButtonV2,
   InputV2,
@@ -22,32 +22,16 @@ import { useStorage } from "@plasmohq/storage/hook";
 import { checkPassword } from "~wallets/auth";
 import { timeoutPromise } from "~utils/promises/timeout";
 
-interface Tag {
-  name: string;
-  value: string;
-}
-
-interface DataStructure {
-  data: number[];
-  target?: string;
-  tags: Tag[];
-}
-
 export default function BatchSignDataItem() {
-  // connect params
-  const params = useAuthParams<{
-    appData: { appURL: string };
-    data: DataStructure;
-  }>();
+  const { authRequest, acceptRequest, rejectRequest } =
+    useCurrentAuthRequest("batchSignDataItem");
+  const { appData, data } = authRequest;
+
   const { setToast } = useToasts();
   const [loading, setLoading] = useState<boolean>(false);
   const [transaction, setTransaction] = useState<any | null>(null);
   const [transactionList, setTransactionList] = useState<any | null>(null);
   const [password, setPassword] = useState<boolean>(false);
-  const { closeWindow, cancel } = useAuthUtils(
-    "batchSignDataItem",
-    params?.authID
-  );
   const passwordInput = useInput();
   async function sign() {
     if (password) {
@@ -61,8 +45,8 @@ export default function BatchSignDataItem() {
         return;
       }
     }
-    await replyToAuthRequest("batchSignDataItem", params?.authID);
-    closeWindow();
+
+    acceptRequest();
   }
 
   const [signatureAllowance] = useStorage(
@@ -77,9 +61,9 @@ export default function BatchSignDataItem() {
     const fetchTransactionList = async () => {
       setLoading(true);
       try {
-        if (Array.isArray(params?.data)) {
+        if (Array.isArray(data)) {
           const listItems = await Promise.all(
-            params.data.map(async (item, index) => {
+            data.map(async (item, index) => {
               let amount = "";
               let name = "";
               const quantity =
@@ -132,7 +116,7 @@ export default function BatchSignDataItem() {
     };
 
     fetchTransactionList();
-  }, [params]);
+  }, [data]);
 
   return (
     <Wrapper>
@@ -140,13 +124,13 @@ export default function BatchSignDataItem() {
         <HeadV2
           title={browser.i18n.getMessage("batch_sign_items")}
           showOptions={false}
-          back={() => (transaction ? setTransaction(null) : cancel())}
+          back={() => (transaction ? setTransaction(null) : rejectRequest())}
         />
         <Description>
           <Text noMargin>
             {browser.i18n.getMessage(
               "batch_sign_data_description",
-              params?.appData.appURL
+              appData.appURL
             )}
           </Text>
         </Description>
@@ -194,7 +178,7 @@ export default function BatchSignDataItem() {
             >
               {browser.i18n.getMessage("signature_authorize")}
             </ButtonV2>
-            <ResetButton fullWidth onClick={cancel}>
+            <ResetButton fullWidth onClick={() => rejectRequest()}>
               {browser.i18n.getMessage("cancel")}
             </ResetButton>
           </>

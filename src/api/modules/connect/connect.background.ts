@@ -11,7 +11,7 @@ import { updateIcon } from "~utils/icon";
 import { getWallets } from "~wallets";
 import Application from "~applications/application";
 import browser from "webextension-polyfill";
-import authenticate from "./auth";
+import { requestUserAuthorization } from "../../../utils/auth/auth.utils";
 
 const background: BackgroundModuleFunction<void> = async (
   appData,
@@ -61,7 +61,7 @@ const background: BackgroundModuleFunction<void> = async (
 
   try {
     // authenticate the user with the requested permissions
-    await authenticate({
+    await requestUserAuthorization({
       type: "connect",
       url: appData.appURL,
       permissions,

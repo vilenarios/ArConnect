@@ -20,9 +20,6 @@ export default function Unlock() {
   // toasts
   const { setToast } = useToasts();
 
-  // router push
-  const [push] = useHistory();
-
   // unlock ArConnect
   async function unlockWallet() {
     // unlock using password
@@ -36,8 +33,6 @@ export default function Unlock() {
         duration: 2200
       });
     }
-
-    push("/");
   }
 
   return (

@@ -1,5 +1,5 @@
 import type { JWKInterface } from "arweave/node/lib/wallet";
-import authenticate from "~api/modules/connect/auth";
+import { requestUserAuthorization } from "~utils/auth/auth.utils";
 import { useStorage } from "@plasmohq/storage/hook";
 import { ExtensionStorage } from "~utils/storage";
 import type { HardwareWallet } from "./hardware";
@@ -244,7 +244,7 @@ export async function getActiveKeyfile(): Promise<DecryptedWallet> {
   // this means that the user has to enter their decryption
   // key so it can be used later
   if (!decryptionKey && !!activeWallet) {
-    await authenticate({
+    await requestUserAuthorization({
       type: "unlock"
     });
 
@@ -295,7 +295,7 @@ export async function getKeyfile(address: string): Promise<DecryptedWallet> {
   // this means that the user has to enter their decryption
   // key so it can be used later
   if (!decryptionKey && !!wallet) {
-    await authenticate({
+    await requestUserAuthorization({
       type: "unlock"
     });
 

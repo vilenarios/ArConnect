@@ -2,7 +2,7 @@ import { onMessage, sendMessage } from "@arconnect/webext-bridge";
 import { bytesToChunks, deconstructTransaction } from "./transaction_builder";
 import type Transaction from "arweave/web/lib/transaction";
 import type { AuthResult } from "shim";
-import authenticate from "../connect/auth";
+import { requestUserAuthorization } from "../../../utils/auth/auth.utils";
 import { nanoid } from "nanoid";
 
 /**
@@ -30,7 +30,7 @@ export const signAuth = (
       } = deconstructTransaction(transaction);
 
       // start auth
-      authenticate({
+      requestUserAuthorization({
         type: "sign",
         url: tabURL,
         address,
@@ -86,7 +86,7 @@ export const signAuthKeystone = (dataToSign: AuthKeystoneData) =>
     (resolve, reject) => {
       // start auth
       const collectionID = nanoid();
-      authenticate({
+      requestUserAuthorization({
         type: "signKeystone",
         keystoneSignType: dataToSign.type,
         collectionID

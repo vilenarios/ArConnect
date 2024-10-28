@@ -1,6 +1,8 @@
 import type { PlasmoCSConfig } from "plasmo";
 import { setupEventListeners } from "~api/foreground/foreground-setup-events";
 
+console.log("events.content-script.ts");
+
 export const config: PlasmoCSConfig = {
   matches: ["file://*/*", "http://*/*", "https://*/*"],
   run_at: "document_end",

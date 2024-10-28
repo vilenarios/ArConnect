@@ -1,4 +1,3 @@
-import { replyToAuthRequest, useAuthParams, useAuthUtils } from "~utils/auth";
 import {
   ButtonV2,
   InputV2,
@@ -21,7 +20,7 @@ import {
 } from "~routes/popup/transaction/[id]";
 import Wrapper from "~components/auth/Wrapper";
 import browser from "webextension-polyfill";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import HeadV2 from "~components/popup/HeadV2";
 import { formatAddress } from "~utils/format";
@@ -40,13 +39,9 @@ import { LogoWrapper, Logo, WarningIcon } from "~components/popup/Token";
 import arLogoLight from "url:/assets/ar/logo_light.png";
 import arLogoDark from "url:/assets/ar/logo_dark.png";
 import { useTheme } from "~utils/theme";
-import {
-  checkWalletBits,
-  EventType,
-  trackEvent,
-  type WalletBitsCheck
-} from "~utils/analytics";
+import { checkWalletBits, type WalletBitsCheck } from "~utils/analytics";
 import { Degraded, WarningWrapper } from "~routes/popup/send";
+import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 
 interface Tag {
   name: string;
@@ -60,11 +55,10 @@ interface DataStructure {
 }
 
 export default function SignDataItem() {
-  // connect params
-  const params = useAuthParams<{
-    appData: { appURL: string };
-    data: DataStructure;
-  }>();
+  const { authRequest, acceptRequest, rejectRequest } =
+    useCurrentAuthRequest("signDataItem");
+
+  const { authID, data, appData } = authRequest;
 
   const [password, setPassword] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -76,14 +70,14 @@ export default function SignDataItem() {
   const { setToast } = useToasts();
 
   const recipient =
-    params?.data?.tags?.find((tag) => tag.name === "Recipient")?.value || "";
+    data?.tags?.find((tag) => tag.name === "Recipient")?.value || "";
   const quantity =
-    params?.data?.tags?.find((tag) => tag.name === "Quantity")?.value || "0";
-  const transfer = params?.data?.tags?.some(
+    data?.tags?.find((tag) => tag.name === "Quantity")?.value || "0";
+  const transfer = data?.tags?.some(
     (tag) => tag.name === "Action" && tag.value === "Transfer"
   );
 
-  const process = params?.data?.target;
+  const process = data?.target;
 
   const formattedAmount = useMemo(
     () => (amount || 0).toLocaleString(),
@@ -128,9 +122,6 @@ export default function SignDataItem() {
   // transaction price
   const fiatPrice = useMemo(() => +(amount || 0) * price, [amount]);
 
-  // get auth utils
-  const { closeWindow, cancel } = useAuthUtils("signDataItem", params?.authID);
-
   const passwordInput = useInput();
 
   // sign message
@@ -147,11 +138,7 @@ export default function SignDataItem() {
       }
     }
 
-    // send response
-    await replyToAuthRequest("signDataItem", params?.authID);
-
-    // close the window
-    closeWindow();
+    await acceptRequest();
   }
 
   useEffect(() => {
@@ -178,7 +165,7 @@ export default function SignDataItem() {
       let tokenInfo: TokenInfo;
       try {
         setLoading(true);
-        const token = await Token(params.data.target);
+        const token = await Token(data.target);
         tokenInfo = {
           ...token.info,
           Denomination: Number(token.info.Denomination)
@@ -197,7 +184,7 @@ export default function SignDataItem() {
             )) || [];
           const aoTokensCombined = [...aoTokens, ...aoTokensCache];
           const token = aoTokensCombined.find(
-            ({ processId }) => params.data.target === processId
+            ({ processId }) => data.target === processId
           );
           if (token) {
             tokenInfo = token;
@@ -223,7 +210,7 @@ export default function SignDataItem() {
       }
     };
     fetchTokenInfo();
-  }, [params]);
+  }, [data]);
 
   // listen for enter to reset
   useEffect(() => {
@@ -236,7 +223,7 @@ export default function SignDataItem() {
     window.addEventListener("keydown", listener);
 
     return () => window.removeEventListener("keydown", listener);
-  }, [params?.authID, password]);
+  }, [authID, password]);
 
   useEffect(() => {
     if (tokenName && !logo) {
@@ -278,7 +265,7 @@ export default function SignDataItem() {
         <HeadV2
           title={browser.i18n.getMessage("sign_item")}
           showOptions={false}
-          back={cancel}
+          back={rejectRequest}
         />
         {mismatch && transfer && (
           <Degraded>
@@ -297,118 +284,105 @@ export default function SignDataItem() {
         )}
         <Description>
           <Text noMargin>
-            {browser.i18n.getMessage(
-              "sign_data_description",
-              params?.appData.appURL
-            )}
+            {browser.i18n.getMessage("sign_data_description", appData.appURL)}
           </Text>
         </Description>
-        {params ? (
-          <Section>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: "4px"
-              }}
-            >
-              {!loading ? (
-                logo && (
-                  <LogoWrapper>
-                    <Logo src={logo} alt={`${tokenName} logo`} />
-                  </LogoWrapper>
-                )
-              ) : (
-                <Loading style={{ width: "16px", height: "16px" }} />
-              )}
-            </div>
-            {transfer && (
-              <>
-                <FiatAmount>
-                  {formatFiatBalance(fiatPrice, currency)}
-                </FiatAmount>
-                <AmountTitle
-                  ref={childRef}
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    justifyContent: "center",
-                    alignItems: "flex-end",
-                    marginBottom: "16px"
-                  }}
-                >
-                  {formattedAmount}
-                  <span style={{ lineHeight: "1.5em" }}>{tokenName}</span>
-                </AmountTitle>
-              </>
+        <Section>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: "4px"
+            }}
+          >
+            {!loading ? (
+              logo && (
+                <LogoWrapper>
+                  <Logo src={logo} alt={`${tokenName} logo`} />
+                </LogoWrapper>
+              )
+            ) : (
+              <Loading style={{ width: "16px", height: "16px" }} />
+            )}
+          </div>
+          {transfer && (
+            <>
+              <FiatAmount>{formatFiatBalance(fiatPrice, currency)}</FiatAmount>
+              <AmountTitle
+                ref={childRef}
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  justifyContent: "center",
+                  alignItems: "flex-end",
+                  marginBottom: "16px"
+                }}
+              >
+                {formattedAmount}
+                <span style={{ lineHeight: "1.5em" }}>{tokenName}</span>
+              </AmountTitle>
+            </>
+          )}
+
+          <Properties>
+            {data?.target && (
+              <TransactionProperty>
+                <PropertyName>
+                  {browser.i18n.getMessage("process_id")}
+                </PropertyName>
+                <PropertyValue>{formatAddress(data.target, 6)}</PropertyValue>
+              </TransactionProperty>
+            )}
+            <TransactionProperty>
+              <PropertyName>
+                {browser.i18n.getMessage("transaction_from")}
+              </PropertyName>
+              <PropertyValue>{formatAddress(activeAddress, 6)}</PropertyValue>
+            </TransactionProperty>
+            {recipient && (
+              <TransactionProperty>
+                <PropertyName>
+                  {browser.i18n.getMessage("transaction_to")}
+                </PropertyName>
+                <PropertyValue>{formatAddress(recipient, 6)}</PropertyValue>
+              </TransactionProperty>
             )}
 
-            <Properties>
-              {params?.data?.target && (
-                <TransactionProperty>
-                  <PropertyName>
-                    {browser.i18n.getMessage("process_id")}
-                  </PropertyName>
-                  <PropertyValue>
-                    {formatAddress(params?.data.target, 6)}
-                  </PropertyValue>
-                </TransactionProperty>
-              )}
-              <TransactionProperty>
-                <PropertyName>
-                  {browser.i18n.getMessage("transaction_from")}
-                </PropertyName>
-                <PropertyValue>{formatAddress(activeAddress, 6)}</PropertyValue>
-              </TransactionProperty>
-              {recipient && (
-                <TransactionProperty>
-                  <PropertyName>
-                    {browser.i18n.getMessage("transaction_to")}
-                  </PropertyName>
-                  <PropertyValue>{formatAddress(recipient, 6)}</PropertyValue>
-                </TransactionProperty>
-              )}
-
-              <TransactionProperty>
-                <PropertyName>
-                  {browser.i18n.getMessage("transaction_fee")}
-                </PropertyName>
-                <PropertyValue>0 AR</PropertyValue>
-              </TransactionProperty>
-              <TransactionProperty>
-                <PropertyName>
-                  {browser.i18n.getMessage("transaction_size")}
-                </PropertyName>
-                <PropertyValue>
-                  {prettyBytes(params?.data.data.length)}
-                </PropertyValue>
-              </TransactionProperty>
-              <Spacer y={0.1} />
-              <PropertyName
-                style={{
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center"
-                }}
-                onClick={() => setShowTags(!showTags)}
-              >
-                {browser.i18n.getMessage("transaction_tags")}
-                {showTags ? <ChevronUpIcon /> : <ChevronDownIcon />}
+            <TransactionProperty>
+              <PropertyName>
+                {browser.i18n.getMessage("transaction_fee")}
               </PropertyName>
-              <Spacer y={0.05} />
-              {showTags &&
-                params?.data?.tags?.map((tag, i) => (
-                  <TransactionProperty key={i}>
-                    <PropertyName>{tag.name}</PropertyName>
-                    <TagValue>{tag.value}</TagValue>
-                  </TransactionProperty>
-                ))}
-            </Properties>
-          </Section>
-        ) : (
-          <Loading />
-        )}
+              <PropertyValue>0 AR</PropertyValue>
+            </TransactionProperty>
+            <TransactionProperty>
+              <PropertyName>
+                {browser.i18n.getMessage("transaction_size")}
+              </PropertyName>
+              <PropertyValue>{prettyBytes(data.data.length)}</PropertyValue>
+            </TransactionProperty>
+            <Spacer y={0.1} />
+            <PropertyName
+              style={{
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center"
+              }}
+              onClick={() => setShowTags(!showTags)}
+            >
+              {browser.i18n.getMessage("transaction_tags")}
+              {showTags ? <ChevronUpIcon /> : <ChevronDownIcon />}
+            </PropertyName>
+            <Spacer y={0.05} />
+            {showTags &&
+              data?.tags?.map((tag, i) => (
+                <TransactionProperty key={i}>
+                  <PropertyName>{tag.name}</PropertyName>
+                  <TagValue>{tag.value}</TagValue>
+                </TransactionProperty>
+              ))}
+          </Properties>
+        </Section>
       </div>
       <Section>
         {password && (
@@ -438,7 +412,7 @@ export default function SignDataItem() {
           {browser.i18n.getMessage("signature_authorize")}
         </ButtonV2>
         <Spacer y={0.75} />
-        <ButtonV2 fullWidth secondary onClick={cancel}>
+        <ButtonV2 fullWidth secondary onClick={() => rejectRequest}>
           {browser.i18n.getMessage("cancel")}
         </ButtonV2>
       </Section>

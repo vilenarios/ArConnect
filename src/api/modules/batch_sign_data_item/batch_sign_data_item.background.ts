@@ -1,11 +1,11 @@
-import type { ModuleFunction } from "~api/module";
 import { isNotCancelError, isRawDataItem } from "~utils/assertions";
-import authenticate from "../connect/auth";
+import { requestUserAuthorization } from "../../../utils/auth/auth.utils";
 import browser from "webextension-polyfill";
 import { getActiveKeyfile } from "~wallets";
 import { freeDecryptedWallet } from "~wallets/encryption";
-import { ArweaveSigner, createData, DataItem } from "arbundles";
+import { ArweaveSigner, createData } from "arbundles";
 import type { RawDataItem } from "../sign_data_item/types";
+import type { BackgroundModuleFunction } from "~api/background/background-modules";
 
 const background: BackgroundModuleFunction<number[][]> = async (
   appData,
@@ -22,7 +22,7 @@ const background: BackgroundModuleFunction<number[][]> = async (
 
   const results: number[][] = [];
 
-  await authenticate({
+  await requestUserAuthorization({
     type: "batchSignDataItem",
     data: dataItems,
     appData

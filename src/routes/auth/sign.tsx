@@ -1,4 +1,3 @@
-import { replyToAuthRequest, useAuthParams, useAuthUtils } from "~utils/auth";
 import { decodeSignature, transactionToUR } from "~wallets/hardware/keystone";
 import { constructTransaction } from "~api/modules/sign/transaction_builder";
 import { formatFiatBalance, formatTokenBalance } from "~tokens/currency";
@@ -30,7 +29,6 @@ import {
 } from "@arconnect/components";
 import AnimatedQRScanner from "~components/hardware/AnimatedQRScanner";
 import AnimatedQRPlayer from "~components/hardware/AnimatedQRPlayer";
-import type Transaction from "arweave/web/lib/transaction";
 import Wrapper from "~components/auth/Wrapper";
 import Progress from "~components/Progress";
 import browser from "webextension-polyfill";
@@ -40,22 +38,25 @@ import prettyBytes from "pretty-bytes";
 import Arweave from "arweave";
 import { defaultGateway } from "~gateways/gateway";
 import BigNumber from "bignumber.js";
+import type Transaction from "arweave/web/lib/transaction";
+import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 
 export default function Sign() {
-  // sign params
-  const params = useAuthParams<{
-    url: string;
-    address: string;
-    transaction: StrippedTx;
-    collectionID: string;
-  }>();
+  const { authRequest, acceptRequest, rejectRequest } =
+    useCurrentAuthRequest("sign");
+
+  const {
+    address,
+    transaction: authRequestTransaction,
+    collectionID
+  } = authRequest;
 
   // reconstructed transaction
   const [transaction, setTransaction] = useState<Transaction>();
 
   useEffect(() => {
     (async () => {
-      if (!params?.transaction) return;
+      if (!authRequestTransaction) return;
 
       // reset tx
       setTransaction(undefined);
@@ -70,7 +71,7 @@ export default function Sign() {
       onMessage("auth_chunk", ({ sender, data }) => {
         // check data type
         if (
-          data.collectionID !== params.collectionID ||
+          data.collectionID !== collectionID ||
           sender.context !== "background" ||
           data.type === "start"
         ) {
@@ -81,7 +82,7 @@ export default function Sign() {
         if (data.type === "end") {
           setTransaction(
             arweave.transactions.fromRaw(
-              constructTransaction(params.transaction, chunks)
+              constructTransaction(authRequestTransaction, chunks)
             )
           );
         } else {
@@ -90,22 +91,19 @@ export default function Sign() {
         }
       });
     })();
-  }, [params]);
-
-  // get auth utils
-  const { closeWindow, cancel } = useAuthUtils("sign", params?.authID);
+  }, [authRequestTransaction, collectionID]);
 
   // quantity
   const quantity = useMemo(() => {
-    if (!params?.transaction?.quantity) {
+    if (!authRequestTransaction?.quantity) {
       return BigNumber("0");
     }
 
     const arweave = new Arweave(defaultGateway);
-    const ar = arweave.ar.winstonToAr(params.transaction.quantity);
+    const ar = arweave.ar.winstonToAr(authRequestTransaction.quantity);
 
     return BigNumber(ar);
-  }, [params]);
+  }, [authRequestTransaction]);
 
   // currency setting
   const [currency] = useSetting<string>("currency");
@@ -127,14 +125,14 @@ export default function Sign() {
 
   // transaction fee
   const fee = useMemo(() => {
-    if (!params?.transaction?.reward) {
+    if (!authRequestTransaction?.reward) {
       return "0";
     }
 
     const arweave = new Arweave(defaultGateway);
 
-    return arweave.ar.winstonToAr(params.transaction.reward);
-  }, [params]);
+    return arweave.ar.winstonToAr(authRequestTransaction.reward);
+  }, [authRequestTransaction]);
 
   // transaction size
   const size = useMemo(() => {
@@ -142,15 +140,6 @@ export default function Sign() {
 
     return transaction?.sizeInBytes ?? transaction.data.length;
   }, [transaction]);
-
-  // authorize
-  async function authorize(data?: any) {
-    // reply to request
-    await replyToAuthRequest("sign", params.authID, undefined, data);
-
-    // close the window
-    closeWindow();
-  }
 
   // tags
   const tags = useMemo<DecodedTag[]>(() => {
@@ -240,22 +229,14 @@ export default function Sign() {
       const data = await decodeSignature(res);
 
       // reply
-      await authorize(data);
+      await acceptRequest(data);
     } catch (e) {
       // log error
       console.error(
         `[ArConnect] Error decoding signature from keystone\n${e?.message || e}`
       );
 
-      // reply to request
-      await replyToAuthRequest(
-        "sign",
-        params.authID,
-        "Failed to decode signature from keystone"
-      );
-
-      // close the window
-      closeWindow();
+      await rejectRequest("Failed to decode signature from keystone");
     }
 
     setLoading(false);
@@ -264,7 +245,7 @@ export default function Sign() {
   // toast
   const { setToast } = useToasts();
 
-  if (!params) return <></>;
+  console.log("tx =", transaction, "loading =", loading);
 
   return (
     <Wrapper>
@@ -272,7 +253,7 @@ export default function Sign() {
         <Head
           title={browser.i18n.getMessage("titles_sign")}
           showOptions={false}
-          back={cancel}
+          back={rejectRequest}
           allowOpen={false}
         />
         <Spacer y={0.75} />
@@ -288,9 +269,7 @@ export default function Sign() {
                 <PropertyName>
                   {browser.i18n.getMessage("transaction_from")}
                 </PropertyName>
-                <PropertyValue>
-                  {formatAddress(params.address, 6)}
-                </PropertyValue>
+                <PropertyValue>{formatAddress(address, 6)}</PropertyValue>
               </TransactionProperty>
               {transaction?.target && (
                 <TransactionProperty>
@@ -372,7 +351,7 @@ export default function Sign() {
 
                   // update page
                   setPage((val) => (!val ? "qr" : "scanner"));
-                } else await authorize();
+                } else await acceptRequest();
               }}
             >
               {!page
@@ -382,15 +361,10 @@ export default function Sign() {
             <Spacer y={0.75} />
           </>
         )}
-        <ButtonV2 fullWidth secondary onClick={cancel}>
+        <ButtonV2 fullWidth secondary onClick={() => rejectRequest}>
           {browser.i18n.getMessage("cancel")}
         </ButtonV2>
       </Section>
     </Wrapper>
   );
-}
-
-interface StrippedTx extends Transaction {
-  data: undefined;
-  tags: undefined;
 }

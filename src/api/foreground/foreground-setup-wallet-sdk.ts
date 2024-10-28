@@ -4,10 +4,10 @@ import type { InjectedEvents } from "~utils/events";
 import { nanoid } from "nanoid";
 import { foregroundModules } from "~api/foreground/foreground-modules";
 import mitt from "mitt";
-import { getFullVersionLabel } from "~utils/runtime";
+// import { getFullVersionLabel } from "~utils/runtime";
 
 export function setupWalletSDK(targetWindow: Window = window) {
-  console.log("injectWallSDK()");
+  console.log("setupWalletSDK()");
 
   /** Init events */
   const events = mitt<InjectedEvents>();
@@ -15,7 +15,7 @@ export function setupWalletSDK(targetWindow: Window = window) {
   /** Init wallet API */
   const WalletAPI: Record<string, any> = {
     walletName: "ArConnect",
-    walletVersion: getFullVersionLabel(),
+    walletVersion: "123",
     events
   };
 

@@ -1,9 +1,4 @@
-import { allowanceAuth, updateAllowance } from "../sign/allowance";
-import {
-  isLocalWallet,
-  isNotCancelError,
-  isRawDataItem
-} from "~utils/assertions";
+import { isNotCancelError, isRawDataItem } from "~utils/assertions";
 import { freeDecryptedWallet } from "~wallets/encryption";
 import type { BackgroundModuleFunction } from "~api/background/background-modules";
 import { ArweaveSigner, createData } from "arbundles";
@@ -17,10 +12,9 @@ import {
   type AuthKeystoneData
 } from "../sign/sign_auth";
 import Arweave from "arweave";
-import authenticate from "../connect/auth";
+import { requestUserAuthorization } from "../../../utils/auth/auth.utils";
 import BigNumber from "bignumber.js";
 import { createDataItem } from "~utils/data_item";
-import signMessage from "../sign_message";
 
 const background: BackgroundModuleFunction<number[]> = async (
   appData,
@@ -63,7 +57,7 @@ const background: BackgroundModuleFunction<number[]> = async (
       }
     }
     try {
-      await authenticate({
+      await requestUserAuthorization({
         type: "signDataItem",
         data: dataItem,
         appData

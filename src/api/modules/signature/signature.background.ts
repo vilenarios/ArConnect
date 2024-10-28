@@ -1,18 +1,11 @@
-import {
-  isArray,
-  isArrayOfType,
-  isNotNull,
-  isNotUndefined,
-  isNumber,
-  isString
-} from "typed-assert";
+import { isArray, isArrayOfType, isNumber, isString } from "typed-assert";
 import { freeDecryptedWallet } from "~wallets/encryption";
 import { isNotCancelError, isSignatureAlgorithm } from "~utils/assertions";
 import type { BackgroundModuleFunction } from "~api/background/background-modules";
 import { getWhitelistRegExp } from "./whitelist";
 import { getActiveKeyfile } from "~wallets";
 import browser from "webextension-polyfill";
-import authenticate from "../connect/auth";
+import { requestUserAuthorization } from "../../../utils/auth/auth.utils";
 
 const background: BackgroundModuleFunction<number[]> = async (
   appData,
@@ -34,7 +27,7 @@ const background: BackgroundModuleFunction<number[]> = async (
   // request user to authorize
   if (!whitelisted) {
     try {
-      await authenticate({
+      await requestUserAuthorization({
         type: "signature",
         url: appData.appURL,
         message: data
