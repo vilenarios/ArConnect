@@ -258,6 +258,7 @@ query ($address: String!) {
         recipient
         owner { address }
         quantity { ar }
+        fee { ar }
         block { timestamp, height }
         tags {
           name
