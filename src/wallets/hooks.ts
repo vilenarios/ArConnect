@@ -1,7 +1,7 @@
 import type { WalletInterface } from "~components/welcome/load/Migrate";
 import type { JWKInterface } from "arweave/web/lib/wallet";
 import { type AnsUser, getAnsProfile } from "~lib/ans";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStorage } from "@plasmohq/storage/hook";
 import { defaultGateway } from "~gateways/gateway";
 import { ExtensionStorage } from "~utils/storage";
@@ -10,6 +10,7 @@ import type { HardwareApi } from "./hardware";
 import type { StoredWallet } from "~wallets";
 import Arweave from "arweave";
 import BigNumber from "bignumber.js";
+import { retryWithDelayAndTimeout } from "~utils/retry";
 
 /**
  * Wallets with details hook
@@ -113,19 +114,31 @@ export function useBalance() {
   // balance in AR
   const [balance, setBalance] = useState(BigNumber("0"));
 
-  useEffect(() => {
-    (async () => {
-      if (!activeAddress) return;
+  const fetchBalance = useCallback(async () => {
+    if (!activeAddress) {
+      setBalance(BigNumber("0"));
+      return;
+    }
 
-      const gateway = await findGateway({});
-      const arweave = new Arweave(gateway);
+    const gateway = await findGateway({ ensureStake: true });
+    const arweave = new Arweave(gateway);
 
-      // fetch balance
-      const winstonBalance = await arweave.wallets.getBalance(activeAddress);
-
-      setBalance(BigNumber(arweave.ar.winstonToAr(winstonBalance)));
-    })();
+    // fetch balance
+    const winstonBalance = await arweave.wallets.getBalance(activeAddress);
+    if (isNaN(+winstonBalance)) {
+      throw new Error("Invalid balance returned");
+    }
+    const arBalance = BigNumber(arweave.ar.winstonToAr(winstonBalance));
+    setBalance(arBalance);
   }, [activeAddress]);
+
+  useEffect(() => {
+    if (!activeAddress) return;
+
+    retryWithDelayAndTimeout(fetchBalance).catch((error) => {
+      console.log(`Error fetching balance: ${error}`);
+    });
+  }, [activeAddress, fetchBalance]);
 
   return balance;
 }

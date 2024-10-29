@@ -1,8 +1,4 @@
-import {
-  formatFiatBalance,
-  formatTokenBalance,
-  balanceToFractioned
-} from "~tokens/currency";
+import { formatFiatBalance, balanceToFractioned } from "~tokens/currency";
 import {
   type MouseEventHandler,
   useEffect,
@@ -23,8 +19,6 @@ import * as viewblock from "~lib/viewblock";
 import Squircle from "~components/Squircle";
 import useSetting from "~settings/hook";
 import styled from "styled-components";
-import Arweave from "arweave";
-import { useGateway } from "~gateways/wayfinder";
 import aoLogo from "url:/assets/ecosystem/ao-logo.svg";
 import { getUserAvatar } from "~lib/avatar";
 import { formatBalance } from "~utils/format";
@@ -34,6 +28,7 @@ import BigNumber from "bignumber.js";
 import JSConfetti from "js-confetti";
 import browser from "webextension-polyfill";
 import { AO_NATIVE_TOKEN } from "~utils/ao_import";
+import { useBalance } from "~wallets/hooks";
 
 export default function Token({ onClick, ...props }: Props) {
   const ref = useRef(null);
@@ -490,33 +485,23 @@ export function ArToken({ onClick }: ArTokenProps) {
   });
 
   // load ar balance
-  const [balance, setBalance] = useState(BigNumber("0"));
   const [fiatBalance, setFiatBalance] = useState(BigNumber("0"));
   const [displayBalance, setDisplayBalance] = useState("0");
   const [totalBalance, setTotalBalance] = useState("");
   const [showTooltip, setShowTooltip] = useState(false);
 
-  // memoized requirements to ensure stability
-  const requirements = useMemo(() => ({ ensureStake: true }), []);
-  const gateway = useGateway(requirements);
+  const balance = useBalance();
 
   useEffect(() => {
     (async () => {
       if (!activeAddress) return;
 
-      const arweave = new Arweave(gateway);
-
-      // fetch balance
-      const winstonBalance = await arweave.wallets.getBalance(activeAddress);
-      const arBalance = BigNumber(arweave.ar.winstonToAr(winstonBalance));
-      setBalance(arBalance);
-
-      const formattedBalance = formatBalance(arBalance);
+      const formattedBalance = formatBalance(balance);
       setTotalBalance(formattedBalance.tooltipBalance);
       setShowTooltip(formattedBalance.showTooltip);
       setDisplayBalance(formattedBalance.displayBalance);
     })();
-  }, [activeAddress, gateway]);
+  }, [activeAddress, balance]);
 
   useEffect(() => {
     setFiatBalance(balance.multipliedBy(price));
