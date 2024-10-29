@@ -34,7 +34,7 @@ export function useCurrentAuthRequest<T extends AuthType>(expectedAuthType: T) {
   }
 
   async function rejectRequest(errorMessage?: string) {
-    console.log("acceptRequest", errorMessage);
+    console.log("rejectRequest", errorMessage);
 
     // send response
     await replyToAuthRequest(

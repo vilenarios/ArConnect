@@ -99,6 +99,8 @@ export function getPopupResponse(authID: string, tabId: number) {
   return new Promise<AuthResult>(async (resolve, reject) => {
     startKeepAlive();
 
+    console.log("LISTENING FOR auth_result...");
+
     onMessage("auth_result", ({ sender, data }) => {
       stopKeepAlive();
 

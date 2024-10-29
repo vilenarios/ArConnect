@@ -46,7 +46,7 @@ export default function Signature() {
           {browser.i18n.getMessage("signature_authorize")}
         </ButtonV2>
         <Spacer y={0.75} />
-        <ButtonV2 fullWidth secondary onClick={() => rejectRequest}>
+        <ButtonV2 fullWidth secondary onClick={() => rejectRequest()}>
           {browser.i18n.getMessage("cancel")}
         </ButtonV2>
       </Section>
