@@ -45,7 +45,7 @@ export async function retryWithDelayAndTimeout<T>(
   delay: number = 1000,
   timeout: number = 10000
 ): Promise<T> {
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+  for (let attempt = 0; attempt <= maxAttempts; attempt++) {
     try {
       // Create a race between the function and the timeout
       const result = await Promise.race([

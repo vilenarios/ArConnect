@@ -270,7 +270,7 @@ async function balanceHistory(address: string) {
 
   // Get the current balance
   const winstonBalance = await retryWithDelayAndTimeout(async () => {
-    const gateway = await findGateway({ ensureStake: true });
+    const gateway = await findGateway({});
     arweave = new Arweave(gateway);
     const balance = await arweave.wallets.getBalance(address);
     if (isNaN(+balance)) throw new Error("Balance is invalid");

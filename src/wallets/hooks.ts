@@ -120,7 +120,7 @@ export function useBalance() {
       return;
     }
 
-    const gateway = await findGateway({ ensureStake: true });
+    const gateway = await findGateway({});
     const arweave = new Arweave(gateway);
 
     // fetch balance
