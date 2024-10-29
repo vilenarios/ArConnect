@@ -14,7 +14,7 @@ export const handleApiCallMessage: OnMessageCallback<
   ApiCall,
   ApiResponse
 > = async ({ data, sender }) => {
-  console.log("HANDLE API CALL");
+  // console.log("HANDLE API CALL");
 
   // construct base message to extend and return
   const baseMessage: ApiResponse = {

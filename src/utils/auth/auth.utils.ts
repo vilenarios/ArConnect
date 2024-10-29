@@ -102,6 +102,8 @@ export function getPopupResponse(authID: string, tabId: number) {
     console.log("LISTENING FOR auth_result...");
 
     onMessage("auth_result", ({ sender, data }) => {
+      console.log("RECEIVED RESPONSE FOR auth_result", data);
+
       stopKeepAlive();
 
       // validate sender by it's tabId

@@ -60,13 +60,11 @@ export const useAuthRequestsLocation: BaseLocationHook = () => {
   const currentAuthRequestType = `/${currentAuthRequest.type}`;
   const currentAuthRequestID = currentAuthRequest.authID || "";
 
-  console.log(authRequests);
-
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [currentAuthRequestID]);
 
-  console.log("currentAuthRequestType =", currentAuthRequestType);
+  // console.log("currentAuthRequestType =", currentAuthRequestType, authRequests);
 
   return [currentAuthRequestType, (path: string) => ""];
 };

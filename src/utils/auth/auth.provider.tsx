@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { AuthRequest } from "~utils/auth/auth.types";
 import { replyToAuthRequest } from "~utils/auth/auth.utils";
+import { retryWithDelay } from "~utils/promises/retry";
 
 interface AuthRequestContextData {
   authRequests: AuthRequest[];
@@ -51,7 +52,23 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
       });
     });
 
-    sendMessage("ready", {});
+    retryWithDelay(() => {
+      return sendMessage("ready", {}).catch((err) => {
+        if (
+          err.message ===
+          "No handler registered in 'background' to accept messages with id 'ready'"
+        ) {
+          console.log(
+            "Ready message sent before background started listening. Retrying...",
+            err
+          );
+        }
+
+        throw err;
+      });
+    }).catch((err) => {
+      console.log("Ready message failed after retrying:", err);
+    });
   }, []);
 
   useEffect(() => {

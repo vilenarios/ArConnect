@@ -56,6 +56,8 @@ export default function Sign() {
 
   useEffect(() => {
     (async () => {
+      console.log("Loading new transaction...");
+
       if (!authRequestTransaction) return;
 
       // reset tx

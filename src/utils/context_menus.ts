@@ -23,7 +23,7 @@ export async function createContextMenus(hasPerms: boolean) {
   const wallets = await getWallets();
   const actionContext = isManifestv3() ? "action" : "browser_action";
 
-  console.log("createContextMenus", wallets.length);
+  // console.log("createContextMenus", wallets.length);
 
   if (wallets.length > 0) {
     browser.contextMenus.create(
