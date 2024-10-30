@@ -6,7 +6,6 @@ import { Loading, TooltipV2 } from "@arconnect/components";
 import { useEffect, useMemo, useState, type HTMLProps } from "react";
 import { useStorage } from "@plasmohq/storage/hook";
 import { ExtensionStorage } from "~utils/storage";
-import { useHistory } from "~utils/hash_router";
 import { useBalance } from "~wallets/hooks";
 import { getArPrice } from "~lib/coingecko";
 import { getAppURL } from "~utils/format";
@@ -25,8 +24,8 @@ import styled from "styled-components";
 import Arweave from "arweave";
 import { removeDecryptionKey } from "~wallets/auth";
 import { findGateway } from "~gateways/wayfinder";
-import type { Gateway } from "~gateways/gateway";
 import BigNumber from "bignumber.js";
+import { retryWithDelay, retryWithDelayAndTimeout } from "~utils/retry";
 
 export default function Balance() {
   const [loading, setLoading] = useState(false);
@@ -103,8 +102,7 @@ export default function Balance() {
     (async () => {
       if (!activeAddress) return;
       setLoading(true);
-      const gateway = await findGateway({ graphql: true });
-      const history = await balanceHistory(activeAddress, gateway);
+      const history = await balanceHistory(activeAddress);
 
       setHistoricalBalance(history);
       setLoading(false);
@@ -192,8 +190,9 @@ export default function Balance() {
   );
 }
 
-async function balanceHistory(address: string, gateway: Gateway) {
-  const arweave = new Arweave(gateway);
+async function balanceHistory(address: string) {
+  const gateway = await findGateway({ graphql: true });
+  let arweave = new Arweave(gateway);
   let minHeight = 0;
   try {
     const { height } = await arweave.network.getInfo();
@@ -203,8 +202,9 @@ async function balanceHistory(address: string, gateway: Gateway) {
 
   // find txs coming in and going out
   const inTxs = (
-    await gql(
-      `
+    await retryWithDelay(() =>
+      gql(
+        `
       query($recipient: String!, $minHeight: Int!) {
         transactions(recipients: [$recipient], first: 100, bundledIn: null, block: {min: $minHeight}) {
           edges {
@@ -226,13 +226,15 @@ async function balanceHistory(address: string, gateway: Gateway) {
         }
       }
     `,
-      { recipient: address, minHeight }
+        { recipient: address, minHeight }
+      )
     )
   ).data.transactions.edges;
 
   const outTxs = (
-    await gql(
-      `
+    await retryWithDelay(() =>
+      gql(
+        `
       query($owner: String!, $minHeight: Int!) {
         transactions(owners: [$owner], first: 100, bundledIn: null, block: {min: $minHeight}) {
           edges {
@@ -254,7 +256,8 @@ async function balanceHistory(address: string, gateway: Gateway) {
         }
       }    
     `,
-      { owner: address, minHeight }
+        { owner: address, minHeight }
+      )
     )
   ).data.transactions.edges;
 
@@ -266,9 +269,14 @@ async function balanceHistory(address: string, gateway: Gateway) {
     .sort((a, b) => b.block.timestamp - a.block.timestamp); // Sort by newest to oldest
 
   // Get the current balance
-  let balance = BigNumber(
-    arweave.ar.winstonToAr(await arweave.wallets.getBalance(address))
-  );
+  const winstonBalance = await retryWithDelayAndTimeout(async () => {
+    const gateway = await findGateway({});
+    arweave = new Arweave(gateway);
+    const balance = await arweave.wallets.getBalance(address);
+    if (isNaN(+balance)) throw new Error("Balance is invalid");
+    return balance;
+  });
+  let balance = BigNumber(arweave.ar.winstonToAr(winstonBalance));
 
   // Initialize the result array with the current balance
   const res = [balance.toNumber()];
