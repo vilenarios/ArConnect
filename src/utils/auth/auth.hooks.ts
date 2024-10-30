@@ -1,5 +1,6 @@
 import { useContext, useEffect } from "react";
-import type { BaseLocationHook, Path } from "wouter";
+import type { BaseLocationHook } from "wouter";
+import { DEFAULT_UNLOCK_AUTH_REQUEST } from "~utils/auth/auth.constants";
 import { AuthRequestsContext } from "~utils/auth/auth.provider";
 import type { AuthRequestByType, AuthType } from "~utils/auth/auth.types";
 import { replyToAuthRequest } from "~utils/auth/auth.utils";
@@ -13,28 +14,39 @@ export function useAuthRequests() {
  *
  * @param type Expected type of the AuthRequest.
  */
-export function useCurrentAuthRequest<T extends AuthType>(expectedAuthType: T) {
-  const { authRequests, nextAuthRequest } = useContext(AuthRequestsContext);
+export function useCurrentAuthRequest<T extends AuthType>(
+  expectedAuthType: T | "any"
+) {
+  const { authRequests, currentAuthRequestIndex, completeAuthRequest } =
+    useContext(AuthRequestsContext);
 
-  const authRequest = authRequests[0] as AuthRequestByType[T];
+  const authRequest = (
+    expectedAuthType === "unlock"
+      ? DEFAULT_UNLOCK_AUTH_REQUEST
+      : authRequests[currentAuthRequestIndex]
+  ) as AuthRequestByType[T];
 
-  if (!authRequest || authRequest.type !== expectedAuthType) {
-    throw new Error(`${authRequest ? "Unexpected" : "Missing"} AuthRequest.`);
+  if (expectedAuthType !== "any" && expectedAuthType !== authRequest.type) {
+    throw new Error(
+      `${
+        authRequest ? "Unexpected" : "Missing"
+      } "${expectedAuthType}" AuthRequest.`
+    );
   }
 
-  const { type, authID } = authRequest;
+  const { type, authID } = authRequest || {};
 
   async function acceptRequest(data?: any) {
-    console.log("acceptRequest", data);
+    console.log("acceptRequest", type, data);
 
     // send response
     await replyToAuthRequest(type, authID, undefined, data);
 
-    nextAuthRequest();
+    completeAuthRequest(authID, true);
   }
 
   async function rejectRequest(errorMessage?: string) {
-    console.log("rejectRequest", errorMessage);
+    console.log("rejectRequest", type, errorMessage);
 
     // send response
     await replyToAuthRequest(
@@ -43,7 +55,7 @@ export function useCurrentAuthRequest<T extends AuthType>(expectedAuthType: T) {
       errorMessage || "User cancelled the auth"
     );
 
-    nextAuthRequest();
+    completeAuthRequest(authID, false);
   }
 
   return {
@@ -55,8 +67,7 @@ export function useCurrentAuthRequest<T extends AuthType>(expectedAuthType: T) {
 }
 
 export const useAuthRequestsLocation: BaseLocationHook = () => {
-  const { authRequests } = useAuthRequests();
-  const currentAuthRequest = authRequests[0];
+  const { authRequest: currentAuthRequest } = useCurrentAuthRequest("any");
   const currentAuthRequestType = `/${currentAuthRequest.type}`;
   const currentAuthRequestID = currentAuthRequest.authID || "";
 

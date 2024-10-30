@@ -7,8 +7,11 @@ import type { TokenType } from "~tokens/token";
 
 // COMMON:
 
+export type AuthRequestStatus = "pending" | "accepted" | "rejected";
+
 export interface CommonAuthRequestData {
-  authID?: string;
+  authID: string;
+  status: AuthRequestStatus;
 }
 
 // CONNECT:

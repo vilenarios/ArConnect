@@ -11,8 +11,11 @@ import {
 import Wrapper from "~components/auth/Wrapper";
 import browser from "webextension-polyfill";
 import Head from "~components/popup/Head";
+import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 
 export default function Unlock() {
+  const { acceptRequest } = useCurrentAuthRequest("unlock");
+
   // password input
   const passwordInput = useInput();
 
@@ -24,8 +27,11 @@ export default function Unlock() {
     // unlock using password
     const res = await unlock(passwordInput.state);
 
-    if (!res) {
+    if (res) {
+      acceptRequest();
+    } else {
       passwordInput.setStatus("error");
+
       return setToast({
         type: "error",
         content: browser.i18n.getMessage("invalidPassword"),

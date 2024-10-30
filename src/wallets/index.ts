@@ -14,6 +14,7 @@ import {
 import { checkPassword, getDecryptionKey, setDecryptionKey } from "./auth";
 import { ArweaveSigner } from "arbundles";
 import { handleSyncLabelsAlarm } from "~api/background/handlers/alarms/sync-labels/sync-labels-alarm.handler";
+import { DEFAULT_UNLOCK_AUTH_REQUEST } from "~utils/auth/auth.constants";
 
 /**
  * Locally stored wallet
@@ -244,9 +245,7 @@ export async function getActiveKeyfile(): Promise<DecryptedWallet> {
   // this means that the user has to enter their decryption
   // key so it can be used later
   if (!decryptionKey && !!activeWallet) {
-    await requestUserAuthorization({
-      type: "unlock"
-    });
+    await requestUserAuthorization(DEFAULT_UNLOCK_AUTH_REQUEST);
 
     // re-read the decryption key
     decryptionKey = await getDecryptionKey();
@@ -295,9 +294,7 @@ export async function getKeyfile(address: string): Promise<DecryptedWallet> {
   // this means that the user has to enter their decryption
   // key so it can be used later
   if (!decryptionKey && !!wallet) {
-    await requestUserAuthorization({
-      type: "unlock"
-    });
+    await requestUserAuthorization(DEFAULT_UNLOCK_AUTH_REQUEST);
 
     // re-read the decryption key
     decryptionKey = await getDecryptionKey();

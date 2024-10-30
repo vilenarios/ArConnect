@@ -18,20 +18,44 @@ import { AnimatePresence } from "framer-motion";
 import { AuthRequestsProvider } from "~utils/auth/auth.provider";
 import {
   useAuthRequests,
-  useAuthRequestsLocation
+  useAuthRequestsLocation,
+  useCurrentAuthRequest
 } from "~utils/auth/auth.hooks";
 
 // TODO: initExtensionMessageForwarder();
 
 export function AuthApp() {
   const initialScreenType = useSetUp();
-  const { authRequests } = useAuthRequests();
+  const { authRequests, currentAuthRequestIndex } = useAuthRequests();
+  const { authRequest } = useCurrentAuthRequest("any");
 
   let content: React.ReactElement = null;
 
+  // TODO: Open the popup without sending a message if blocked? => The message is sent but not enqueued.
+
+  // TODO: Maybe change requestUserAuthorization(authRequest: AuthRequest) to requestUserAuthorization(authRequest?: AuthRequest)
+  // and only open the popup if no authRequest is sent? But the "response" must be sent anyway.
+
   // TODO: Handle special case if authRequest has type = "unlock".
 
-  // TODO: Show loader if signDataItem !params (no next auth reques or no data other than default?)
+  // TODO: Show loader if signDataItem !params (no next auth request or no data other than default?)
+
+  // TODO: Dev nav bar with navigation and expandable <pre> with tabs (select)
+  // TODO: Wait time before closing.
+
+  // TODO: Unhandled special case: If there are pending AuthRequests and we disconnect from the site.
+
+  // TODO: Auth screens should indicate what app the requests comes from.
+
+  /*
+  useEffect(() => {
+    if (initialScreenType === "default" && authRequests.length <= 0) {
+      console.log("CLOSE POPUP");
+      // If there isn't anything to show, just close the /auth popup:
+      // window.top.close();
+    }
+  }, [])
+  */
 
   if (initialScreenType === "locked") {
     content = (
@@ -39,7 +63,7 @@ export function AuthApp() {
         <Unlock />
       </Page>
     );
-  } else if (!authRequests || authRequests.length <= 0) {
+  } else if (!authRequest) {
     content = <p>Loading...</p>;
   } else if (initialScreenType === "default") {
     content = (
@@ -59,6 +83,9 @@ export function AuthApp() {
 
   return (
     <>
+      <pre>
+        {initialScreenType} / {currentAuthRequestIndex}
+      </pre>
       <pre>{JSON.stringify(authRequests, null, "  ")}</pre>
 
       {content}
