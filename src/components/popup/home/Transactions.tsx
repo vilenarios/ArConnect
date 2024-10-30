@@ -166,14 +166,13 @@ export default function Transactions() {
                         : "Pending"}
                     </Secondary>
                   </Section>
-                  {transaction.transactionType !== "printArchive" && (
-                    <Section alignRight>
-                      <Main>{getFormattedAmount(transaction)}</Main>
-                      <Secondary>
-                        {getFormattedFiatAmount(transaction, arPrice, currency)}
-                      </Secondary>
-                    </Section>
-                  )}
+
+                  <Section alignRight>
+                    <Main>{getFormattedAmount(transaction)}</Main>
+                    <Secondary>
+                      {getFormattedFiatAmount(transaction, arPrice, currency)}
+                    </Secondary>
+                  </Section>
                 </Transaction>
               </TransactionItem>
             ))
