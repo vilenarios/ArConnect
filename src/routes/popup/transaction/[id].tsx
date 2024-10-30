@@ -475,6 +475,12 @@ export default function Transaction({ id: rawId, gw, message }: Props) {
                     </div>
                   </PropertyValue>
                 </TransactionProperty>
+                <TransactionProperty>
+                  <PropertyName>
+                    {browser.i18n.getMessage("transaction_fee")}
+                  </PropertyName>
+                  <PropertyValue>{transaction.fee.ar} AR</PropertyValue>
+                </TransactionProperty>
                 {!message && (
                   <TransactionProperty>
                     <PropertyName>

@@ -143,6 +143,8 @@ export const getFormattedAmount = (transaction: ExtendedTransaction) => {
         }).toFixed()} ${transaction.aoInfo.tickerName}`;
       }
       return "";
+    case "printArchive":
+      return `${parseFloat(transaction.node.fee.ar).toFixed(3)} AR`;
     default:
       return "";
   }
@@ -154,8 +156,19 @@ export const getFormattedFiatAmount = (
   currency: string
 ) => {
   try {
-    if (transaction.node.quantity) {
+    if (
+      transaction.node.quantity &&
+      transaction.transactionType !== "printArchive"
+    ) {
       const fiatBalance = BigNumber(transaction.node.quantity.ar).multipliedBy(
+        arPrice
+      );
+      return formatFiatBalance(fiatBalance, currency);
+    } else if (
+      transaction.node.fee &&
+      transaction.transactionType === "printArchive"
+    ) {
+      const fiatBalance = BigNumber(transaction.node.fee.ar).multipliedBy(
         arPrice
       );
       return formatFiatBalance(fiatBalance, currency);
