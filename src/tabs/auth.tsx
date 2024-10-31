@@ -31,22 +31,6 @@ export function AuthApp() {
 
   let content: React.ReactElement = null;
 
-  // TODO: Open the popup without sending a message if blocked? => The message is sent but not enqueued.
-
-  // TODO: Maybe change requestUserAuthorization(authRequest: AuthRequest) to requestUserAuthorization(authRequest?: AuthRequest)
-  // and only open the popup if no authRequest is sent? But the "response" must be sent anyway.
-
-  // TODO: Handle special case if authRequest has type = "unlock".
-
-  // TODO: Show loader if signDataItem !params (no next auth request or no data other than default?)
-
-  // TODO: Dev nav bar with navigation and expandable <pre> with tabs (select)
-  // TODO: Wait time before closing.
-
-  // TODO: Unhandled special case: If there are pending AuthRequests and we disconnect from the site.
-
-  // TODO: Auth screens should indicate what app the requests comes from.
-
   /*
   useEffect(() => {
     if (initialScreenType === "default" && authRequests.length <= 0) {
@@ -64,6 +48,7 @@ export function AuthApp() {
       </Page>
     );
   } else if (!authRequest) {
+    // TODO: We probably need an UI for this...
     content = <p>Loading...</p>;
   } else if (initialScreenType === "default") {
     content = (

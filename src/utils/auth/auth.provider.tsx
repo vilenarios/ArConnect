@@ -7,7 +7,10 @@ import {
   useState,
   type PropsWithChildren
 } from "react";
-import { DEFAULT_UNLOCK_AUTH_REQUEST_ID } from "~utils/auth/auth.constants";
+import {
+  AUTH_POPUP_CLOSING_DELAY_MS,
+  DEFAULT_UNLOCK_AUTH_REQUEST_ID
+} from "~utils/auth/auth.constants";
 import type { AuthRequest } from "~utils/auth/auth.types";
 import { replyToAuthRequest } from "~utils/auth/auth.utils";
 import { retryWithDelay } from "~utils/promises/retry";
@@ -88,7 +91,17 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
         }
 
         if (authRequest.data.type === "connect") {
-          // TODO: Make sure there are no duplicates (but this is per-site)...
+          // TODO: Check if there are other ConnectAuthRequest for the same site. If so, combine the permissions and take data for the last one.
+          // TODO: What about the authIDs? We need to call `completeAuthRequest` on all of them.
+
+          // If not, add the new one AFTER the last connect one.
+          return {
+            authRequests: [
+              { ...authRequest.data, status: "pending" },
+              ...prevAuthRequests
+            ],
+            currentAuthRequestIndex: prevCurrentAuthRequestIndex
+          };
         }
 
         // TODO: Validate and merge this properly (by domain, tab, tags, etc.):
@@ -136,7 +149,7 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
       timeoutRef.current = setTimeout(() => {
         alert("CLOSING...");
         window.top.close();
-      }, 5000);
+      }, AUTH_POPUP_CLOSING_DELAY_MS);
     }
 
     function handleBeforeUnload() {
