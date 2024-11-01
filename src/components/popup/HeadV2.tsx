@@ -1,11 +1,6 @@
-import {
-  type DisplayTheme,
-  Section,
-  Text,
-  Spacer
-} from "@arconnect/components";
+import { type DisplayTheme, Section, Text } from "@arconnect/components";
 import { Avatar, CloseLayer, NoAvatarIcon } from "./WalletHeader";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { useTheme } from "~utils/theme";
 import { useStorage } from "@plasmohq/storage/hook";
 import { ArrowLeftIcon } from "@iconicicons/react";
@@ -122,35 +117,37 @@ export default function HeadV2({
       <PageTitle>{title}</PageTitle>
 
       {showOptions ? (
-        <AvatarButton>
-          <ButtonAvatar
-            img={ans?.avatar || svgieAvatar}
-            onClick={() => {
-              setOpen(true);
-            }}
-          >
-            {!ans?.avatar && !svgieAvatar && <NoAvatarIcon />}
-            <AnimatePresence initial={false}>
-              {hardwareApi === "keystone" && (
-                <HardwareWalletIcon
-                  icon={keystoneLogo}
-                  color="#2161FF"
-                  {...hwIconAnimateProps}
-                />
-              )}
-            </AnimatePresence>
-          </ButtonAvatar>
-        </AvatarButton>
+        <>
+          <AvatarButton>
+            <ButtonAvatar
+              img={ans?.avatar || svgieAvatar}
+              onClick={() => {
+                setOpen(true);
+              }}
+            >
+              {!ans?.avatar && !svgieAvatar && <NoAvatarIcon />}
+              <AnimatePresence initial={false}>
+                {hardwareApi === "keystone" && (
+                  <HardwareWalletIcon
+                    icon={keystoneLogo}
+                    color="#2161FF"
+                    {...hwIconAnimateProps}
+                  />
+                )}
+              </AnimatePresence>
+            </ButtonAvatar>
+          </AvatarButton>
+
+          <WalletSwitcher
+            open={isOpen}
+            close={() => setOpen(false)}
+            exactTop={true}
+            showOptions={showOptions}
+          />
+
+          {isOpen && <CloseLayer onClick={() => setOpen(false)} />}
+        </>
       ) : null}
-
-      {isOpen && <CloseLayer onClick={() => setOpen(false)} />}
-
-      <WalletSwitcher
-        open={isOpen}
-        close={() => setOpen(false)}
-        exactTop={true}
-        showOptions={showOptions}
-      />
     </HeadWrapper>
   );
 }

@@ -32,7 +32,6 @@ import AnimatedQRPlayer from "~components/hardware/AnimatedQRPlayer";
 import Wrapper from "~components/auth/Wrapper";
 import Progress from "~components/Progress";
 import browser from "webextension-polyfill";
-import Head from "~components/popup/Head";
 import useSetting from "~settings/hook";
 import prettyBytes from "pretty-bytes";
 import Arweave from "arweave";
@@ -40,6 +39,7 @@ import { defaultGateway } from "~gateways/gateway";
 import BigNumber from "bignumber.js";
 import type Transaction from "arweave/web/lib/transaction";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
+import { HeadAuth } from "~components/HeadAuth";
 
 export default function Sign() {
   const { authRequest, acceptRequest, rejectRequest } =
@@ -252,12 +252,7 @@ export default function Sign() {
   return (
     <Wrapper>
       <div>
-        <Head
-          title={browser.i18n.getMessage("titles_sign")}
-          showOptions={false}
-          back={rejectRequest}
-          allowOpen={false}
-        />
+        <HeadAuth title={browser.i18n.getMessage("titles_sign")} />
         <Spacer y={0.75} />
         {(!page && (
           <Section>

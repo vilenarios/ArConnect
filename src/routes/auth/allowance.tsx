@@ -16,13 +16,13 @@ import {
 } from "@arconnect/components";
 import Wrapper from "~components/auth/Wrapper";
 import browser from "webextension-polyfill";
-import Head from "~components/popup/Head";
 import App from "~components/auth/App";
 import Arweave from "arweave";
 import styled from "styled-components";
 import { defaultGateway } from "~gateways/gateway";
 import BigNumber from "bignumber.js";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
+import { HeadAuth } from "~components/HeadAuth";
 
 export default function Allowance() {
   const arweave = new Arweave(defaultGateway);
@@ -129,11 +129,7 @@ export default function Allowance() {
   return (
     <Wrapper>
       <div>
-        <Head
-          title={browser.i18n.getMessage("reset_allowance")}
-          showOptions={false}
-          back={rejectRequest}
-        />
+        <HeadAuth title={browser.i18n.getMessage("reset_allowance")} />
         <Spacer y={0.75} />
         <App
           appName={appData?.name || url}

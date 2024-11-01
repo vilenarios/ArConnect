@@ -93,6 +93,7 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
         if (authRequest.data.type === "connect") {
           // TODO: Check if there are other ConnectAuthRequest for the same site. If so, combine the permissions and take data for the last one.
           // TODO: What about the authIDs? We need to call `completeAuthRequest` on all of them.
+          // TODO: Connect request not automatically go to the front unless they can be combined.
 
           // If not, add the new one AFTER the last connect one.
           return {

@@ -2,9 +2,9 @@ import { ButtonV2, Section, Spacer, Text } from "@arconnect/components";
 import Message from "~components/auth/Message";
 import Wrapper from "~components/auth/Wrapper";
 import browser from "webextension-polyfill";
-import Head from "~components/popup/Head";
 import { useEffect } from "react";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
+import { HeadAuth } from "~components/HeadAuth";
 
 export default function Signature() {
   const { authRequest, acceptRequest, rejectRequest } =
@@ -27,11 +27,7 @@ export default function Signature() {
   return (
     <Wrapper>
       <div>
-        <Head
-          title={browser.i18n.getMessage("titles_signature")}
-          showOptions={false}
-          back={rejectRequest}
-        />
+        <HeadAuth title={browser.i18n.getMessage("titles_signature")} />
         <Spacer y={0.75} />
         <Section>
           <Text noMargin>

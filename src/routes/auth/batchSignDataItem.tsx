@@ -21,6 +21,7 @@ import { ExtensionStorage } from "~utils/storage";
 import { useStorage } from "@plasmohq/storage/hook";
 import { checkPassword } from "~wallets/auth";
 import { timeoutPromise } from "~utils/promises/timeout";
+import { HeadAuth } from "~components/HeadAuth";
 
 export default function BatchSignDataItem() {
   const { authRequest, acceptRequest, rejectRequest } =
@@ -121,10 +122,9 @@ export default function BatchSignDataItem() {
   return (
     <Wrapper>
       <div>
-        <HeadV2
+        <HeadAuth
           title={browser.i18n.getMessage("batch_sign_items")}
-          showOptions={false}
-          back={() => (transaction ? setTransaction(null) : rejectRequest())}
+          back={transaction ? () => setTransaction(null) : undefined}
         />
         <Description>
           <Text noMargin>

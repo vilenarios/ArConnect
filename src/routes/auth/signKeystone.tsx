@@ -25,6 +25,7 @@ import { onMessage, sendMessage } from "@arconnect/webext-bridge";
 import type { Chunk } from "~api/modules/sign/chunks";
 import { bytesFromChunks } from "~api/modules/sign/transaction_builder";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
+import { HeadAuth } from "~components/HeadAuth";
 
 export default function SignKeystone() {
   const { authRequest, acceptRequest, rejectRequest } =
@@ -142,12 +143,7 @@ export default function SignKeystone() {
   return (
     <Wrapper>
       <div>
-        <Head
-          title={browser.i18n.getMessage("titles_sign")}
-          showOptions={false}
-          back={rejectRequest}
-          allowOpen={false}
-        />
+        <HeadAuth title={browser.i18n.getMessage("titles_sign")} />
         <Spacer y={0.75} />
         {(!page && dataToSign && dataType === "Message" && (
           <Section>

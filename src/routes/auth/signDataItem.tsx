@@ -42,6 +42,7 @@ import { useTheme } from "~utils/theme";
 import { checkWalletBits, type WalletBitsCheck } from "~utils/analytics";
 import { Degraded, WarningWrapper } from "~routes/popup/send";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
+import { HeadAuth } from "~components/HeadAuth";
 
 interface Tag {
   name: string;
@@ -262,11 +263,7 @@ export default function SignDataItem() {
   return (
     <Wrapper ref={parentRef}>
       <div>
-        <HeadV2
-          title={browser.i18n.getMessage("sign_item")}
-          showOptions={false}
-          back={rejectRequest}
-        />
+        <HeadAuth title={browser.i18n.getMessage("sign_item")} />
         {mismatch && transfer && (
           <Degraded>
             <WarningWrapper>

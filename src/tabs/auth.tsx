@@ -17,7 +17,6 @@ import BatchSignDataItem from "~routes/auth/batchSignDataItem";
 import { AnimatePresence } from "framer-motion";
 import { AuthRequestsProvider } from "~utils/auth/auth.provider";
 import {
-  useAuthRequests,
   useAuthRequestsLocation,
   useCurrentAuthRequest
 } from "~utils/auth/auth.hooks";
@@ -26,7 +25,6 @@ import {
 
 export function AuthApp() {
   const initialScreenType = useSetUp();
-  const { authRequests, currentAuthRequestIndex } = useAuthRequests();
   const { authRequest } = useCurrentAuthRequest("any");
 
   let content: React.ReactElement = null;
@@ -66,16 +64,7 @@ export function AuthApp() {
     );
   }
 
-  return (
-    <>
-      <pre>
-        {initialScreenType} / {currentAuthRequestIndex}
-      </pre>
-      <pre>{JSON.stringify(authRequests, null, "  ")}</pre>
-
-      {content}
-    </>
-  );
+  return <>{content}</>;
 }
 
 export default function AuthAppRoot() {

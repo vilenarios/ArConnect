@@ -30,6 +30,7 @@ import styled from "styled-components";
 import { concatGatewayURL } from "~gateways/utils";
 import { findGateway, useGateway } from "~gateways/wayfinder";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
+import { HeadAuth } from "~components/HeadAuth";
 
 export default function Token() {
   const { authRequest, acceptRequest, rejectRequest } =
@@ -174,11 +175,7 @@ export default function Token() {
   return (
     <Wrapper>
       <div>
-        <Head
-          title={browser.i18n.getMessage("addToken")}
-          showOptions={false}
-          back={rejectRequest}
-        />
+        <HeadAuth title={browser.i18n.getMessage("addToken")} />
         <Spacer y={0.75} />
         <Section>
           <Text noMargin>

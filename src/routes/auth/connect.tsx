@@ -1,7 +1,6 @@
 import {
   ButtonV2,
   Card,
-  Checkbox,
   InputV2,
   LabelV2,
   Section,
@@ -41,6 +40,7 @@ import { defaultAllowance } from "~applications/allowance";
 import Arweave from "arweave";
 import Permissions from "../../components/auth/Permissions";
 import { Flex } from "~routes/popup/settings/apps/[url]";
+import { HeadAuth } from "~components/HeadAuth";
 
 export default function Connect() {
   // active address
@@ -223,10 +223,9 @@ export default function Connect() {
   return (
     <Wrapper>
       <div>
-        <HeadV2
+        <HeadAuth
           title={!edit ? browser.i18n.getMessage("sign_in") : "Permissions"}
-          showOptions={false}
-          back={edit ? () => setEdit(false) : rejectRequest}
+          back={edit ? () => setEdit(false) : undefined}
         />
         <App
           appName={appInfo.name || url}

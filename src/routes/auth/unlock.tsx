@@ -12,6 +12,7 @@ import Wrapper from "~components/auth/Wrapper";
 import browser from "webextension-polyfill";
 import Head from "~components/popup/Head";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
+import { HeadAuth } from "~components/HeadAuth";
 
 export default function Unlock() {
   const { acceptRequest } = useCurrentAuthRequest("unlock");
@@ -43,12 +44,7 @@ export default function Unlock() {
   return (
     <Wrapper>
       <div>
-        <Head
-          title={browser.i18n.getMessage("unlock")}
-          showOptions={false}
-          back={() => {}}
-          showBack={false}
-        />
+        <HeadAuth title={browser.i18n.getMessage("unlock")} />
         <Spacer y={0.75} />
         <Section>
           <Text noMargin>

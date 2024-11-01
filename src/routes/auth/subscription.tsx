@@ -39,6 +39,7 @@ import { EventType, trackEvent } from "~utils/analytics";
 import { handleSubscriptionPayment } from "~subscriptions/payments";
 import BigNumber from "bignumber.js";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
+import { HeadAuth } from "~components/HeadAuth";
 
 export default function Subscription() {
   const { authRequest, acceptRequest, rejectRequest } =
@@ -47,7 +48,6 @@ export default function Subscription() {
   const { url, subscriptionFeeAmount } = authRequest;
 
   const { setToast } = useToasts();
-  const allowanceInput = useInput();
   const [currency] = useSetting<string>("currency");
   const [checked, setChecked] = useState<boolean>(false);
   const [autopayChecked, setAutopayChecked] = useState<boolean>(false);
@@ -135,10 +135,7 @@ export default function Subscription() {
 
   return (
     <>
-      <HeadV2
-        title={browser.i18n.getMessage("subscriptions")}
-        back={rejectRequest}
-      />
+      <HeadAuth title={browser.i18n.getMessage("subscriptions")} />
       <Wrapper>
         <Main>
           <SubscriptionListItem>
