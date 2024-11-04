@@ -1,14 +1,8 @@
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import styled from "styled-components";
-import type { AppInfo } from "~applications/application";
-import Application from "~applications/application";
-import useActiveTab from "~applications/useActiveTab";
-import Head from "~components/popup/Head";
 import HeadV2 from "~components/popup/HeadV2";
-import type { Gateway } from "~gateways/gateway";
 import { useAuthRequests } from "~utils/auth/auth.hooks";
-import { getAppURL } from "~utils/format";
 
 export interface HeadAuthProps {
   title?: string;
@@ -19,46 +13,34 @@ export const HeadAuth: React.FC<HeadAuthProps> = ({ title, back }) => {
   const [areLogsExpanded, setAreLogsExpanded] = useState(false);
   const { authRequests, currentAuthRequestIndex } = useAuthRequests();
 
-  // active app
-  const activeTab = useActiveTab();
-  const activeApp = useMemo<Application | undefined>(() => {
-    if (!activeTab?.url) {
-      return undefined;
-    }
+  /*
 
-    return new Application(getAppURL(activeTab.url));
-  }, [activeTab]);
+  // TODO: AppInfo / url should be included in all requests, not only on Connect & Allowance.
 
-  // active app data
-  const [activeAppData, setActiveAppData] = useState<
-    AppInfo & { gateway: Gateway }
-  >();
+  const { url } = authRequests[currentAuthRequestIndex] as any;
+
+  const [appInfo, setAppInfo] = useState<AppInfo>();
 
   useEffect(() => {
-    (async () => {
-      // check if there is an active app
-      if (!activeApp) {
-        return setActiveAppData(undefined);
-      }
+    async function loadAppInfo() {
+      if (!url) return;
 
-      // check if connected
-      const connected = await activeApp.isConnected();
-      if (!connected) {
-        return setActiveAppData(undefined);
-      }
+      const app = new Application(url);
+      const appInfo = await app.getAppData();
 
-      // get app data
-      const appData = await activeApp.getAppData();
-      const gatewayConfig = await activeApp.getGatewayConfig();
+      setAppInfo(appInfo);
+    }
 
-      setActiveAppData({
-        ...appData,
-        gateway: gatewayConfig
-      });
-    })();
-  }, [activeApp]);
+    loadAppInfo();
+  }, [url]);
 
-  console.log({ activeAppData, activeApp: activeApp });
+  console.log({ url, appInfo });
+
+  */
+
+  // TODO: Display "X more" label if there are too many of them or add some kind of horizontal scroll or get rid of older ones...
+
+  // TODO: Add application logo (e.g. favicon) inside HeadV2.
 
   return (
     <>
@@ -106,22 +88,20 @@ export const HeadAuth: React.FC<HeadAuthProps> = ({ title, back }) => {
         ) : null}
       </DivTransactionTracker>
 
-      {activeAppData?.logo ? (
-        <img
-          src={activeAppData.logo}
-          alt={activeAppData.name || ""}
-          draggable={false}
-        />
-      ) : null}
+      {/*
+      // TODO: Add date label (now, a minute ago, etc.)
+
+      <Spacer y={0.75} />
+
+      <App
+        appName={appInfo?.name || url}
+        appUrl={url}
+        appIcon={appInfo?.logo}
+      />
+      */}
     </>
   );
 };
-
-// TODO: Add indicator for the current one...
-
-// TODO: Add date label (now, a minute ago, etc.)
-
-// TODO: Display "X more" label if there are too many of them or add some kind of horizontal scroll or get rid of older ones...
 
 const DivTransactionTracker = styled.div`
   position: relative;
@@ -135,8 +115,35 @@ const DivTransactionsList = styled.div`
   border-bottom: 1px solid rgb(31, 30, 47);
 `;
 
-const ButtonTransactionButton = styled.button`
-  border: 2px solid white;
+interface AuthRequestIndicatorProps {
+  isCurrent: boolean;
+  isAccepted: boolean;
+  isRejected: boolean;
+}
+
+function getAuthRequestButtonIndicatorBorderColor(
+  props: AuthRequestIndicatorProps
+) {
+  if (props.isAccepted) return "green";
+  if (props.isRejected) return "red";
+
+  return "white";
+}
+
+function getAuthRequestButtonIndicatorBackgroundColor(
+  props: AuthRequestIndicatorProps
+) {
+  if (!props.isCurrent) return "transparent";
+
+  if (props.isAccepted) return "green";
+  if (props.isRejected) return "red";
+
+  return "white";
+}
+
+const ButtonTransactionButton = styled.button<AuthRequestIndicatorProps>`
+  border: 2px solid ${getAuthRequestButtonIndicatorBorderColor};
+  background: ${getAuthRequestButtonIndicatorBackgroundColor};
   border-radius: 128px;
   min-width: 20px;
   height: 12px;
@@ -166,8 +173,31 @@ const DivLogWrapper = styled.div`
   border-bottom: 1px solid rgb(31, 30, 47);
 `;
 
-const PreLogItem = styled.pre`
-  padding: 16px;
+function getAuthRequestLogIndicatorStyles(props: AuthRequestIndicatorProps) {
+  let styles = "";
+
+  styles += `background: ${getAuthRequestButtonIndicatorBorderColor(props)};`;
+
+  if (!props.isCurrent) styles += "opacity: 0.25;";
+
+  return styles;
+}
+
+const PreLogItem = styled.pre<AuthRequestIndicatorProps>`
+  position: relative;
+  padding: 16px 16px 16px 32px;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    left: 16px;
+    width: 4px;
+    border-radius: 128px;
+    transform: translate(-50%, 0);
+    ${getAuthRequestLogIndicatorStyles};
+  }
 
   & + & {
     border-top: 1px solid rgb(31, 30, 47);
