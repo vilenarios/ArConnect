@@ -36,7 +36,7 @@ const background: BackgroundModuleFunction<ReturnType> = async (
   isString(chunkCollectionID);
 
   // create client
-  const app = new Application(appData.appURL);
+  const app = new Application(appData.url);
   const arweave = new Arweave(await app.getGatewayConfig());
 
   // grab the user's keyfile
@@ -56,7 +56,7 @@ const background: BackgroundModuleFunction<ReturnType> = async (
   const keyfile = decryptedWallet.keyfile;
 
   // get chunks for transaction
-  const chunks = getChunks(chunkCollectionID, appData.appURL);
+  const chunks = getChunks(chunkCollectionID, appData.url);
 
   // reconstruct the transaction from the chunks
   let transaction = arweave.transactions.fromRaw({
@@ -107,10 +107,10 @@ const background: BackgroundModuleFunction<ReturnType> = async (
     await uploadDataToTurbo(dataEntry, await app.getBundler());
 
     // update allowance spent amount (in winstons)
-    await updateAllowance(appData.appURL, price);
+    await updateAllowance(appData.url, price);
 
     // show notification
-    await signNotification(0, dataEntry.id, appData.appURL, "dispatch");
+    await signNotification(0, dataEntry.id, appData.url, "dispatch");
 
     // remove wallet from memory
     freeDecryptedWallet(keyfile);
@@ -150,10 +150,10 @@ const background: BackgroundModuleFunction<ReturnType> = async (
     }
 
     // update allowance spent amount (in winstons)
-    await updateAllowance(appData.appURL, price);
+    await updateAllowance(appData.url, price);
 
     // show notification
-    await signNotification(price, transaction.id, appData.appURL);
+    await signNotification(price, transaction.id, appData.url);
 
     // remove wallet from memory
     freeDecryptedWallet(keyfile);

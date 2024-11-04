@@ -47,13 +47,13 @@ const background: BackgroundModuleFunction<BackgroundResult> = async (
   });
 
   // app instance
-  const app = new Application(appData.appURL);
+  const app = new Application(appData.url);
 
   // create arweave client
   const arweave = new Arweave(await app.getGatewayConfig());
 
   // get chunks for transaction
-  const chunks = getChunks(chunkCollectionID, appData.appURL);
+  const chunks = getChunks(chunkCollectionID, appData.url);
 
   // get keyfile for active wallet
   // @ts-expect-error
@@ -87,7 +87,7 @@ const background: BackgroundModuleFunction<BackgroundResult> = async (
   const price = BigNumber(transaction.reward).plus(transaction.quantity);
 
   // get allowance
-  const allowance = await getAllowance(appData.appURL);
+  const allowance = await getAllowance(appData.url);
 
   // always ask
   const alwaysAsk = allowance.enabled && allowance.limit.eq(BigNumber("0"));
@@ -104,7 +104,7 @@ const background: BackgroundModuleFunction<BackgroundResult> = async (
 
     try {
       // auth before signing
-      const res = await signAuth(appData.appURL, transaction, addr);
+      const res = await signAuth(appData, transaction, addr);
 
       if (res.data && activeWallet.type === "hardware") {
         transaction.setSignature({
@@ -124,7 +124,7 @@ const background: BackgroundModuleFunction<BackgroundResult> = async (
     // authenticate user if the allowance
     // limit is reached
     try {
-      await allowanceAuth(allowance, appData.appURL, price, alwaysAsk);
+      await allowanceAuth(appData, allowance, price, alwaysAsk);
     } catch (e) {
       freeDecryptedWallet(keyfile);
       throw new Error(e?.message || e);
@@ -135,16 +135,16 @@ const background: BackgroundModuleFunction<BackgroundResult> = async (
   if (activeWallet.type === "local") {
     await arweave.transactions.sign(transaction, keyfile, options);
 
-    browser.alarms.create(`scheduled-fee.${transaction.id}.${appData.appURL}`, {
+    browser.alarms.create(`scheduled-fee.${transaction.id}.${appData.url}`, {
       when: Date.now() + 2000
     });
   }
 
   // notify the user of the signing
-  await signNotification(price, transaction.id, appData.appURL);
+  await signNotification(price, transaction.id, appData.url);
 
   // update allowance spent amount (in winstons)
-  await updateAllowance(appData.appURL, price);
+  await updateAllowance(appData.url, price);
 
   // de-construct the transaction:
   // remove "tags" and "data", so we don't have to
@@ -159,7 +159,7 @@ const background: BackgroundModuleFunction<BackgroundResult> = async (
   }
   // analytics
   await trackDirect(EventType.SIGNED, {
-    appUrl: appData.appURL,
+    appUrl: appData.url,
     totalInAR: arweave.ar.winstonToAr(price.toString())
   });
 

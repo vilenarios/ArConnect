@@ -4,6 +4,7 @@ import type Transaction from "arweave/web/lib/transaction";
 import type { AuthResult } from "shim";
 import { requestUserAuthorization } from "../../../utils/auth/auth.utils";
 import { nanoid } from "nanoid";
+import type { ModuleAppData } from "~api/background/background-modules";
 
 /**
  * Request a manual signature for the transaction.
@@ -14,12 +15,12 @@ import { nanoid } from "nanoid";
  * @param transaction Transaction to sign
  * @param address Address of the wallet that signs the tx
  */
-export const signAuth = (
-  tabURL: string,
+export function signAuth(
+  appData: ModuleAppData,
   transaction: Transaction,
   address: string
-) =>
-  new Promise<AuthResult<{ id: string; signature: string } | undefined>>(
+) {
+  return new Promise<AuthResult<{ id: string; signature: string } | undefined>>(
     (resolve, reject) => {
       // generate chunks
       const {
@@ -30,13 +31,15 @@ export const signAuth = (
       } = deconstructTransaction(transaction);
 
       // start auth
-      requestUserAuthorization({
-        type: "sign",
-        url: tabURL,
-        address,
-        transaction: tx,
-        collectionID: chunkCollectionID
-      })
+      requestUserAuthorization(
+        {
+          type: "sign",
+          address,
+          transaction: tx,
+          collectionID: chunkCollectionID
+        },
+        appData
+      )
         .then((res) => resolve(res))
         .catch((err) => reject(err));
 
@@ -73,6 +76,7 @@ export const signAuth = (
       });
     }
   );
+}
 
 export type AuthKeystoneType = "Message" | "DataItem";
 
@@ -81,16 +85,22 @@ export interface AuthKeystoneData {
   data: Uint8Array;
 }
 
-export const signAuthKeystone = (dataToSign: AuthKeystoneData) =>
-  new Promise<AuthResult<{ id: string; signature: string } | undefined>>(
+export function signAuthKeystone(
+  appData: ModuleAppData,
+  dataToSign: AuthKeystoneData
+) {
+  return new Promise<AuthResult<{ id: string; signature: string } | undefined>>(
     (resolve, reject) => {
       // start auth
       const collectionID = nanoid();
-      requestUserAuthorization({
-        type: "signKeystone",
-        keystoneSignType: dataToSign.type,
-        collectionID
-      })
+      requestUserAuthorization(
+        {
+          type: "signKeystone",
+          keystoneSignType: dataToSign.type,
+          collectionID
+        },
+        appData
+      )
         .then((res) => resolve(res))
         .catch((err) => reject(err));
       const dataChunks = bytesToChunks(dataToSign.data, collectionID, 0);
@@ -128,3 +138,4 @@ export const signAuthKeystone = (dataToSign: AuthKeystoneData) =>
       });
     }
   );
+}

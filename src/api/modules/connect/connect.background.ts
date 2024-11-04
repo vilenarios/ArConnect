@@ -38,7 +38,7 @@ const background: BackgroundModuleFunction<void> = async (
   }
 
   // get permissions
-  const app = new Application(appData.appURL);
+  const app = new Application(appData.url);
   const existingPermissions = await app.getPermissions();
 
   // compare existing permissions
@@ -61,13 +61,15 @@ const background: BackgroundModuleFunction<void> = async (
 
   try {
     // authenticate the user with the requested permissions
-    await requestUserAuthorization({
-      type: "connect",
-      url: appData.appURL,
-      permissions,
-      appInfo,
-      gateway
-    });
+    await requestUserAuthorization(
+      {
+        type: "connect",
+        permissions,
+        appInfo,
+        gateway
+      },
+      appData
+    );
 
     // add features available after connection
     await updateIcon(true);

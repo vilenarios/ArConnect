@@ -49,7 +49,8 @@ import tokenBalanceModule from "../modules/token_balance";
 import tokenBalance from "../modules/token_balance/token_balance.background";
 
 export interface ModuleAppData {
-  appURL: string;
+  tabID: number;
+  url: string;
   favicon?: string;
 }
 

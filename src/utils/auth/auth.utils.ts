@@ -4,7 +4,13 @@ import { nanoid } from "nanoid";
 import browser from "webextension-polyfill";
 import { Mutex } from "~utils/mutex";
 import { isomorphicSendMessage } from "~utils/messaging/messaging.utils";
-import type { AuthRequest, AuthType } from "~utils/auth/auth.types";
+import type {
+  AuthRequest,
+  AuthRequestData,
+  AuthType
+} from "~utils/auth/auth.types";
+import { DEFAULT_UNLOCK_AUTH_REQUEST_ID } from "~utils/auth/auth.constants";
+import type { ModuleAppData } from "~api/background/background-modules";
 
 const mutex = new Mutex();
 const popupMutex = new Mutex();
@@ -19,11 +25,17 @@ let activePopups = 0;
  *
  * @param data Data to send to the auth window
  */
-export async function requestUserAuthorization(authRequest: AuthRequest) {
+export async function requestUserAuthorization(
+  authRequestData: AuthRequestData,
+  moduleAppData: ModuleAppData
+) {
   console.log("authenticate");
 
   // create the popup
-  const { authID, tabId } = await createAuthPopup(authRequest);
+  const { authID, tabId } = await createAuthPopup(
+    authRequestData,
+    moduleAppData
+  );
 
   // wait for the results from the popup
   return await getPopupResponse(authID, tabId);
@@ -38,7 +50,10 @@ let popupWindowTabID = -1;
  *
  * @returns ID of the authentication
  */
-async function createAuthPopup(authRequest: AuthRequest) {
+async function createAuthPopup(
+  authRequestData: AuthRequestData,
+  moduleAppData: ModuleAppData
+) {
   // TODO: Update to check if there's already a popup and send messages to it and communicate using postMessage():
 
   const unlock = await popupMutex.lock();
@@ -73,14 +88,21 @@ async function createAuthPopup(authRequest: AuthRequest) {
   unlock();
 
   // Generate an unique id for the authentication to be checked later:
-  const authID = authRequest.authID || nanoid();
+  const authID =
+    authRequestData.type === "unlock"
+      ? DEFAULT_UNLOCK_AUTH_REQUEST_ID
+      : nanoid();
 
-  await isomorphicSendMessage({
+  await isomorphicSendMessage<AuthRequest>({
     messageId: "authRequest",
     tabId: popupWindowTab.id,
     data: {
-      ...authRequest,
-      authID
+      ...authRequestData,
+      url: moduleAppData.url,
+      tabID: moduleAppData.tabID,
+      authID,
+      createdAt: Date.now(),
+      status: "pending"
     }
   });
 

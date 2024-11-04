@@ -44,22 +44,11 @@ import { Degraded, WarningWrapper } from "~routes/popup/send";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { HeadAuth } from "~components/HeadAuth";
 
-interface Tag {
-  name: string;
-  value: string;
-}
-
-interface DataStructure {
-  data: number[];
-  target?: string;
-  tags: Tag[];
-}
-
 export default function SignDataItem() {
   const { authRequest, acceptRequest, rejectRequest } =
     useCurrentAuthRequest("signDataItem");
 
-  const { authID, data, appData } = authRequest;
+  const { authID, data, url } = authRequest;
 
   const [password, setPassword] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -281,7 +270,7 @@ export default function SignDataItem() {
         )}
         <Description>
           <Text noMargin>
-            {browser.i18n.getMessage("sign_data_description", appData.appURL)}
+            {browser.i18n.getMessage("sign_data_description", url)}
           </Text>
         </Description>
         <Section>

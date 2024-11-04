@@ -4,7 +4,7 @@ import { updateIcon } from "~utils/icon";
 
 const background: BackgroundModuleFunction<void> = async (appData) => {
   // remove app
-  await removeApp(appData.appURL);
+  await removeApp(appData.url);
 
   // remove connected icon
   await updateIcon(false);

@@ -13,13 +13,13 @@ const background: BackgroundModuleFunction<number[]> = async (
   algorithm: unknown
 ) => {
   // validate
-  isString(appData?.appURL, "Application URL is undefined.");
+  isString(appData?.url, "Application URL is undefined.");
   isArray(data, "Data has to be an array.");
   isArrayOfType(data, isNumber, "Data has to be an array of numbers.");
   isSignatureAlgorithm(algorithm);
 
   // temporary whitelist
-  const whitelisted = appData.appURL.match(getWhitelistRegExp());
+  const whitelisted = appData.url.match(getWhitelistRegExp());
 
   //isNotNull(whitelisted, "The signature() API is deprecated.");
   //isNotUndefined(whitelisted, "The signature() API is deprecated.");
@@ -27,11 +27,13 @@ const background: BackgroundModuleFunction<number[]> = async (
   // request user to authorize
   if (!whitelisted) {
     try {
-      await requestUserAuthorization({
-        type: "signature",
-        url: appData.appURL,
-        message: data
-      });
+      await requestUserAuthorization(
+        {
+          type: "signature",
+          message: data
+        },
+        appData
+      );
     } catch {
       throw new Error("User rejected the signature request");
     }

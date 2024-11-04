@@ -1,24 +1,27 @@
 import type { AppInfo } from "~applications/application";
 import type { PermissionType } from "~applications/permissions";
 import type { Gateway } from "~gateways/gateway";
-import type Transaction from "arweave/web/lib/transaction";
 import type { SubscriptionData } from "~subscriptions/subscription";
 import type { TokenType } from "~tokens/token";
+import type { SplitTransaction } from "~api/modules/sign/transaction_builder";
+import type { RawDataItem } from "~api/modules/sign_data_item/types";
 
 // COMMON:
 
-export type AuthRequestStatus = "pending" | "accepted" | "rejected";
+type AuthRequestStatus = "pending" | "accepted" | "rejected";
 
-export interface CommonAuthRequestData {
+interface CommonAuthRequestProps {
+  url: string;
+  tabID: number;
   authID: string;
+  createdAt: number;
   status: AuthRequestStatus;
 }
 
 // CONNECT:
 
-export interface ConnectAuthRequest extends CommonAuthRequestData {
+export interface ConnectAuthRequestData {
   type: "connect";
-  url: string;
   permissions: PermissionType[];
   appInfo: AppInfo;
   gateway?: Gateway;
@@ -26,94 +29,101 @@ export interface ConnectAuthRequest extends CommonAuthRequestData {
 
 // ALLOWANCE:
 
-export interface AllowanceAuthRequest extends CommonAuthRequestData {
+export interface AllowanceAuthRequestData {
   type: "allowance";
-  url: string;
   spendingLimitReached: boolean;
 }
 
 // UNLOCK:
 
-export interface UnlockAuthRequest extends CommonAuthRequestData {
+export interface UnlockAuthRequestData {
   type: "unlock";
 }
 
 // TOKEN AUTH:
 
-export interface TokenAuthRequest extends CommonAuthRequestData {
+export interface TokenAuthRequestData {
   type: "token";
-  url: string;
   tokenID: string;
   tokenType?: TokenType;
   dre?: string;
 }
 
-interface StrippedTx extends Transaction {
-  data: undefined;
-  tags: undefined;
-}
-
 // SIGN:
 
-export interface SignAuthRequest extends CommonAuthRequestData {
+export interface SignAuthRequestData {
   type: "sign";
-  url: string;
   address: string;
-  transaction: StrippedTx;
+  transaction: SplitTransaction;
   collectionID: string;
 }
 
 // SUBSCRIPTION:
 
-export interface SubscriptionAuthRequest
-  extends CommonAuthRequestData,
-    SubscriptionData {
+export interface SubscriptionAuthRequestData extends SubscriptionData {
   type: "subscription";
-  url: string;
 }
 
 // SIGN KEYSTONE:
 
-export interface SignKeystoneAuthRequest extends CommonAuthRequestData {
+export interface SignKeystoneAuthRequestData {
   type: "signKeystone";
   collectionID: string;
   keystoneSignType: string;
 }
 
-interface Tag {
-  name: string;
-  value: string;
-}
-
-interface DataStructure {
-  data: number[];
-  target?: string;
-  tags: Tag[];
-}
-
 // SIGNATURE:
 
-export interface SignatureAuthRequest extends CommonAuthRequestData {
+export interface SignatureAuthRequestData {
   type: "signature";
-  url: string;
   message: number[];
 }
 
 // SIGN DATA ITEM:
 
-export interface SignDataItemAuthRequest extends CommonAuthRequestData {
+export interface SignDataItemAuthRequestData {
   type: "signDataItem";
-  appData: { appURL: string };
-  data: DataStructure;
+  data: RawDataItem;
 }
 
 // BATCH SIGN DATA ITEM:
 
-export interface BatchSignDataItemAuthRequest extends CommonAuthRequestData {
+export interface BatchSignDataItemAuthRequestData {
   type: "batchSignDataItem";
-  appData: { appURL: string };
-  data: DataStructure;
+  data: RawDataItem;
 }
+
+export type AuthRequestData =
+  | ConnectAuthRequestData
+  | AllowanceAuthRequestData
+  | UnlockAuthRequestData
+  | TokenAuthRequestData
+  | SignAuthRequestData
+  | SubscriptionAuthRequestData
+  | SignKeystoneAuthRequestData
+  | SignatureAuthRequestData
+  | SignDataItemAuthRequestData
+  | BatchSignDataItemAuthRequestData;
+
+export type AuthType = AuthRequestData["type"];
+
+export type ConnectAuthRequest = ConnectAuthRequestData &
+  CommonAuthRequestProps;
+export type AllowanceAuthRequest = AllowanceAuthRequestData &
+  CommonAuthRequestProps;
+export type UnlockAuthRequest = UnlockAuthRequestData & CommonAuthRequestProps;
+export type TokenAuthRequest = TokenAuthRequestData & CommonAuthRequestProps;
+export type SignAuthRequest = SignAuthRequestData & CommonAuthRequestProps;
+export type SubscriptionAuthRequest = SubscriptionAuthRequestData &
+  CommonAuthRequestProps;
+export type SignKeystoneAuthRequest = SignKeystoneAuthRequestData &
+  CommonAuthRequestProps;
+export type SignatureAuthRequest = SignatureAuthRequestData &
+  CommonAuthRequestProps;
+export type SignDataItemAuthRequest = SignDataItemAuthRequestData &
+  CommonAuthRequestProps;
+export type BatchSignDataItemAuthRequest = BatchSignDataItemAuthRequestData &
+  CommonAuthRequestProps;
 
 export type AuthRequest =
   | ConnectAuthRequest
@@ -126,8 +136,6 @@ export type AuthRequest =
   | SignatureAuthRequest
   | SignDataItemAuthRequest
   | BatchSignDataItemAuthRequest;
-
-export type AuthType = AuthRequest["type"];
 
 export type AuthRequestByType = {
   connect: ConnectAuthRequest;

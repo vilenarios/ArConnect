@@ -12,7 +12,7 @@ import { signAuthKeystone, type AuthKeystoneData } from "../sign/sign_auth";
 import Arweave from "arweave";
 
 const background: BackgroundModuleFunction<number[]> = async (
-  _,
+  appData,
   data: unknown,
   options = { hashAlgorithm: "SHA-256" }
 ) => {
@@ -70,7 +70,7 @@ const background: BackgroundModuleFunction<number[]> = async (
       type: "Message",
       data: dataToSign
     };
-    const res = await signAuthKeystone(data);
+    const res = await signAuthKeystone(appData, data);
     const sig = Arweave.utils.b64UrlToBuffer(res.data.signature);
     return Array.from(sig);
   }

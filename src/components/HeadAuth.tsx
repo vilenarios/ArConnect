@@ -11,14 +11,12 @@ export interface HeadAuthProps {
 
 export const HeadAuth: React.FC<HeadAuthProps> = ({ title, back }) => {
   const [areLogsExpanded, setAreLogsExpanded] = useState(false);
-  const { authRequests, currentAuthRequestIndex } = useAuthRequests();
+  const { authRequests, currentAuthRequestIndex, setCurrentAuthRequestIndex } =
+    useAuthRequests();
+
+  const { url } = authRequests[currentAuthRequestIndex];
 
   /*
-
-  // TODO: AppInfo / url should be included in all requests, not only on Connect & Allowance.
-
-  const { url } = authRequests[currentAuthRequestIndex] as any;
-
   const [appInfo, setAppInfo] = useState<AppInfo>();
 
   useEffect(() => {
@@ -33,14 +31,13 @@ export const HeadAuth: React.FC<HeadAuthProps> = ({ title, back }) => {
 
     loadAppInfo();
   }, [url]);
-
-  console.log({ url, appInfo });
-
   */
 
   // TODO: Display "X more" label if there are too many of them or add some kind of horizontal scroll or get rid of older ones...
 
   // TODO: Add application logo (e.g. favicon) inside HeadV2.
+
+  // TODO: Add date label (now, a minute ago, etc.)
 
   return (
     <>
@@ -50,6 +47,7 @@ export const HeadAuth: React.FC<HeadAuthProps> = ({ title, back }) => {
         // allowOpen={false}
         showBack={!!back}
         back={back}
+        url={url}
       />
 
       <DivTransactionTracker>
@@ -60,6 +58,7 @@ export const HeadAuth: React.FC<HeadAuthProps> = ({ title, back }) => {
               isCurrent={i === currentAuthRequestIndex}
               isAccepted={authRequest.status === "accepted"}
               isRejected={authRequest.status === "rejected"}
+              onClick={() => setCurrentAuthRequestIndex(i)}
             />
           ))}
 
@@ -87,18 +86,6 @@ export const HeadAuth: React.FC<HeadAuthProps> = ({ title, back }) => {
           </DivLogWrapper>
         ) : null}
       </DivTransactionTracker>
-
-      {/*
-      // TODO: Add date label (now, a minute ago, etc.)
-
-      <Spacer y={0.75} />
-
-      <App
-        appName={appInfo?.name || url}
-        appUrl={url}
-        appIcon={appInfo?.logo}
-      />
-      */}
     </>
   );
 };
@@ -147,6 +134,7 @@ const ButtonTransactionButton = styled.button<AuthRequestIndicatorProps>`
   border-radius: 128px;
   min-width: 20px;
   height: 12px;
+  cursor: pointer;
 `;
 
 const DivTransactionButtonSpacer = styled.button`

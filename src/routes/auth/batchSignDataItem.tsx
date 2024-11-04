@@ -26,7 +26,7 @@ import { HeadAuth } from "~components/HeadAuth";
 export default function BatchSignDataItem() {
   const { authRequest, acceptRequest, rejectRequest } =
     useCurrentAuthRequest("batchSignDataItem");
-  const { appData, data } = authRequest;
+  const { data, url } = authRequest;
 
   const { setToast } = useToasts();
   const [loading, setLoading] = useState<boolean>(false);
@@ -128,10 +128,7 @@ export default function BatchSignDataItem() {
         />
         <Description>
           <Text noMargin>
-            {browser.i18n.getMessage(
-              "batch_sign_data_description",
-              appData.appURL
-            )}
+            {browser.i18n.getMessage("batch_sign_data_description", url)}
           </Text>
         </Description>
 

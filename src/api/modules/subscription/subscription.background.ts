@@ -44,20 +44,22 @@ const background: BackgroundModuleFunction<SubscriptionData> = async (
     throw new Error("Account is already subscribed");
   }
 
-  await requestUserAuthorization({
-    type: "subscription",
-    url: appData.appURL,
-    arweaveAccountAddress: subscriptionData.arweaveAccountAddress,
-    applicationName: subscriptionData.applicationName,
-    subscriptionName: subscriptionData.subscriptionName,
-    subscriptionManagementUrl: subscriptionData.subscriptionManagementUrl,
-    subscriptionFeeAmount: subscriptionData.subscriptionFeeAmount,
-    recurringPaymentFrequency: subscriptionData.recurringPaymentFrequency,
-    nextPaymentDue: subscriptionData.nextPaymentDue,
-    subscriptionStartDate: subscriptionData.subscriptionStartDate,
-    subscriptionEndDate: subscriptionData.subscriptionEndDate,
-    applicationIcon: subscriptionData?.applicationIcon
-  });
+  await requestUserAuthorization(
+    {
+      type: "subscription",
+      arweaveAccountAddress: subscriptionData.arweaveAccountAddress,
+      applicationName: subscriptionData.applicationName,
+      subscriptionName: subscriptionData.subscriptionName,
+      subscriptionManagementUrl: subscriptionData.subscriptionManagementUrl,
+      subscriptionFeeAmount: subscriptionData.subscriptionFeeAmount,
+      recurringPaymentFrequency: subscriptionData.recurringPaymentFrequency,
+      nextPaymentDue: subscriptionData.nextPaymentDue,
+      subscriptionStartDate: subscriptionData.subscriptionStartDate,
+      subscriptionEndDate: subscriptionData.subscriptionEndDate,
+      applicationIcon: subscriptionData?.applicationIcon
+    },
+    appData
+  );
 
   subscriptions = await getSubscriptionData(address);
   const subscription = subscriptions.find(

@@ -72,7 +72,10 @@ export async function handlePrint(
     const activeTab = await getActiveTab();
 
     await signAuth(
-      activeTab.url,
+      {
+        tabID: activeTab.id,
+        url: activeTab.url
+      },
       // @ts-expect-error
       {
         ...dataEntry.toJSON(),

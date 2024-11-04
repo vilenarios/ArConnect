@@ -3,7 +3,7 @@ import Application from "~applications/application";
 import { type Gateway } from "~gateways/gateway";
 
 const background: BackgroundModuleFunction<Gateway> = async (appData) => {
-  const app = new Application(appData.appURL);
+  const app = new Application(appData.url);
   const gateway = await app.getGatewayConfig();
 
   return gateway;

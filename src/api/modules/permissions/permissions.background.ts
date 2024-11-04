@@ -6,7 +6,7 @@ const background: BackgroundModuleFunction<PermissionType[]> = async (
   appData
 ) => {
   // construct app
-  const app = new Application(appData.appURL);
+  const app = new Application(appData.url);
 
   // grab permissions for this app
   const permissions = await app.getPermissions();

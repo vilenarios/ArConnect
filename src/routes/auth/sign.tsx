@@ -56,7 +56,7 @@ export default function Sign() {
 
   useEffect(() => {
     (async () => {
-      console.log("Loading new transaction...");
+      console.log("Loading new transaction =", authRequestTransaction);
 
       if (!authRequestTransaction) return;
 
@@ -71,6 +71,8 @@ export default function Sign() {
 
       // listen for chunks
       onMessage("auth_chunk", ({ sender, data }) => {
+        console.log("chunk data =", data);
+
         // check data type
         if (
           data.collectionID !== collectionID ||
@@ -247,7 +249,7 @@ export default function Sign() {
   // toast
   const { setToast } = useToasts();
 
-  console.log("tx =", transaction, "loading =", loading);
+  console.log({ tx: transaction, authRequestTransaction, loading });
 
   return (
     <Wrapper>

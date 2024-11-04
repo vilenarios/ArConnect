@@ -22,11 +22,13 @@ const background: BackgroundModuleFunction<number[][]> = async (
 
   const results: number[][] = [];
 
-  await requestUserAuthorization({
-    type: "batchSignDataItem",
-    data: dataItems,
+  await requestUserAuthorization(
+    {
+      type: "batchSignDataItem",
+      data: dataItems
+    },
     appData
-  });
+  );
 
   // grab the user's keyfile
   const decryptedWallet = await getActiveKeyfile().catch((e) => {

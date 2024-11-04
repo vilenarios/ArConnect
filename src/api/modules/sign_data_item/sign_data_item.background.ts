@@ -3,7 +3,6 @@ import { freeDecryptedWallet } from "~wallets/encryption";
 import type { BackgroundModuleFunction } from "~api/background/background-modules";
 import { ArweaveSigner, createData } from "arbundles";
 import Application from "~applications/application";
-import { getPrice } from "../dispatch/uploader";
 import { getActiveKeyfile, getActiveWallet } from "~wallets";
 import browser from "webextension-polyfill";
 import {
@@ -27,7 +26,7 @@ const background: BackgroundModuleFunction<number[]> = async (
     throw new Error(err);
   }
 
-  const app = new Application(appData.appURL);
+  const app = new Application(appData.url);
   const allowance = await app.getAllowance();
   const alwaysAsk = allowance.enabled && allowance.limit.eq(BigNumber("0"));
 
@@ -57,11 +56,13 @@ const background: BackgroundModuleFunction<number[]> = async (
       }
     }
     try {
-      await requestUserAuthorization({
-        type: "signDataItem",
-        data: dataItem,
+      await requestUserAuthorization(
+        {
+          type: "signDataItem",
+          data: dataItem
+        },
         appData
-      });
+      );
     } catch {
       throw new Error("User rejected the sign data item request");
     }
@@ -104,7 +105,7 @@ const background: BackgroundModuleFunction<number[]> = async (
         );
 
         await signAuth(
-          appData.appURL,
+          appData,
           // @ts-expect-error
           dataEntry.toJSON(),
           address
@@ -118,7 +119,7 @@ const background: BackgroundModuleFunction<number[]> = async (
     await dataEntry.sign(dataSigner);
 
     // update allowance spent amount (in winstons)
-    // await updateAllowance(appData.appURL, price);
+    // await updateAllowance(appData.url, price);
 
     // remove keyfile
     freeDecryptedWallet(decryptedWallet.keyfile);
@@ -142,7 +143,7 @@ const background: BackgroundModuleFunction<number[]> = async (
         type: "DataItem",
         data: dataEntry.getRaw()
       };
-      const res = await signAuthKeystone(data);
+      const res = await signAuthKeystone(appData, data);
       dataEntry.setSignature(
         Buffer.from(Arweave.utils.b64UrlToBuffer(res.data.signature))
       );

@@ -7,7 +7,10 @@ import browser from "webextension-polyfill";
 import { getTab } from "~applications/tab";
 import { pushEvent } from "~utils/events";
 import { getAppURL } from "~utils/format";
-import { backgroundModules } from "~api/background/background-modules";
+import {
+  backgroundModules,
+  type ModuleAppData
+} from "~api/background/background-modules";
 
 export const handleApiCallMessage: OnMessageCallback<
   // @ts-expect-error
@@ -100,9 +103,10 @@ export const handleApiCallMessage: OnMessageCallback<
     // handle function
     const functionResult = await mod.function(
       {
-        appURL: app.url,
+        tabID: tab.id,
+        url: app.url,
         favicon: tab.favIconUrl
-      },
+      } satisfies ModuleAppData,
       ...(data.data.params || [])
     );
 

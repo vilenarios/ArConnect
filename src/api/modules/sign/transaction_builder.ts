@@ -1,3 +1,4 @@
+import type { TransactionInterface } from "arweave/web/lib/transaction";
 import type Transaction from "arweave/web/lib/transaction";
 import type { Tag } from "arweave/web/lib/transaction";
 import { type Chunk, CHUNK_SIZE } from "./chunks";
@@ -7,7 +8,10 @@ import { nanoid } from "nanoid";
 /**
  * Transaction object **without** it's data or tags
  */
-export type SplitTransaction = Partial<Transaction>;
+export interface SplitTransaction extends TransactionInterface {
+  data: undefined;
+  tags: undefined;
+}
 
 /**
  * Split an Uint8Array to chunks, per chunks value max size is limited to 0.5mb
@@ -149,7 +153,7 @@ export function constructTransaction(
   chunks: Chunk[]
 ) {
   // create base tx
-  const transaction = splitTransaction;
+  const transaction: TransactionInterface = splitTransaction;
 
   transaction.tags = [];
 

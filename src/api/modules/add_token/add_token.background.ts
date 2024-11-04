@@ -23,13 +23,15 @@ const background: BackgroundModuleFunction<void> = async (
   }
 
   // request "add token" popup
-  await requestUserAuthorization({
-    type: "token",
-    url: appData.appURL,
-    tokenID: id,
-    tokenType: type,
-    dre: dre_node
-  });
+  await requestUserAuthorization(
+    {
+      type: "token",
+      tokenID: id,
+      tokenType: type,
+      dre: dre_node
+    },
+    appData
+  );
 };
 
 export default background;

@@ -21,12 +21,14 @@ interface AuthRequestContextState {
 }
 
 interface AuthRequestContextData extends AuthRequestContextState {
+  setCurrentAuthRequestIndex: (currentAuthRequestIndex: number) => void;
   completeAuthRequest: (authID: string, accepted: boolean) => void;
 }
 
 export const AuthRequestsContext = createContext<AuthRequestContextData>({
   authRequests: [],
   currentAuthRequestIndex: 0,
+  setCurrentAuthRequestIndex: () => {},
   completeAuthRequest: () => {}
 });
 
@@ -38,6 +40,18 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
     authRequests: [],
     currentAuthRequestIndex: 0
   });
+
+  const setCurrentAuthRequestIndex = useCallback(
+    (currentAuthRequestIndex: number) => {
+      setAuthRequestContextState((prevAuthRequestContextState) => {
+        return {
+          ...prevAuthRequestContextState,
+          currentAuthRequestIndex
+        };
+      });
+    },
+    []
+  );
 
   const completeAuthRequest = useCallback(
     (authID: string, accepted: boolean) => {
@@ -106,6 +120,12 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
         }
 
         // TODO: Validate and merge this properly (by domain, tab, tags, etc.):
+
+        // TODO: Update enqueueing logic to group/sort by site and combine connect AuthRequests.
+
+        // TODO: Update enqueueing logic to group individual signDataItem requests in a single batchSignDataItem.
+
+        // TODO: Update enqueueing logic to remove AuthRequests if the tab that requested them gets closed or we disconnect the wallet.
 
         return {
           authRequests: [
@@ -178,7 +198,12 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
 
   return (
     <AuthRequestsContext.Provider
-      value={{ authRequests, currentAuthRequestIndex, completeAuthRequest }}
+      value={{
+        authRequests,
+        currentAuthRequestIndex,
+        setCurrentAuthRequestIndex,
+        completeAuthRequest
+      }}
     >
       {children}
     </AuthRequestsContext.Provider>
