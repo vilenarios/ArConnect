@@ -131,6 +131,10 @@ export function getChunks(collectionID: string, appURL: string) {
   return collection?.rawChunks;
 }
 
+// TODO: These can only be obtained ones, so it should be the AuthProvider (not the Sign page) who loads them.
+
+// TODO: Clean up chunks and AuthRequest from closed tabs
+
 /**
  * Remove a chunk collection
  *
