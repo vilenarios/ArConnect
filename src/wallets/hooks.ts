@@ -10,7 +10,7 @@ import type { HardwareApi } from "./hardware";
 import type { StoredWallet } from "~wallets";
 import Arweave from "arweave";
 import BigNumber from "bignumber.js";
-import { retryWithDelayAndTimeout } from "~utils/retry";
+import { retryWithDelayAndTimeout } from "~utils/promises/retry";
 
 /**
  * Wallets with details hook

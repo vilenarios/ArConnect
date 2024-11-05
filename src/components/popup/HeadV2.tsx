@@ -1,9 +1,16 @@
-import { type DisplayTheme, Section, Text } from "@arconnect/components";
+import {
+  type DisplayTheme,
+  ListItem,
+  ListItemImg,
+  Section,
+  Text,
+  TooltipV2
+} from "@arconnect/components";
 import { Avatar, CloseLayer, NoAvatarIcon } from "./WalletHeader";
 import { AnimatePresence } from "framer-motion";
 import { useTheme } from "~utils/theme";
 import { useStorage } from "@plasmohq/storage/hook";
-import { ArrowLeftIcon } from "@iconicicons/react";
+import { ArrowLeftIcon, GridIcon } from "@iconicicons/react";
 import { useAnsProfile } from "~lib/ans";
 import { ExtensionStorage } from "~utils/storage";
 import HardwareWalletIcon, {
@@ -16,14 +23,19 @@ import keystoneLogo from "url:/assets/hardware/keystone.png";
 import WalletSwitcher from "./WalletSwitcher";
 import styled from "styled-components";
 import { svgie } from "~utils/svgies";
+import type { AppInfo } from "~applications/application";
+import Application from "~applications/application";
+import squircleSvgURL from "url:/assets/svg/squircle.svg";
+import Squircle from "~components/Squircle";
 
-interface HeadV2Props {
+export interface HeadV2Props {
   title: string;
   showOptions?: boolean;
   // allow opening the wallet switcher
   showBack?: boolean;
   padding?: string;
   back?: (...args) => any;
+  url?: string;
 }
 
 export default function HeadV2({
@@ -31,7 +43,8 @@ export default function HeadV2({
   showOptions = true,
   back,
   padding,
-  showBack = true
+  showBack = true,
+  url
 }: HeadV2Props) {
   // scroll position
   const [scrollDirection, setScrollDirection] = useState<"up" | "down">("up");
@@ -96,12 +109,30 @@ export default function HeadV2({
   // history back
   const [, goBack] = useHistory();
 
+  // Display an application logo if `url` is provided:
+
+  const [appInfo, setAppInfo] = useState<AppInfo>();
+
+  useEffect(() => {
+    async function loadAppInfo() {
+      if (!url) return;
+
+      const app = new Application(url);
+      const appInfo = await app.getAppData();
+
+      setAppInfo(appInfo);
+    }
+
+    loadAppInfo();
+  }, [url]);
+
   return (
     <HeadWrapper
       displayTheme={theme}
       collapse={scrollDirection === "down"}
       scrolled={scrolled}
       padding={padding}
+      center={!url}
     >
       {showBack ? (
         <BackButton
@@ -115,6 +146,15 @@ export default function HeadV2({
       ) : null}
 
       <PageTitle>{title}</PageTitle>
+
+      {url ? (
+        <TooltipV2 content={appInfo?.name || url} position="bottomEnd">
+          <SquircleImg
+            img={appInfo?.logo}
+            placeholderText={appInfo?.name?.[0]}
+          />
+        </TooltipV2>
+      ) : null}
 
       {showOptions ? (
         <>
@@ -157,6 +197,7 @@ const HeadWrapper = styled(Section)<{
   scrolled: boolean;
   displayTheme: DisplayTheme;
   padding: string;
+  center: boolean;
 }>`
   position: sticky;
   top: 0;
@@ -167,7 +208,7 @@ const HeadWrapper = styled(Section)<{
   flex-direction: row;
   width: full;
   padding: ${(props) => (props.padding ? props.padding : "15px")};
-  justify-content: center;
+  justify-content: ${(props) => (props.center ? "center" : "space-between")};
   align-items: center;
   background-color: rgba(${(props) => props.theme.background}, 0.75);
   backdrop-filter: blur(15px);
@@ -255,4 +296,9 @@ const ButtonAvatar = styled(Avatar)`
   ${NoAvatarIcon} {
     font-size: 1.4rem;
   }
+`;
+
+const SquircleImg = styled(Squircle)`
+  width: 32px;
+  height: 32px;
 `;

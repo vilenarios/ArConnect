@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { createElement, type PropsWithChildren } from "react";
 import { useRoute, Route as BaseRoute } from "wouter";
 import styled from "styled-components";

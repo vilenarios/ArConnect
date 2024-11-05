@@ -20,16 +20,33 @@ import {
   useAuthRequestsLocation,
   useCurrentAuthRequest
 } from "~utils/auth/auth.hooks";
+import browser from "webextension-polyfill";
+import { LoadingPage } from "~components/LoadingPage";
+
+// DONE: Add logo ("favicon") to the HeadV2 (and HeadAuth) components.
+// DONE: Hide the debug button in HeadAuth behind a flag.
+
+// TODO: Display "X more" to HeadAuth label if there are too many of them or add some kind of horizontal scroll or get rid of older ones...
+
+// DONE: Add a requestedAt label (now, a minute ago, etc.). Added only to sign.tsx, not signDataItem, signKeystone or any other page.
+// TODO: Unify transaction details component.
+
+// TODO: All screens should account for a tx being accepted/rejected already (change buttons)
+
+// TODO: Load transactions from AuthRequests in the Provider, not in the sign.tsx route.
 
 // TODO: initExtensionMessageForwarder();
 
 export function AuthApp() {
   const initialScreenType = useSetUp();
-  const { authRequest } = useCurrentAuthRequest("any");
+  const { authRequest, prevAuthRequest } = useCurrentAuthRequest("any");
 
   let content: React.ReactElement = null;
 
   /*
+
+  // TODO: Automatically close if nothing happens relatively quick after the popup is opened.
+
   useEffect(() => {
     if (initialScreenType === "default" && authRequests.length <= 0) {
       console.log("CLOSE POPUP");
@@ -46,8 +63,13 @@ export function AuthApp() {
       </Page>
     );
   } else if (!authRequest) {
-    // TODO: We probably need an UI for this...
-    content = <p>Loading...</p>;
+    content = (
+      <LoadingPage
+        label={browser.i18n.getMessage(
+          `${prevAuthRequest?.type || "default"}RequestLoading`
+        )}
+      />
+    );
   } else if (initialScreenType === "default") {
     content = (
       <Router hook={useAuthRequestsLocation}>

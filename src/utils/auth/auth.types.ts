@@ -14,7 +14,7 @@ interface CommonAuthRequestProps {
   url: string;
   tabID: number;
   authID: string;
-  createdAt: number;
+  requestedAt: number;
   status: AuthRequestStatus;
 }
 

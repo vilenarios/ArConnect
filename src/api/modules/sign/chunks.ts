@@ -135,6 +135,8 @@ export function getChunks(collectionID: string, appURL: string) {
 
 // TODO: Clean up chunks and AuthRequest from closed tabs
 
+// TODO: REVIEW THIS
+
 /**
  * Remove a chunk collection
  *

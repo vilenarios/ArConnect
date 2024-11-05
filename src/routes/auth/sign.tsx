@@ -5,7 +5,7 @@ import { onMessage, sendMessage } from "@arconnect/webext-bridge";
 import type { DecodedTag } from "~api/modules/sign/tags";
 import type { Tag } from "arweave/web/lib/transaction";
 import type { Chunk } from "~api/modules/sign/chunks";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useScanner } from "@arconnect/keystone-sdk";
 import { useActiveWallet } from "~wallets/hooks";
 import { formatAddress } from "~utils/format";
@@ -40,6 +40,13 @@ import BigNumber from "bignumber.js";
 import type Transaction from "arweave/web/lib/transaction";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { HeadAuth } from "~components/HeadAuth";
+import { useThrottledRequestAnimationFrame } from "@swyg/corre";
+
+function prettyDate(timestamp: number) {
+  const elapsedSeconds = Math.round((Date.now() - timestamp) / 1000);
+
+  return `${elapsedSeconds} seconds ago`;
+}
 
 export default function Sign() {
   const { authRequest, acceptRequest, rejectRequest } =
@@ -48,8 +55,21 @@ export default function Sign() {
   const {
     address,
     transaction: authRequestTransaction,
-    collectionID
+    collectionID,
+    requestedAt
   } = authRequest;
+
+  const requestedAtElementRef = useRef<HTMLSpanElement>();
+
+  useThrottledRequestAnimationFrame(() => {
+    const requestedAtElement = requestedAtElementRef.current;
+
+    if (!requestedAtElement) return;
+
+    requestedAtElement.textContent = prettyDate(requestedAt);
+
+    // TODO: After one minute, change the interval wait time to 5 seconds or so. Consider adding this to @swyg/corre and adding a function/hook useFormattedTime
+  }, 250);
 
   // reconstructed transaction
   const [transaction, setTransaction] = useState<Transaction>();
@@ -68,6 +88,8 @@ export default function Sign() {
 
       const chunks: Chunk[] = [];
       const arweave = new Arweave(defaultGateway);
+
+      // TODO: REVIEW THIS
 
       // listen for chunks
       onMessage("auth_chunk", ({ sender, data }) => {
@@ -257,8 +279,6 @@ export default function Sign() {
   // toast
   const { setToast } = useToasts();
 
-  console.log({ tx: transaction, authRequestTransaction, loading });
-
   return (
     <Wrapper>
       <div>
@@ -299,6 +319,7 @@ export default function Sign() {
                 </PropertyName>
                 <PropertyValue>{formatAddress(address, 6)}</PropertyValue>
               </TransactionProperty>
+
               {transaction?.target && (
                 <TransactionProperty>
                   <PropertyName>
@@ -307,6 +328,7 @@ export default function Sign() {
                   <PropertyValue>{formatAddress(recipient, 6)}</PropertyValue>
                 </TransactionProperty>
               )}
+
               {!isPrintTx && (
                 <TransactionProperty>
                   <PropertyName>
@@ -318,17 +340,33 @@ export default function Sign() {
                   </PropertyValue>
                 </TransactionProperty>
               )}
+
               <TransactionProperty>
                 <PropertyName>
                   {browser.i18n.getMessage("transaction_size")}
                 </PropertyName>
                 <PropertyValue>{prettyBytes(size)}</PropertyValue>
               </TransactionProperty>
+
+              <TransactionProperty>
+                <PropertyName>
+                  {browser.i18n.getMessage("transaction_requestedAt")}
+                </PropertyName>
+                <PropertyValue>
+                  <span ref={requestedAtElementRef}>
+                    {prettyDate(requestedAt)}
+                  </span>
+                </PropertyValue>
+              </TransactionProperty>
+
               <Spacer y={0.1} />
+
               <PropertyName>
                 {browser.i18n.getMessage("transaction_tags")}
               </PropertyName>
+
               <Spacer y={0.05} />
+
               {tags.map((tag, i) => (
                 <TransactionProperty key={i}>
                   <PropertyName>{tag.name}</PropertyName>

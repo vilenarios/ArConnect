@@ -1285,6 +1285,10 @@
       "message": "大小",
       "description": "Transaction \"size\" label"
   },
+  "transaction_requestedAt": {
+    "message": "Requested",
+    "description": "AuthRequest \"requestedAt\" label"
+  },
   "transaction_confirmations": {
       "message": "确认",
       "description": "Transaction \"confirmations\" label"
@@ -2271,5 +2275,45 @@
     "new_transaction": {
         "message": "新交易",
         "description": "New transaction description"
+    },
+    "batchSignDataItemRequestLoading": {
+      "message": "Signing...",
+      "description": "Loading message for AuthRequest of type batchSignDataItem"
+    },
+    "connectRequestLoading": {
+      "message": "Connecting...",
+      "description": "Loading message for AuthRequest of type connect"
+    },
+    "allowanceRequestLoading": {
+      "message": "Updating allowance...",
+      "description": "Loading message for AuthRequest of type allowance"
+    },
+    "unlockRequestLoading": {
+      "message": "Unlocking...",
+      "description": "Loading message for AuthRequest of type unlock"
+    },
+    "tokenRequestLoading": {
+      "message": "Adding token...",
+      "description": "Loading message for AuthRequest of type token"
+    },
+    "signRequestLoading": {
+      "message": "Signing...",
+      "description": "Loading message for AuthRequest of type sign"
+    },
+    "subscriptionRequestLoading": {
+      "message": "Subscribing...",
+      "description": "Loading message for AuthRequest of type subscription"
+    },
+    "signKeystoneRequestLoading": {
+      "message": "Signing...",
+      "description": "Loading message for AuthRequest of type signKeystone"
+    },
+    "signatureRequestLoading": {
+      "message": "Signing...",
+      "description": "Loading message for AuthRequest of type signature"
+    },
+    "signDataItemRequestLoading": {
+      "message": "Signing...",
+      "description": "Loading message for AuthRequest of type signDataItem"
     }
 }

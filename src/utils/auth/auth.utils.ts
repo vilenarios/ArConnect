@@ -101,7 +101,7 @@ async function createAuthPopup(
       url: moduleAppData.url,
       tabID: moduleAppData.tabID,
       authID,
-      createdAt: Date.now(),
+      requestedAt: Date.now(),
       status: "pending"
     }
   });

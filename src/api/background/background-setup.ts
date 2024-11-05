@@ -88,13 +88,14 @@ export function setupBackgroundService() {
 
   // print to the permaweb (only on chrome)
   if (typeof chrome !== "undefined") {
-    // @ts-expect-error
     chrome.printerProvider.onGetCapabilityRequested.addListener(
       handleGetCapabilities
     );
+
     chrome.printerProvider.onGetPrintersRequested.addListener(
       handleGetPrinters
     );
+
     chrome.printerProvider.onPrintRequested.addListener(handlePrint);
   }
 }

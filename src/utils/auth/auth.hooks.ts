@@ -2,7 +2,11 @@ import { useContext, useEffect } from "react";
 import type { BaseLocationHook } from "wouter";
 import { DEFAULT_UNLOCK_AUTH_REQUEST } from "~utils/auth/auth.constants";
 import { AuthRequestsContext } from "~utils/auth/auth.provider";
-import type { AuthRequestByType, AuthType } from "~utils/auth/auth.types";
+import type {
+  AuthRequest,
+  AuthRequestByType,
+  AuthType
+} from "~utils/auth/auth.types";
 import { replyToAuthRequest } from "~utils/auth/auth.utils";
 
 export function useAuthRequests() {
@@ -19,6 +23,9 @@ export function useCurrentAuthRequest<T extends AuthType>(
 ) {
   const { authRequests, currentAuthRequestIndex, completeAuthRequest } =
     useContext(AuthRequestsContext);
+
+  const prevAuthRequest =
+    authRequests[currentAuthRequestIndex - 1] || (null as AuthRequest | null);
 
   const authRequest = (
     expectedAuthType === "unlock"
@@ -59,6 +66,7 @@ export function useCurrentAuthRequest<T extends AuthType>(
   }
 
   return {
+    prevAuthRequest,
     authRequest,
     acceptRequest,
     rejectRequest

@@ -25,7 +25,10 @@ import Arweave from "arweave";
 import { removeDecryptionKey } from "~wallets/auth";
 import { findGateway } from "~gateways/wayfinder";
 import BigNumber from "bignumber.js";
-import { retryWithDelay, retryWithDelayAndTimeout } from "~utils/retry";
+import {
+  retryWithDelay,
+  retryWithDelayAndTimeout
+} from "~utils/promises/retry";
 
 export default function Balance() {
   const [loading, setLoading] = useState(false);
@@ -254,7 +257,7 @@ async function balanceHistory(address: string) {
             }
           }
         }
-      }    
+      }
     `,
         { owner: address, minHeight }
       )

@@ -60,6 +60,7 @@
     "@permaweb/aoconnect": "^0.0.55",
     "@plasmohq/storage": "^1.7.2",
     "@segment/analytics-next": "^1.53.2",
+    "@swyg/corre": "^1.0.4",
     "@untitled-ui/icons-react": "^0.1.1",
     "ao-tokens": "^0.0.4",
     "ar-gql": "1.2.9",

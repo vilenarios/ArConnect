@@ -109,6 +109,8 @@ export function signAuthKeystone(
       onMessage("auth_listening", async ({ sender }) => {
         if (sender.context !== "web_accessible") return;
 
+        // TODO: REVIEW THIS
+
         // send data chunks
         for (const chunk of dataChunks) {
           try {

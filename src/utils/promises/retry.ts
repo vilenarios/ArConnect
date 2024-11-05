@@ -1,3 +1,5 @@
+import { sleep } from "~utils/promises/sleep";
+
 /**
  * Retries a given function up to a maximum number of attempts.
  * @param fn - The asynchronous function to retry, which should return a Promise.
@@ -83,10 +85,6 @@ export async function withRetry<T>(
 ): Promise<T> {
   let lastError: any;
 
-  // TODO: Replace with sleep
-  const delay = (ms: number) =>
-    new Promise((resolve) => setTimeout(resolve, ms));
-
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       return await fn();
@@ -95,7 +93,7 @@ export async function withRetry<T>(
       if (attempt < maxRetries) {
         const waitTime = Math.pow(2, attempt - 1) * retryDelay;
         console.log(`Attempt ${attempt} failed, retrying in ${waitTime}ms...`);
-        await delay(waitTime);
+        await sleep(waitTime);
       } else {
         console.error(
           `All ${maxRetries} attempts failed. Last error:`,

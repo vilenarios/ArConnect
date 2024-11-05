@@ -1,5 +1,5 @@
 import type { ModuleAppData } from "~api/background/background-modules";
-import type { UnlockAuthRequestData } from "~utils/auth/auth.types";
+import type { AuthType, UnlockAuthRequestData } from "~utils/auth/auth.types";
 
 export const AUTH_POPUP_CLOSING_DELAY_MS = 5000 as const;
 

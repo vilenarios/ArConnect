@@ -16,29 +16,6 @@ export const HeadAuth: React.FC<HeadAuthProps> = ({ title, back }) => {
 
   const { url } = authRequests[currentAuthRequestIndex];
 
-  /*
-  const [appInfo, setAppInfo] = useState<AppInfo>();
-
-  useEffect(() => {
-    async function loadAppInfo() {
-      if (!url) return;
-
-      const app = new Application(url);
-      const appInfo = await app.getAppData();
-
-      setAppInfo(appInfo);
-    }
-
-    loadAppInfo();
-  }, [url]);
-  */
-
-  // TODO: Display "X more" label if there are too many of them or add some kind of horizontal scroll or get rid of older ones...
-
-  // TODO: Add application logo (e.g. favicon) inside HeadV2.
-
-  // TODO: Add date label (now, a minute ago, etc.)
-
   return (
     <>
       <HeadV2
@@ -64,14 +41,18 @@ export const HeadAuth: React.FC<HeadAuthProps> = ({ title, back }) => {
 
           <DivTransactionButtonSpacer />
 
-          <ButtonExpandLogs
-            onClick={() =>
-              setAreLogsExpanded((prevAreLogsExpanded) => !prevAreLogsExpanded)
-            }
-          />
+          {process.env.NODE_ENV === "development" ? (
+            <ButtonExpandLogs
+              onClick={() =>
+                setAreLogsExpanded(
+                  (prevAreLogsExpanded) => !prevAreLogsExpanded
+                )
+              }
+            />
+          ) : null}
         </DivTransactionsList>
 
-        {areLogsExpanded ? (
+        {process.env.NODE_ENV === "development" && areLogsExpanded ? (
           <DivLogWrapper>
             {authRequests.map((authRequest, i) => (
               <PreLogItem
