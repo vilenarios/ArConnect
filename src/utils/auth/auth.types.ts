@@ -5,6 +5,7 @@ import type { SubscriptionData } from "~subscriptions/subscription";
 import type { TokenType } from "~tokens/token";
 import type { SplitTransaction } from "~api/modules/sign/transaction_builder";
 import type { RawDataItem } from "~api/modules/sign_data_item/types";
+import type { Transaction } from "arbundles";
 
 // COMMON:
 
@@ -113,11 +114,18 @@ export type AllowanceAuthRequest = AllowanceAuthRequestData &
   CommonAuthRequestProps;
 export type UnlockAuthRequest = UnlockAuthRequestData & CommonAuthRequestProps;
 export type TokenAuthRequest = TokenAuthRequestData & CommonAuthRequestProps;
-export type SignAuthRequest = SignAuthRequestData & CommonAuthRequestProps;
+export interface SignAuthRequest
+  extends CommonAuthRequestProps,
+    Omit<SignAuthRequestData, "transaction"> {
+  transaction: SplitTransaction | Transaction;
+}
 export type SubscriptionAuthRequest = SubscriptionAuthRequestData &
   CommonAuthRequestProps;
-export type SignKeystoneAuthRequest = SignKeystoneAuthRequestData &
-  CommonAuthRequestProps;
+export interface SignKeystoneAuthRequest
+  extends CommonAuthRequestProps,
+    SignKeystoneAuthRequestData {
+  data: Buffer;
+}
 export type SignatureAuthRequest = SignatureAuthRequestData &
   CommonAuthRequestProps;
 export type SignDataItemAuthRequest = SignDataItemAuthRequestData &

@@ -1,4 +1,3 @@
-import { onMessage, sendMessage } from "@arconnect/webext-bridge";
 import {
   createContext,
   useCallback,
@@ -11,9 +10,21 @@ import {
   AUTH_POPUP_CLOSING_DELAY_MS,
   DEFAULT_UNLOCK_AUTH_REQUEST_ID
 } from "~utils/auth/auth.constants";
-import type { AuthRequest } from "~utils/auth/auth.types";
+import type {
+  AuthRequest,
+  SignAuthRequest,
+  SignKeystoneAuthRequest
+} from "~utils/auth/auth.types";
 import { replyToAuthRequest } from "~utils/auth/auth.utils";
-import { retryWithDelay } from "~utils/promises/retry";
+import type { Chunk } from "~api/modules/sign/chunks";
+import { defaultGateway } from "~gateways/gateway";
+import Arweave from "arweave";
+import {
+  bytesFromChunks,
+  constructTransaction,
+  type SplitTransaction
+} from "~api/modules/sign/transaction_builder";
+import { isomorphicOnMessage } from "~utils/messaging/messaging.utils";
 
 interface AuthRequestContextState {
   authRequests: AuthRequest[];
@@ -68,6 +79,8 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
           currentAuthRequestIndex: prevCurrentAuthRequestIndex
         } = prevAuthRequestContextState;
         const nextAuthRequests = prevAuthRequests;
+
+        // TODO: Get the previous pending one if the next one is not there...
         const nextCurrentAuthRequestIndex = prevCurrentAuthRequestIndex + 1;
 
         nextAuthRequests[prevCurrentAuthRequestIndex] = {
@@ -85,14 +98,14 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
   );
 
   useEffect(() => {
-    onMessage<AuthRequest, string>("authRequest", (authRequest) => {
+    isomorphicOnMessage("auth_request", (authRequest) => {
       setAuthRequestContextState((prevAuthRequestContextState) => {
         const {
           authRequests: prevAuthRequests,
           currentAuthRequestIndex: prevCurrentAuthRequestIndex
         } = prevAuthRequestContextState;
 
-        console.log("REQUEST RECEIVED", authRequest);
+        console.log("AuthProvider - Request received", authRequest);
 
         // UnlockAuthRequests are not enqueued as those are simply used to open the popup to prompt users to enter their
         // password and wait for the wallet to unlock:
@@ -136,25 +149,99 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
         };
       });
     });
+  }, []);
 
-    // TODO: Maybe not needed?
+  useEffect(() => {
+    const chunksByCollectionID: Record<string, Chunk[]> = {};
 
-    retryWithDelay(() => {
-      return sendMessage("ready", {}).catch((err) => {
-        if (
-          err.message ===
-          "No handler registered in 'background' to accept messages with id 'ready'"
-        ) {
-          console.log(
-            "Ready message sent before background started listening. Retrying...",
-            err
-          );
+    console.log("AuthProvider - WAITING FOR auth_chunk...");
+
+    // listen for chunks
+    isomorphicOnMessage("auth_chunk", ({ sender, data }) => {
+      console.log("AuthProvider - auth_chunk", data);
+
+      if (sender.context !== "background") return;
+
+      const { type, collectionID } = data;
+
+      if (type === "start") {
+        console.log(`AuthProvider - ${collectionID} START`);
+
+        chunksByCollectionID[collectionID] = [];
+      } else if (type === "end") {
+        console.log(`AuthProvider - ${collectionID} END`);
+
+        const arweave = new Arweave(defaultGateway);
+
+        setAuthRequestContextState((prevAuthRequestContextState) => {
+          const { authRequests: prevAuthRequests, currentAuthRequestIndex } =
+            prevAuthRequestContextState;
+
+          const targetAuthRequest = prevAuthRequests.find((authRequest) => {
+            return (
+              (authRequest.type === "sign" ||
+                authRequest.type === "signKeystone") &&
+              authRequest.collectionID === collectionID
+            );
+          }) as SignAuthRequest | SignKeystoneAuthRequest;
+
+          if (!targetAuthRequest) return prevAuthRequestContextState;
+
+          // Update SignAuthRequest with `transaction`:
+
+          if (targetAuthRequest.type === "sign") {
+            const transaction = arweave.transactions.fromRaw(
+              constructTransaction(
+                targetAuthRequest.transaction as SplitTransaction,
+                chunksByCollectionID[collectionID]
+              )
+            );
+
+            const authRequests = prevAuthRequests.map((authRequest) => {
+              if (authRequest.authID !== targetAuthRequest.authID)
+                return authRequest;
+
+              return {
+                ...authRequest,
+                transaction
+              } as SignAuthRequest;
+            });
+
+            return {
+              authRequests,
+              currentAuthRequestIndex
+            };
+          }
+
+          // Update SignKeystoneAuthRequest with `data`:
+
+          const bytes = bytesFromChunks(chunksByCollectionID[collectionID]);
+          const data = Buffer.from(bytes);
+
+          const authRequests = prevAuthRequests.map((authRequest) => {
+            if (authRequest.authID !== targetAuthRequest.authID)
+              return authRequest;
+
+            return {
+              ...authRequest,
+              data
+            } as SignKeystoneAuthRequest;
+          });
+
+          return {
+            authRequests,
+            currentAuthRequestIndex
+          };
+        });
+      } else {
+        console.log(`AuthProvider - ${collectionID} chunk...`);
+
+        if (!chunksByCollectionID[collectionID]) {
+          chunksByCollectionID[collectionID] = [data];
+        } else {
+          chunksByCollectionID[collectionID].push(data);
         }
-
-        throw err;
-      });
-    }).catch((err) => {
-      console.log("Ready message failed after retrying:", err);
+      }
     });
   }, []);
 
@@ -165,10 +252,11 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
       authRequests.length > 0 &&
       authRequests[authRequests.length - 1].status !== "pending";
 
+    // TODO: Add a timeout in case no transactions arrives, or return immediately if this was just opened to unlock the wallet?
+
     if (done) {
       // Close the window if the last request has been handled:
       timeoutRef.current = setTimeout(() => {
-        alert("CLOSING...");
         window.top.close();
       }, AUTH_POPUP_CLOSING_DELAY_MS);
     }
@@ -192,6 +280,7 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
 
     return () => {
       clearTimeout(timeoutRef.current);
+
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [authRequests, currentAuthRequestIndex]);

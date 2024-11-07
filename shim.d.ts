@@ -3,17 +3,42 @@ import type { DisplayTheme } from "@arconnect/components";
 import type { Chunk } from "~api/modules/sign/chunks";
 import type { InjectedEvents } from "~utils/events";
 import "styled-components";
+import type { AuthRequest } from "~utils/auth/auth.types";
 
 declare module "@arconnect/webext-bridge" {
+  // TODO: Make this type work with sendMessage, isomorphicSendMessage and isomorphicOnMessage
+
   export interface ProtocolMap {
+    /**
+     *
+     */
     api_call: ProtocolWithReturn<ApiCall, ApiResponse>;
+
+    /**
+     *
+     */
+    chunk: ProtocolWithReturn<ApiCall<Chunk>, ApiResponse<number>>;
+
+    /**
+     *
+     */
+    auth_request: AuthRequest;
+
+    /**
+     *
+     */
     auth_result: AuthResult;
+
+    /**
+     *
+     */
+    auth_chunk: Chunk;
+
+    // OTHER:
+
     switch_wallet_event: string | null;
     copy_address: string;
-    chunk: ProtocolWithReturn<ApiCall<Chunk>, ApiResponse<number>>;
     event: Event;
-    auth_listening: number;
-    auth_chunk: Chunk;
     ar_protocol: ProtocolWithReturn<{ url: string }, { url: sting }>;
   }
 }

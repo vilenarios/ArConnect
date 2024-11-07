@@ -1,5 +1,5 @@
 import type { TransactionInterface } from "arweave/web/lib/transaction";
-import type Transaction from "arweave/web/lib/transaction";
+import Transaction from "arweave/web/lib/transaction";
 import type { Tag } from "arweave/web/lib/transaction";
 import { type Chunk, CHUNK_SIZE } from "./chunks";
 import { signedTxTags } from "./tags";
@@ -11,6 +11,12 @@ import { nanoid } from "nanoid";
 export interface SplitTransaction extends TransactionInterface {
   data: undefined;
   tags: undefined;
+}
+
+export function isSplitTransaction(
+  tx: Transaction | SplitTransaction
+): tx is SplitTransaction {
+  return !(tx instanceof Transaction);
 }
 
 /**

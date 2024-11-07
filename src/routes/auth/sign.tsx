@@ -1,10 +1,8 @@
 import { decodeSignature, transactionToUR } from "~wallets/hardware/keystone";
-import { constructTransaction } from "~api/modules/sign/transaction_builder";
+import { isSplitTransaction } from "~api/modules/sign/transaction_builder";
 import { formatFiatBalance, formatTokenBalance } from "~tokens/currency";
-import { onMessage, sendMessage } from "@arconnect/webext-bridge";
 import type { DecodedTag } from "~api/modules/sign/tags";
 import type { Tag } from "arweave/web/lib/transaction";
-import type { Chunk } from "~api/modules/sign/chunks";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useScanner } from "@arconnect/keystone-sdk";
 import { useActiveWallet } from "~wallets/hooks";
@@ -37,7 +35,6 @@ import prettyBytes from "pretty-bytes";
 import Arweave from "arweave";
 import { defaultGateway } from "~gateways/gateway";
 import BigNumber from "bignumber.js";
-import type Transaction from "arweave/web/lib/transaction";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { HeadAuth } from "~components/HeadAuth";
 import { useThrottledRequestAnimationFrame } from "@swyg/corre";
@@ -52,12 +49,9 @@ export default function Sign() {
   const { authRequest, acceptRequest, rejectRequest } =
     useCurrentAuthRequest("sign");
 
-  const {
-    address,
-    transaction: authRequestTransaction,
-    collectionID,
-    requestedAt
-  } = authRequest;
+  const { address, transaction, requestedAt } = authRequest;
+
+  // TODO: Maybe the requested at label would be useful on all AuthRequest types?
 
   const requestedAtElementRef = useRef<HTMLSpanElement>();
 
@@ -71,65 +65,17 @@ export default function Sign() {
     // TODO: After one minute, change the interval wait time to 5 seconds or so. Consider adding this to @swyg/corre and adding a function/hook useFormattedTime
   }, 250);
 
-  // reconstructed transaction
-  const [transaction, setTransaction] = useState<Transaction>();
-
-  useEffect(() => {
-    (async () => {
-      console.log("Loading new transaction =", authRequestTransaction);
-
-      if (!authRequestTransaction) return;
-
-      // reset tx
-      setTransaction(undefined);
-
-      // request chunks
-      sendMessage("auth_listening", null, "background");
-
-      const chunks: Chunk[] = [];
-      const arweave = new Arweave(defaultGateway);
-
-      // TODO: REVIEW THIS
-
-      // listen for chunks
-      onMessage("auth_chunk", ({ sender, data }) => {
-        console.log("chunk data =", data);
-
-        // check data type
-        if (
-          data.collectionID !== collectionID ||
-          sender.context !== "background" ||
-          data.type === "start"
-        ) {
-          return;
-        }
-
-        // end chunk stream
-        if (data.type === "end") {
-          setTransaction(
-            arweave.transactions.fromRaw(
-              constructTransaction(authRequestTransaction, chunks)
-            )
-          );
-        } else {
-          // add chunk
-          chunks.push(data);
-        }
-      });
-    })();
-  }, [authRequestTransaction, collectionID]);
-
   // quantity
   const quantity = useMemo(() => {
-    if (!authRequestTransaction?.quantity) {
+    if (!transaction?.quantity) {
       return BigNumber("0");
     }
 
     const arweave = new Arweave(defaultGateway);
-    const ar = arweave.ar.winstonToAr(authRequestTransaction.quantity);
+    const ar = arweave.ar.winstonToAr(transaction.quantity);
 
     return BigNumber(ar);
-  }, [authRequestTransaction]);
+  }, [transaction]);
 
   // currency setting
   const [currency] = useSetting<string>("currency");
@@ -151,25 +97,25 @@ export default function Sign() {
 
   // transaction fee
   const fee = useMemo(() => {
-    if (!authRequestTransaction?.reward) {
+    if (!transaction?.reward) {
       return "0";
     }
 
     const arweave = new Arweave(defaultGateway);
 
-    return arweave.ar.winstonToAr(authRequestTransaction.reward);
-  }, [authRequestTransaction]);
+    return arweave.ar.winstonToAr(transaction.reward);
+  }, [transaction]);
 
   // transaction size
   const size = useMemo(() => {
-    if (!transaction) return 0;
+    if (!transaction || isSplitTransaction(transaction)) return 0;
 
-    return transaction?.sizeInBytes ?? transaction.data.length;
+    return transaction?.sizeInBytes ?? transaction?.data?.length ?? 0;
   }, [transaction]);
 
   // tags
   const tags = useMemo<DecodedTag[]>(() => {
-    if (!transaction) return [];
+    if (!transaction || isSplitTransaction(transaction)) return [];
 
     // @ts-expect-error
     const tags = transaction.get("tags") as Tag[];
@@ -234,9 +180,15 @@ export default function Sign() {
   const [transactionUR, setTransactionUR] = useState<UR>();
 
   async function loadTransactionUR() {
-    if (wallet.type !== "hardware" || !transaction) return;
+    if (
+      wallet.type !== "hardware" ||
+      !transaction ||
+      isSplitTransaction(transaction)
+    )
+      return;
 
     // load the ur data
+    // TODO: This function is actually mutating the transaction!
     const ur = await transactionToUR(transaction, wallet.xfp, wallet.publicKey);
 
     setTransactionUR(ur);
@@ -410,7 +362,7 @@ export default function Sign() {
             <ButtonV2
               fullWidth
               disabled={!transaction || loading}
-              loading={!transaction || loading}
+              loading={!!(!transaction || loading)}
               onClick={async () => {
                 if (!transaction) return;
                 if (wallet.type === "hardware") {

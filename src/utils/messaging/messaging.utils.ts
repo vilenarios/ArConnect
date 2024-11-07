@@ -1,11 +1,15 @@
 import {
   onMessage,
-  sendMessage as webExtBridgeSendMessage
+  sendMessage as webExtBridgeSendMessage,
+  type DataTypeKey,
+  type GetDataType,
+  type GetReturnType,
+  type OnMessageCallback
 } from "@arconnect/webext-bridge";
 
 export interface SendMessageResult<T> {
   messageId: string;
-  tabId: number;
+  tabId?: number;
   data: T;
 }
 
@@ -25,15 +29,11 @@ export async function isomorphicSendMessage<T extends {}>({
   // TODO: Just send it and wait for ACK.
 
   async function sendMessage() {
-    console.log(currentMessage, "SENT");
-
     const result = await webExtBridgeSendMessage(
       messageId,
       data,
-      `web_accessible@${tabId}`
+      tabId ? `web_accessible@${tabId}` : "background"
     );
-
-    console.log(currentMessage, "RECEIVED", result);
 
     // check the result
     if (
@@ -54,29 +54,34 @@ export async function isomorphicSendMessage<T extends {}>({
   return new Promise(async (resolve, reject) => {
     // TODO: Timeout and retry if it doesn't return in X seconds...
 
-    console.log(currentMessage, "sendMessage now...");
+    console.log(`- 3. ${currentMessage}. Sending message now...`);
 
     sendMessage()
       .then((result) => {
-        console.log(currentMessage, "sendMessage now ok");
+        console.log(`- 3. ${currentMessage}. Message Ok`);
 
         resolve(result);
       })
       .catch((err) => {
         if (
-          err.message !==
-          "No handler registered in 'web_accessible' to accept messages with id 'authRequest'"
+          !(err.message || "").endsWith(
+            `No handler registered in 'web_accessible' to accept messages with id '${messageId}'`
+          )
         ) {
-          console.log(currentMessage, "sendMessage now error", err);
+          console.log(
+            `- 3. ${currentMessage}. Message error (${messageId}):`,
+            err
+          );
 
           reject(err);
 
           return;
         }
 
-        console.log(currentMessage, "sendMessage waiting for ready", err);
+        console.log(`- 4. ${currentMessage}. Waiting for ready...`);
 
-        onMessage("ready", async ({ sender, data }) => {
+        // TODO: Make this generic:
+        onMessage(`${messageId}_ready`, async ({ sender, data }) => {
           // console.log("ready received");
 
           // validate sender by it's tabId
@@ -84,16 +89,16 @@ export async function isomorphicSendMessage<T extends {}>({
             return;
           }
 
-          console.log(currentMessage, "sendMessage after ready...");
+          console.log(`- 5. ${currentMessage}. Sending message again...`);
 
           await sendMessage()
             .then((result) => {
-              console.log(currentMessage, "sendMessage after ready ok");
+              console.log(`- 5. ${currentMessage}. Message again Ok`);
 
               resolve(result);
             })
             .catch((err) => {
-              console.log(currentMessage, "sendMessage after ready error", err);
+              console.log(`- 5. ${currentMessage}. Message again error:`, err);
 
               reject(err);
             });
@@ -101,3 +106,45 @@ export async function isomorphicSendMessage<T extends {}>({
       });
   });
 }
+
+export function isomorphicOnMessage<
+  Data extends {},
+  K extends DataTypeKey | string
+>(
+  messageID: K,
+  callback: OnMessageCallback<GetDataType<K, Data>, GetReturnType<K, any>>
+): void {
+  onMessage(messageID, callback);
+
+  isomorphicSendMessage({
+    messageId: `${messageID}_ready`,
+    data: {}
+  });
+
+  // TODO: Can the first message submission from isomorphicSendMessage fail and the "ready" event never be received?
+  // TODO: Maybe not needed? This should be done automatically from isomorphicOnMessage
+
+  /*
+
+  retryWithDelay(() => {
+    return sendMessage("ready", {}).catch((err) => {
+      if (
+        err.message ===
+        "No handler registered in 'background' to accept messages with id 'ready'"
+      ) {
+        console.log(
+          "AuthProvider - Ready message sent before background started listening. Retrying...",
+          err
+        );
+      }
+
+      throw err;
+    });
+  }).catch((err) => {
+    console.log("AuthProvider - Ready message failed after retrying:", err);
+  });
+
+  */
+}
+
+export function useIsomorphicOnMessage() {}

@@ -111,7 +111,7 @@ export default function HeadV2({
 
   // Display an application logo if `url` is provided:
 
-  const [appInfo, setAppInfo] = useState<AppInfo>();
+  const [appInfo, setAppInfo] = useState<AppInfo>({});
 
   useEffect(() => {
     async function loadAppInfo() {
@@ -132,7 +132,7 @@ export default function HeadV2({
       collapse={scrollDirection === "down"}
       scrolled={scrolled}
       padding={padding}
-      center={!url}
+      center={url === undefined}
     >
       {showBack ? (
         <BackButton

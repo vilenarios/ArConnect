@@ -31,9 +31,10 @@ import { LoadingPage } from "~components/LoadingPage";
 // DONE: Add a requestedAt label (now, a minute ago, etc.). Added only to sign.tsx, not signDataItem, signKeystone or any other page.
 // TODO: Unify transaction details component.
 
-// TODO: All screens should account for a tx being accepted/rejected already (change buttons)
+// TODO: All screens should account for a tx being accepted/rejected already (change buttons) and show the requested at label.
 
-// TODO: Load transactions from AuthRequests in the Provider, not in the sign.tsx route.
+// DONE: Load transactions from AuthRequests in the Provider, not in the sign.tsx route.
+// TODO: Remove transactions if the tab that requested them is closed.
 
 // TODO: initExtensionMessageForwarder();
 

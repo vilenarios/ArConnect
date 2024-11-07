@@ -41,21 +41,23 @@ export function useCurrentAuthRequest<T extends AuthType>(
     );
   }
 
-  const { type, authID } = authRequest || {};
+  const { type, authID, status } = authRequest || {};
 
   async function acceptRequest(data?: any) {
+    if (status !== "pending") throw new Error(`AuthRequest already ${status}`);
+
     console.log("acceptRequest", type, data);
 
-    // send response
     await replyToAuthRequest(type, authID, undefined, data);
 
     completeAuthRequest(authID, true);
   }
 
   async function rejectRequest(errorMessage?: string) {
+    if (status !== "pending") throw new Error(`AuthRequest already ${status}`);
+
     console.log("rejectRequest", type, errorMessage);
 
-    // send response
     await replyToAuthRequest(
       type,
       authID,
@@ -82,8 +84,6 @@ export const useAuthRequestsLocation: BaseLocationHook = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [currentAuthRequestID]);
-
-  // console.log("currentAuthRequestType =", currentAuthRequestType, authRequests);
 
   return [currentAuthRequestType, (path: string) => ""];
 };

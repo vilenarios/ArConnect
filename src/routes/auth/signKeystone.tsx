@@ -19,11 +19,7 @@ import AnimatedQRPlayer from "~components/hardware/AnimatedQRPlayer";
 import Wrapper from "~components/auth/Wrapper";
 import Progress from "~components/Progress";
 import browser from "webextension-polyfill";
-import Head from "~components/popup/Head";
 import Message from "~components/auth/Message";
-import { onMessage, sendMessage } from "@arconnect/webext-bridge";
-import type { Chunk } from "~api/modules/sign/chunks";
-import { bytesFromChunks } from "~api/modules/sign/transaction_builder";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { HeadAuth } from "~components/HeadAuth";
 
@@ -31,51 +27,16 @@ export default function SignKeystone() {
   const { authRequest, acceptRequest, rejectRequest } =
     useCurrentAuthRequest("signKeystone");
 
-  const { collectionID, keystoneSignType } = authRequest;
-
-  // reconstructed transaction
-  const [dataToSign, setDataToSign] = useState<Buffer>();
-  const [dataType, setDataType] = useState("Message");
+  const { keystoneSignType, data: dataToSign } = authRequest;
 
   useEffect(() => {
     (async () => {
-      // request chunks
-      setDataType(keystoneSignType);
-      sendMessage("auth_listening", null, "background");
-
-      const chunks: Chunk[] = [];
-
-      // listen for chunks
-      onMessage("auth_chunk", ({ sender, data }) => {
-        // check data type
-        if (
-          data.collectionID !== collectionID ||
-          sender.context !== "background" ||
-          data.type === "start"
-        ) {
-          return;
-        }
-        // end chunk stream
-        if (data.type === "end") {
-          const bytes = bytesFromChunks(chunks);
-          const signData = Buffer.from(bytes);
-          setDataToSign(signData);
-        } else if (data.type === "bytes") {
-          // add chunk
-          chunks.push(data);
-        }
-      });
-    })();
-  }, [collectionID, keystoneSignType]);
-
-  useEffect(() => {
-    (async () => {
-      if (dataType === "DataItem" && !!dataToSign) {
+      if (keystoneSignType === "DataItem" && !!dataToSign) {
         await loadTransactionUR();
         setPage("qr");
       }
     })();
-  }, [dataType, dataToSign]);
+  }, [keystoneSignType, dataToSign]);
 
   /**
    * Hardware wallet logic
@@ -93,7 +54,7 @@ export default function SignKeystone() {
   async function loadTransactionUR() {
     if (wallet.type !== "hardware" || !dataToSign) return;
     // load the ur data
-    if (dataType === "DataItem") {
+    if (keystoneSignType === "DataItem") {
       const ur = await dataItemToUR(dataToSign, wallet.xfp);
       setTransactionUR(ur);
     } else {
@@ -140,12 +101,14 @@ export default function SignKeystone() {
   // toast
   const { setToast } = useToasts();
 
+  // TODO: Could large `data` values cause issues with this component or `<Message>` below?
+
   return (
     <Wrapper>
       <div>
         <HeadAuth title={browser.i18n.getMessage("titles_sign")} />
         <Spacer y={0.75} />
-        {(!page && dataToSign && dataType === "Message" && (
+        {(!page && dataToSign && keystoneSignType === "Message" && (
           <Section>
             <Message message={[...dataToSign]} />
           </Section>

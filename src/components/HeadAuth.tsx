@@ -14,7 +14,7 @@ export const HeadAuth: React.FC<HeadAuthProps> = ({ title, back }) => {
   const { authRequests, currentAuthRequestIndex, setCurrentAuthRequestIndex } =
     useAuthRequests();
 
-  const { url } = authRequests[currentAuthRequestIndex];
+  const url = authRequests[currentAuthRequestIndex]?.url || "";
 
   return (
     <>
@@ -29,6 +29,16 @@ export const HeadAuth: React.FC<HeadAuthProps> = ({ title, back }) => {
 
       <DivTransactionTracker>
         <DivTransactionsList>
+          {process.env.NODE_ENV === "development" ? (
+            <ButtonExpandLogs
+              onClick={() =>
+                setAreLogsExpanded(
+                  (prevAreLogsExpanded) => !prevAreLogsExpanded
+                )
+              }
+            />
+          ) : null}
+
           {authRequests.map((authRequest, i) => (
             <ButtonTransactionButton
               key={authRequest.authID}
@@ -40,16 +50,6 @@ export const HeadAuth: React.FC<HeadAuthProps> = ({ title, back }) => {
           ))}
 
           <DivTransactionButtonSpacer />
-
-          {process.env.NODE_ENV === "development" ? (
-            <ButtonExpandLogs
-              onClick={() =>
-                setAreLogsExpanded(
-                  (prevAreLogsExpanded) => !prevAreLogsExpanded
-                )
-              }
-            />
-          ) : null}
         </DivTransactionsList>
 
         {process.env.NODE_ENV === "development" && areLogsExpanded ? (

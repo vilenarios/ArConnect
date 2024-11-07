@@ -86,10 +86,10 @@ export default function Squircle({
           <text
             x="50%"
             y="50%"
-            alignment-baseline="central"
-            text-anchor="middle"
+            alignmentBaseline="central"
+            textAnchor="middle"
             fill="white"
-            font-size="2em"
+            fontSize="2em"
           >
             {placeholderText}
           </text>

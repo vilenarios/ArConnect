@@ -15,9 +15,6 @@ import type { ModuleAppData } from "~api/background/background-modules";
 const mutex = new Mutex();
 const popupMutex = new Mutex();
 
-let keepAliveInterval: number | null = null;
-let activePopups = 0;
-
 /**
  * Authenticate the user from the background script.
  * Creates a popup window to authenticate and returns
@@ -29,19 +26,33 @@ export async function requestUserAuthorization(
   authRequestData: AuthRequestData,
   moduleAppData: ModuleAppData
 ) {
-  console.log("authenticate");
+  console.log("- 1. Request user authorization");
 
   // create the popup
-  const { authID, tabId } = await createAuthPopup(
+  const { authID, popupWindowTabID } = await createAuthPopup(
     authRequestData,
     moduleAppData
   );
 
   // wait for the results from the popup
-  return await getPopupResponse(authID, tabId);
+  return await getPopupResponse(authID, popupWindowTabID);
 }
 
 let popupWindowTabID = -1;
+
+// TODO: Refactor this without polling...
+
+export function getAuthPopupWindowTabID() {
+  if (popupWindowTabID !== -1) return popupWindowTabID;
+
+  return new Promise<number>((resolve) => {
+    const intervalID = setInterval(() => {
+      if (popupWindowTabID === -1) return;
+      clearInterval(intervalID);
+      resolve(popupWindowTabID);
+    }, 100);
+  });
+}
 
 /**
  * Create an authenticator popup
@@ -57,8 +68,6 @@ async function createAuthPopup(
   // TODO: Update to check if there's already a popup and send messages to it and communicate using postMessage():
 
   const unlock = await popupMutex.lock();
-
-  console.log("createAuthPopup", popupWindowTabID);
 
   let popupWindowTab: browser.Tabs.Tab | null = await browser.tabs
     .get(popupWindowTabID)
@@ -80,9 +89,9 @@ async function createAuthPopup(
     popupWindowTab = window.tabs[0];
     popupWindowTabID = popupWindowTab.id;
 
-    console.log("NEW POPUP =", popupWindowTabID);
+    console.log("- 2. Create popup", popupWindowTabID);
   } else {
-    console.log("REUSE POPUP");
+    console.log("- 2. Reuse popup", popupWindowTabID);
   }
 
   unlock();
@@ -93,8 +102,10 @@ async function createAuthPopup(
       ? DEFAULT_UNLOCK_AUTH_REQUEST_ID
       : nanoid();
 
+  // TODO: There should be another type AuthRequestMessageData:
+
   await isomorphicSendMessage<AuthRequest>({
-    messageId: "authRequest",
+    messageId: "auth_request",
     tabId: popupWindowTab.id,
     data: {
       ...authRequestData,
@@ -108,28 +119,26 @@ async function createAuthPopup(
 
   return {
     authID,
-    tabId: popupWindowTabID
+    popupWindowTabID
   };
 }
 
 /**
  * Await for a browser message from the popup
  */
-export function getPopupResponse(authID: string, tabId: number) {
-  console.log("getPopupResponse");
-
+export function getPopupResponse(authID: string, popupWindowTabID: number) {
   return new Promise<AuthResult>(async (resolve, reject) => {
-    startKeepAlive();
+    startKeepAlive(authID);
 
-    console.log("LISTENING FOR auth_result...");
+    console.log("- 6. Waiting for popup response...");
 
     onMessage("auth_result", ({ sender, data }) => {
-      console.log("RECEIVED RESPONSE FOR auth_result", data);
+      console.log("- 6. Popup response:", data);
 
-      stopKeepAlive();
+      stopKeepAlive(authID);
 
       // validate sender by it's tabId
-      if (sender.tabId !== tabId) {
+      if (sender.tabId !== popupWindowTabID) {
         return;
       }
 
@@ -147,48 +156,6 @@ export function getPopupResponse(authID: string, tabId: number) {
       }
     });
   });
-}
-
-/**
- * Function to send periodic keep-alive messages
- */
-export async function startKeepAlive() {
-  const unlock = await mutex.lock();
-
-  try {
-    // Increment the active popups count
-    activePopups++;
-    if (activePopups > 0 && keepAliveInterval === null) {
-      console.log("Started keep-alive messages...");
-      keepAliveInterval = setInterval(
-        () => browser.alarms.create("keep-alive", { when: Date.now() + 1 }),
-        20000
-      );
-    }
-  } finally {
-    unlock();
-  }
-}
-
-/**
- * Function to stop sending keep-alive messages
- */
-export async function stopKeepAlive() {
-  const unlock = await mutex.lock();
-
-  try {
-    // Decrement the active popups count
-    activePopups--;
-    if (activePopups <= 0 && keepAliveInterval !== null) {
-      // Stop keep-alive messages when no popups are active
-      browser.alarms.clear("keep-alive");
-      clearInterval(keepAliveInterval);
-      keepAliveInterval = null;
-      console.log("Stopped keep-alive messages...");
-    }
-  } finally {
-    unlock();
-  }
 }
 
 /**
@@ -216,4 +183,57 @@ export async function replyToAuthRequest(
 
   // send the response message
   await sendMessage("auth_result", response, "background");
+}
+
+// KEEP ALIVE ALARM:
+
+let keepAliveInterval: number | null = null;
+
+const activeAuthRequests = new Set();
+
+/**
+ * Function to send periodic keep-alive messages
+ */
+export async function startKeepAlive(authID: string) {
+  const unlock = await mutex.lock();
+
+  try {
+    activeAuthRequests.add(authID);
+
+    const activePopups = activeAuthRequests.size;
+
+    if (activePopups > 0 && keepAliveInterval === null) {
+      console.log("Started keep-alive messages...");
+
+      keepAliveInterval = setInterval(
+        () => browser.alarms.create("keep-alive", { when: Date.now() + 1 }),
+        20000
+      );
+    }
+  } finally {
+    unlock();
+  }
+}
+
+/**
+ * Function to stop sending keep-alive messages
+ */
+export async function stopKeepAlive(authID: string) {
+  const unlock = await mutex.lock();
+
+  try {
+    activeAuthRequests.delete(authID);
+
+    const activePopups = activeAuthRequests.size;
+
+    if (activePopups <= 0 && keepAliveInterval !== null) {
+      console.log("Stopped keep-alive messages...");
+
+      browser.alarms.clear("keep-alive");
+      clearInterval(keepAliveInterval);
+      keepAliveInterval = null;
+    }
+  } finally {
+    unlock();
+  }
 }
