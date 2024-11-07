@@ -4,16 +4,47 @@ import { nanoid } from "nanoid";
 import browser from "webextension-polyfill";
 import { Mutex } from "~utils/mutex";
 import { isomorphicSendMessage } from "~utils/messaging/messaging.utils";
-import type {
-  AuthRequest,
-  AuthRequestData,
-  AuthType
-} from "~utils/auth/auth.types";
+import type { AuthRequestData, AuthType } from "~utils/auth/auth.types";
 import { DEFAULT_UNLOCK_AUTH_REQUEST_ID } from "~utils/auth/auth.constants";
 import type { ModuleAppData } from "~api/background/background-modules";
 
-const mutex = new Mutex();
 const popupMutex = new Mutex();
+
+type PopupUpdatedCallback = (popupTabID: number) => void;
+
+let popupUpdatedCallbacks: PopupUpdatedCallback[] = [];
+
+let POPUP_TAB_ID = -1;
+
+function setPopupTabID(popupTabID: number) {
+  POPUP_TAB_ID = popupTabID;
+
+  popupUpdatedCallbacks.forEach((cb) => {
+    cb(popupTabID);
+  });
+
+  popupUpdatedCallbacks = [];
+}
+
+function onPopupTabUpdated(cb: PopupUpdatedCallback) {
+  if (POPUP_TAB_ID !== -1) return cb(POPUP_TAB_ID);
+
+  popupUpdatedCallbacks.push(cb);
+}
+
+export function getCachedAuthPopupWindowTabID() {
+  return POPUP_TAB_ID;
+}
+
+export function getAuthPopupWindowTabID() {
+  if (POPUP_TAB_ID !== -1) return Promise.resolve(POPUP_TAB_ID);
+
+  return new Promise<number>((resolve) => {
+    onPopupTabUpdated((popupTabID) => {
+      resolve(popupTabID);
+    });
+  });
+}
 
 /**
  * Authenticate the user from the background script.
@@ -38,24 +69,8 @@ export async function requestUserAuthorization(
   return await getPopupResponse(authID, popupWindowTabID);
 }
 
-let popupWindowTabID = -1;
-
-// TODO: Refactor this without polling...
-
-export function getAuthPopupWindowTabID() {
-  if (popupWindowTabID !== -1) return popupWindowTabID;
-
-  return new Promise<number>((resolve) => {
-    const intervalID = setInterval(() => {
-      if (popupWindowTabID === -1) return;
-      clearInterval(intervalID);
-      resolve(popupWindowTabID);
-    }, 100);
-  });
-}
-
 /**
- * Create an authenticator popup
+ * Create or reuse an authenticator popup to handle an `AuthRequest`.
  *
  * @param data The data sent to the popup
  *
@@ -65,12 +80,10 @@ async function createAuthPopup(
   authRequestData: AuthRequestData,
   moduleAppData: ModuleAppData
 ) {
-  // TODO: Update to check if there's already a popup and send messages to it and communicate using postMessage():
-
   const unlock = await popupMutex.lock();
 
-  let popupWindowTab: browser.Tabs.Tab | null = await browser.tabs
-    .get(popupWindowTabID)
+  const popupWindowTab: browser.Tabs.Tab | null = await browser.tabs
+    .get(POPUP_TAB_ID)
     .catch(() => null);
 
   if (
@@ -78,7 +91,6 @@ async function createAuthPopup(
     !popupWindowTab.url.startsWith(browser.runtime.getURL("tabs/auth.html"))
   ) {
     const window = await browser.windows.create({
-      // tabId: popupTabID,
       url: `${browser.runtime.getURL("tabs/auth.html")}#/`,
       focused: true,
       type: "popup",
@@ -86,12 +98,11 @@ async function createAuthPopup(
       height: 720
     });
 
-    popupWindowTab = window.tabs[0];
-    popupWindowTabID = popupWindowTab.id;
+    setPopupTabID(window.tabs[0].id);
 
-    console.log("- 2. Create popup", popupWindowTabID);
+    console.log("- 2. Create popup", POPUP_TAB_ID);
   } else {
-    console.log("- 2. Reuse popup", popupWindowTabID);
+    console.log("- 2. Reuse popup", POPUP_TAB_ID);
   }
 
   unlock();
@@ -102,9 +113,7 @@ async function createAuthPopup(
       ? DEFAULT_UNLOCK_AUTH_REQUEST_ID
       : nanoid();
 
-  // TODO: There should be another type AuthRequestMessageData:
-
-  await isomorphicSendMessage<AuthRequest>({
+  await isomorphicSendMessage({
     messageId: "auth_request",
     tabId: popupWindowTab.id,
     data: {
@@ -119,7 +128,7 @@ async function createAuthPopup(
 
   return {
     authID,
-    popupWindowTabID
+    popupWindowTabID: POPUP_TAB_ID
   };
 }
 
@@ -190,6 +199,8 @@ export async function replyToAuthRequest(
 let keepAliveInterval: number | null = null;
 
 const activeAuthRequests = new Set();
+
+const mutex = new Mutex();
 
 /**
  * Function to send periodic keep-alive messages

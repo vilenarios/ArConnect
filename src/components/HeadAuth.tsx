@@ -3,6 +3,7 @@ import { useState } from "react";
 import styled from "styled-components";
 import HeadV2 from "~components/popup/HeadV2";
 import { useAuthRequests } from "~utils/auth/auth.hooks";
+import type { AuthRequestStatus } from "~utils/auth/auth.types";
 
 export interface HeadAuthProps {
   title?: string;
@@ -43,8 +44,7 @@ export const HeadAuth: React.FC<HeadAuthProps> = ({ title, back }) => {
             <ButtonTransactionButton
               key={authRequest.authID}
               isCurrent={i === currentAuthRequestIndex}
-              isAccepted={authRequest.status === "accepted"}
-              isRejected={authRequest.status === "rejected"}
+              status={authRequest.status}
               onClick={() => setCurrentAuthRequestIndex(i)}
             />
           ))}
@@ -54,16 +54,23 @@ export const HeadAuth: React.FC<HeadAuthProps> = ({ title, back }) => {
 
         {process.env.NODE_ENV === "development" && areLogsExpanded ? (
           <DivLogWrapper>
-            {authRequests.map((authRequest, i) => (
-              <PreLogItem
-                key={authRequest.authID}
-                isCurrent={i === currentAuthRequestIndex}
-                isAccepted={authRequest.status === "accepted"}
-                isRejected={authRequest.status === "rejected"}
-              >
-                {JSON.stringify(authRequest, null, "  ")}
-              </PreLogItem>
-            ))}
+            {authRequests.map((authRequest, i) => {
+              if (authRequest.type === "sign") {
+                // TODO: Consider removing `authRequest.transaction.data` if large
+              } else if (authRequest.type === "signKeystone") {
+                // TODO: Consider removing `authRequest.data` if large.
+              }
+
+              return (
+                <PreLogItem
+                  key={authRequest.authID}
+                  isCurrent={i === currentAuthRequestIndex}
+                  status={authRequest.status}
+                >
+                  {JSON.stringify(authRequest, null, "  ")}
+                </PreLogItem>
+              );
+            })}
           </DivLogWrapper>
         ) : null}
       </DivTransactionTracker>
@@ -85,28 +92,27 @@ const DivTransactionsList = styled.div`
 
 interface AuthRequestIndicatorProps {
   isCurrent: boolean;
-  isAccepted: boolean;
-  isRejected: boolean;
+  status: AuthRequestStatus;
 }
 
-function getAuthRequestButtonIndicatorBorderColor(
-  props: AuthRequestIndicatorProps
-) {
-  if (props.isAccepted) return "green";
-  if (props.isRejected) return "red";
+const colorsByStatus: Record<AuthRequestStatus, string> = {
+  pending: "white",
+  accepted: "green",
+  rejected: "red",
+  aborted: "grey"
+};
 
-  return "white";
+function getAuthRequestButtonIndicatorBorderColor({
+  status
+}: AuthRequestIndicatorProps) {
+  return colorsByStatus[status];
 }
 
-function getAuthRequestButtonIndicatorBackgroundColor(
-  props: AuthRequestIndicatorProps
-) {
-  if (!props.isCurrent) return "transparent";
-
-  if (props.isAccepted) return "green";
-  if (props.isRejected) return "red";
-
-  return "white";
+function getAuthRequestButtonIndicatorBackgroundColor({
+  isCurrent,
+  status
+}: AuthRequestIndicatorProps) {
+  return isCurrent ? colorsByStatus[status] : "transparent";
 }
 
 const ButtonTransactionButton = styled.button<AuthRequestIndicatorProps>`

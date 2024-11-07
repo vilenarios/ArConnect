@@ -1,32 +1,30 @@
 import {
-  onMessage,
+  onMessage as webExtBridgeOnMessage,
   sendMessage as webExtBridgeSendMessage,
-  type DataTypeKey,
   type GetDataType,
   type GetReturnType,
-  type OnMessageCallback
+  type OnMessageCallback,
+  type ProtocolMap
 } from "@arconnect/webext-bridge";
 
-export interface SendMessageResult<T> {
-  messageId: string;
+export type MessageID = keyof ProtocolMap;
+
+export interface MessageData<K extends MessageID> {
+  messageId: K;
   tabId?: number;
-  data: T;
+  data: ProtocolMap[K];
 }
 
 let messageCounter = 0;
 
-export async function isomorphicSendMessage<T extends {}>({
+export async function isomorphicSendMessage<K extends MessageID>({
   messageId,
   tabId,
   data
-}: SendMessageResult<T>) {
+}: MessageData<K>) {
+  // See the "Receive API calls" comment in `ArConnect/src/contents/api.ts` for more on message passing.
+
   const currentMessage = messageCounter++;
-
-  // TODO: Background sends this using sendMessage, which the content script receives and re-throws with postMessage.
-
-  // TODO: The embedded wallet directly uses postMessage from the iframe to the parent.
-
-  // TODO: Just send it and wait for ACK.
 
   async function sendMessage() {
     const result = await webExtBridgeSendMessage(
@@ -54,11 +52,11 @@ export async function isomorphicSendMessage<T extends {}>({
   return new Promise(async (resolve, reject) => {
     // TODO: Timeout and retry if it doesn't return in X seconds...
 
-    console.log(`- 3. ${currentMessage}. Sending message now...`);
+    console.log(`- 3. ${currentMessage}. Sending ${messageId}...`);
 
     sendMessage()
       .then((result) => {
-        console.log(`- 3. ${currentMessage}. Message Ok`);
+        console.log(`- 3. ${currentMessage}. Ok ${messageId}.`);
 
         resolve(result);
       })
@@ -68,10 +66,7 @@ export async function isomorphicSendMessage<T extends {}>({
             `No handler registered in 'web_accessible' to accept messages with id '${messageId}'`
           )
         ) {
-          console.log(
-            `- 3. ${currentMessage}. Message error (${messageId}):`,
-            err
-          );
+          console.log(`- 3. ${currentMessage}. Error ${messageId}:`, err);
 
           reject(err);
 
@@ -81,40 +76,43 @@ export async function isomorphicSendMessage<T extends {}>({
         console.log(`- 4. ${currentMessage}. Waiting for ready...`);
 
         // TODO: Make this generic:
-        onMessage(`${messageId}_ready`, async ({ sender, data }) => {
-          // console.log("ready received");
+        webExtBridgeOnMessage(
+          `${messageId}_ready`,
+          async ({ sender, data }) => {
+            // console.log("ready received");
 
-          // validate sender by it's tabId
-          if (sender.tabId !== tabId) {
-            return;
+            // validate sender by it's tabId
+            if (sender.tabId !== tabId) {
+              return;
+            }
+
+            console.log(`- 5. ${currentMessage}. Sending message again...`);
+
+            await sendMessage()
+              .then((result) => {
+                console.log(`- 5. ${currentMessage}. Message again Ok`);
+
+                resolve(result);
+              })
+              .catch((err) => {
+                console.log(
+                  `- 5. ${currentMessage}. Message again error:`,
+                  err
+                );
+
+                reject(err);
+              });
           }
-
-          console.log(`- 5. ${currentMessage}. Sending message again...`);
-
-          await sendMessage()
-            .then((result) => {
-              console.log(`- 5. ${currentMessage}. Message again Ok`);
-
-              resolve(result);
-            })
-            .catch((err) => {
-              console.log(`- 5. ${currentMessage}. Message again error:`, err);
-
-              reject(err);
-            });
-        });
+        );
       });
   });
 }
 
-export function isomorphicOnMessage<
-  Data extends {},
-  K extends DataTypeKey | string
->(
+export function isomorphicOnMessage<K extends MessageID>(
   messageID: K,
   callback: OnMessageCallback<GetDataType<K, Data>, GetReturnType<K, any>>
 ): void {
-  onMessage(messageID, callback);
+  webExtBridgeOnMessage(messageID, callback);
 
   isomorphicSendMessage({
     messageId: `${messageID}_ready`,
@@ -146,5 +144,3 @@ export function isomorphicOnMessage<
 
   */
 }
-
-export function useIsomorphicOnMessage() {}

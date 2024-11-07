@@ -9,7 +9,7 @@ import type { Transaction } from "arbundles";
 
 // COMMON:
 
-type AuthRequestStatus = "pending" | "accepted" | "rejected";
+export type AuthRequestStatus = "pending" | "accepted" | "rejected" | "aborted";
 
 interface CommonAuthRequestProps {
   url: string;
@@ -18,6 +18,8 @@ interface CommonAuthRequestProps {
   requestedAt: number;
   status: AuthRequestStatus;
 }
+
+// AuthRequestData:
 
 // CONNECT:
 
@@ -94,6 +96,57 @@ export interface BatchSignDataItemAuthRequestData {
   data: RawDataItem;
 }
 
+// AuthRequestMessageData:
+
+export type ConnectAuthRequestMessageData = ConnectAuthRequestData &
+  CommonAuthRequestProps;
+export type AllowanceAuthRequestMessageData = AllowanceAuthRequestData &
+  CommonAuthRequestProps;
+export type UnlockAuthRequestMessageData = UnlockAuthRequestData &
+  CommonAuthRequestProps;
+export type TokenAuthRequestMessageData = TokenAuthRequestData &
+  CommonAuthRequestProps;
+export type SignAuthRequestMessageData = SignAuthRequestData &
+  CommonAuthRequestProps;
+export type SubscriptionAuthRequestMessageData = SubscriptionAuthRequestData &
+  CommonAuthRequestProps;
+export type SignKeystoneAuthRequestMessageData = SignKeystoneAuthRequestData &
+  CommonAuthRequestProps;
+export type SignatureAuthRequestMessageData = SignatureAuthRequestData &
+  CommonAuthRequestProps;
+export type SignDataItemAuthRequestMessageData = SignDataItemAuthRequestData &
+  CommonAuthRequestProps;
+export type BatchSignDataItemAuthRequestMessageData =
+  BatchSignDataItemAuthRequestData & CommonAuthRequestProps;
+
+// AuthRequest:
+
+export type ConnectAuthRequest = ConnectAuthRequestMessageData;
+export type AllowanceAuthRequest = AllowanceAuthRequestMessageData;
+export type UnlockAuthRequest = UnlockAuthRequestMessageData;
+export type TokenAuthRequest = TokenAuthRequestMessageData;
+
+export interface SignAuthRequest
+  extends Omit<SignAuthRequestMessageData, "transaction"> {
+  transaction: SplitTransaction | Transaction;
+}
+
+export type SubscriptionAuthRequest = SubscriptionAuthRequestMessageData;
+
+export interface SignKeystoneAuthRequest
+  extends SignKeystoneAuthRequestMessageData {
+  data?: Buffer;
+}
+
+export type SignatureAuthRequest = SignatureAuthRequestMessageData;
+export type SignDataItemAuthRequest = SignDataItemAuthRequestMessageData;
+export type BatchSignDataItemAuthRequest =
+  BatchSignDataItemAuthRequestMessageData;
+
+// Unions & Misc:
+
+export type AuthType = AuthRequestData["type"];
+
 export type AuthRequestData =
   | ConnectAuthRequestData
   | AllowanceAuthRequestData
@@ -106,32 +159,17 @@ export type AuthRequestData =
   | SignDataItemAuthRequestData
   | BatchSignDataItemAuthRequestData;
 
-export type AuthType = AuthRequestData["type"];
-
-export type ConnectAuthRequest = ConnectAuthRequestData &
-  CommonAuthRequestProps;
-export type AllowanceAuthRequest = AllowanceAuthRequestData &
-  CommonAuthRequestProps;
-export type UnlockAuthRequest = UnlockAuthRequestData & CommonAuthRequestProps;
-export type TokenAuthRequest = TokenAuthRequestData & CommonAuthRequestProps;
-export interface SignAuthRequest
-  extends CommonAuthRequestProps,
-    Omit<SignAuthRequestData, "transaction"> {
-  transaction: SplitTransaction | Transaction;
-}
-export type SubscriptionAuthRequest = SubscriptionAuthRequestData &
-  CommonAuthRequestProps;
-export interface SignKeystoneAuthRequest
-  extends CommonAuthRequestProps,
-    SignKeystoneAuthRequestData {
-  data: Buffer;
-}
-export type SignatureAuthRequest = SignatureAuthRequestData &
-  CommonAuthRequestProps;
-export type SignDataItemAuthRequest = SignDataItemAuthRequestData &
-  CommonAuthRequestProps;
-export type BatchSignDataItemAuthRequest = BatchSignDataItemAuthRequestData &
-  CommonAuthRequestProps;
+export type AuthRequestMessageData =
+  | ConnectAuthRequestMessageData
+  | AllowanceAuthRequestMessageData
+  | UnlockAuthRequestMessageData
+  | TokenAuthRequestMessageData
+  | SignAuthRequestMessageData
+  | SubscriptionAuthRequestMessageData
+  | SignKeystoneAuthRequestMessageData
+  | SignatureAuthRequestMessageData
+  | SignDataItemAuthRequestMessageData
+  | BatchSignDataItemAuthRequestMessageData;
 
 export type AuthRequest =
   | ConnectAuthRequest

@@ -356,12 +356,19 @@ export default function Sign() {
           </Section>
         )}
       </div>
+
+      <Section>
+        <p>{authRequest.status}</p>
+      </Section>
+
       <Section>
         {page !== "scanner" && (
           <>
             <ButtonV2
               fullWidth
-              disabled={!transaction || loading}
+              disabled={
+                !transaction || loading || authRequest.status !== "pending"
+              }
               loading={!!(!transaction || loading)}
               onClick={async () => {
                 if (!transaction) return;
@@ -381,7 +388,12 @@ export default function Sign() {
             <Spacer y={0.75} />
           </>
         )}
-        <ButtonV2 fullWidth secondary onClick={() => rejectRequest()}>
+        <ButtonV2
+          secondary
+          fullWidth
+          disabled={authRequest.status !== "pending"}
+          onClick={() => rejectRequest()}
+        >
           {browser.i18n.getMessage("cancel")}
         </ButtonV2>
       </Section>

@@ -3,7 +3,7 @@ import type { DisplayTheme } from "@arconnect/components";
 import type { Chunk } from "~api/modules/sign/chunks";
 import type { InjectedEvents } from "~utils/events";
 import "styled-components";
-import type { AuthRequest } from "~utils/auth/auth.types";
+import type { AuthRequestMessageData } from "~utils/auth/auth.types";
 
 declare module "@arconnect/webext-bridge" {
   // TODO: Make this type work with sendMessage, isomorphicSendMessage and isomorphicOnMessage
@@ -22,7 +22,7 @@ declare module "@arconnect/webext-bridge" {
     /**
      *
      */
-    auth_request: AuthRequest;
+    auth_request: AuthRequestMessageData;
 
     /**
      *
@@ -33,6 +33,11 @@ declare module "@arconnect/webext-bridge" {
      *
      */
     auth_chunk: Chunk;
+
+    /**
+     *
+     */
+    auth_tab_closed: number;
 
     // OTHER:
 

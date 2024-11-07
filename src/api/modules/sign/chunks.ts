@@ -17,6 +17,7 @@ export interface Chunk {
  */
 export const CHUNK_SIZE = 500000;
 
+// TODO: Store these in a map instead...
 // stored chunks
 const chunks: {
   chunkCollectionID: string; // unique ID for this collection
@@ -130,12 +131,6 @@ export function getChunks(collectionID: string, appURL: string) {
 
   return collection?.rawChunks;
 }
-
-// TODO: These can only be obtained ones, so it should be the AuthProvider (not the Sign page) who loads them.
-
-// TODO: Clean up chunks and AuthRequest from closed tabs
-
-// TODO: REVIEW THIS
 
 /**
  * Remove a chunk collection

@@ -99,23 +99,21 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     isomorphicOnMessage("auth_request", (authRequest) => {
+      console.log("AuthProvider - Request received", authRequest);
+
+      // UnlockAuthRequests are not enqueued as those are simply used to open the popup to prompt users to enter their
+      // password and wait for the wallet to unlock:
+
+      if (
+        !authRequest ||
+        !authRequest.data ||
+        authRequest.data.type === "unlock"
+      )
+        return;
+
       setAuthRequestContextState((prevAuthRequestContextState) => {
-        const {
-          authRequests: prevAuthRequests,
-          currentAuthRequestIndex: prevCurrentAuthRequestIndex
-        } = prevAuthRequestContextState;
-
-        console.log("AuthProvider - Request received", authRequest);
-
-        // UnlockAuthRequests are not enqueued as those are simply used to open the popup to prompt users to enter their
-        // password and wait for the wallet to unlock:
-        if (
-          !authRequest ||
-          !authRequest.data ||
-          authRequest.data.type === "unlock"
-        ) {
-          return prevAuthRequestContextState;
-        }
+        const { authRequests: prevAuthRequests, currentAuthRequestIndex } =
+          prevAuthRequestContextState;
 
         if (authRequest.data.type === "connect") {
           // TODO: Check if there are other ConnectAuthRequest for the same site. If so, combine the permissions and take data for the last one.
@@ -128,7 +126,7 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
               { ...authRequest.data, status: "pending" },
               ...prevAuthRequests
             ],
-            currentAuthRequestIndex: prevCurrentAuthRequestIndex
+            currentAuthRequestIndex
           };
         }
 
@@ -145,7 +143,41 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
             ...prevAuthRequests,
             { ...authRequest.data, status: "pending" }
           ],
-          currentAuthRequestIndex: prevCurrentAuthRequestIndex
+          currentAuthRequestIndex
+        };
+      });
+    });
+  }, []);
+
+  useEffect(() => {
+    isomorphicOnMessage("auth_tab_closed", (tabClosedMessage) => {
+      const tabID = tabClosedMessage?.data;
+
+      console.log(`AuthProvider - Tab ${tabID || "-"} closed`);
+
+      // TODO: Clean up chunks and alarm?
+
+      // UnlockAuthRequests are not enqueued as those are simply used to open the popup to prompt users to enter their
+      // password and wait for the wallet to unlock:
+
+      if (!tabID) return;
+
+      setAuthRequestContextState((prevAuthRequestContextState) => {
+        const { authRequests: prevAuthRequests, currentAuthRequestIndex } =
+          prevAuthRequestContextState;
+
+        const authRequests = prevAuthRequests.map((authRequest) => {
+          return authRequest.tabID === tabID
+            ? ({
+                ...authRequest,
+                status: "aborted"
+              } satisfies AuthRequest)
+            : authRequest;
+        });
+
+        return {
+          authRequests,
+          currentAuthRequestIndex
         };
       });
     });

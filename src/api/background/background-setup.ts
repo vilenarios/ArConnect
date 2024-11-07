@@ -1,5 +1,4 @@
 import { onMessage } from "@arconnect/webext-bridge";
-import { handleTabUpdate } from "~applications/tab";
 import handleFeeAlarm from "~api/modules/sign/fee";
 import { ExtensionStorage } from "~utils/storage";
 import browser from "webextension-polyfill";
@@ -23,6 +22,10 @@ import { handleSyncLabelsAlarm } from "~api/background/handlers/alarms/sync-labe
 import { handleWindowClose } from "~api/background/handlers/browser/window-close/window-close.handler";
 import { handleKeyRemovalAlarm } from "~api/background/handlers/alarms/key-removal/key-removal-alarm.handler";
 import { handleAoTokensImportAlarm } from "~api/background/handlers/alarms/ao-tokens-import/ao-tokens-import-alarm.handler";
+import {
+  handleTabClosed,
+  handleTabUpdate
+} from "~api/background/handlers/browser/tabs/tabs.handler";
 
 export function setupBackgroundService() {
   // MESSAGES:
@@ -82,6 +85,7 @@ export function setupBackgroundService() {
   // handle tab change (icon, context menus)
   browser.tabs.onUpdated.addListener((tabId) => handleTabUpdate(tabId));
   browser.tabs.onActivated.addListener(({ tabId }) => handleTabUpdate(tabId));
+  browser.tabs.onRemoved.addListener((tabId) => handleTabClosed(tabId));
 
   // handle ar:// protocol
   browser.webNavigation.onBeforeNavigate.addListener(handleProtocol);

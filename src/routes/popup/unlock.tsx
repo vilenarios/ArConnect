@@ -1,5 +1,4 @@
 import { unlock } from "~wallets/auth";
-import { useHistory } from "~utils/hash_router";
 import Wrapper from "~components/auth/Wrapper";
 import browser from "webextension-polyfill";
 import {
