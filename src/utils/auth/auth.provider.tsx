@@ -75,19 +75,30 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
 
       // If it is any other type of `AuthRequest`, we mark it as accepted/cancelled and move on to the next one:
       setAuthRequestContextState((prevAuthRequestContextState) => {
-        const {
-          authRequests: prevAuthRequests,
-          currentAuthRequestIndex: prevCurrentAuthRequestIndex
-        } = prevAuthRequestContextState;
-        const nextAuthRequests = prevAuthRequests;
+        const { authRequests, currentAuthRequestIndex } =
+          prevAuthRequestContextState;
 
-        // TODO: Get the previous pending one if the next one is not there...
-        const nextCurrentAuthRequestIndex = prevCurrentAuthRequestIndex + 1;
+        if (authRequests[currentAuthRequestIndex]?.authID !== authID)
+          return prevAuthRequestContextState;
 
-        nextAuthRequests[prevCurrentAuthRequestIndex] = {
-          ...nextAuthRequests[prevCurrentAuthRequestIndex],
+        const nextAuthRequests = authRequests;
+
+        // Mark the current `AuthRequest` as "accepted" or "rejected":
+        nextAuthRequests[currentAuthRequestIndex] = {
+          ...nextAuthRequests[currentAuthRequestIndex],
           status: accepted ? "accepted" : "rejected"
         };
+
+        // Find the index of the next "pending" `AuthRequest`, or keep it unchanged if there are none left:
+        let nextCurrentAuthRequestIndex = currentAuthRequestIndex;
+
+        do {
+          nextCurrentAuthRequestIndex =
+            (nextCurrentAuthRequestIndex + 1) % nextAuthRequests.length;
+        } while (
+          nextCurrentAuthRequestIndex !== currentAuthRequestIndex &&
+          nextAuthRequests[nextCurrentAuthRequestIndex].status !== "pending"
+        );
 
         return {
           authRequests: nextAuthRequests,
@@ -100,7 +111,6 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     // Close the popup if an AuthRequest doesn't arrive in less than `AUTH_POPUP_REQUEST_WAIT_MS` (1s):
-
     const timeoutID = setTimeout(() => {
       window.top.close();
     }, AUTH_POPUP_REQUEST_WAIT_MS);
@@ -124,28 +134,20 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
         const { authRequests: prevAuthRequests, currentAuthRequestIndex } =
           prevAuthRequestContextState;
 
-        if (authRequest.data.type === "connect") {
-          // TODO: Check if there are other ConnectAuthRequest for the same site. If so, combine the permissions and take data for the last one.
-          // TODO: What about the authIDs? We need to call `completeAuthRequest` on all of them.
-          // TODO: Connect request not automatically go to the front unless they can be combined.
-
-          // If not, add the new one AFTER the last connect one.
-          return {
-            authRequests: [
-              { ...authRequest.data, status: "pending" },
-              ...prevAuthRequests
-            ],
-            currentAuthRequestIndex
-          };
-        }
-
-        // TODO: Validate and merge this properly (by domain, tab, tags, etc.):
-
-        // TODO: Update enqueueing logic to group/sort by site and combine connect AuthRequests.
-
-        // TODO: Update enqueueing logic to group individual signDataItem requests in a single batchSignDataItem.
-
-        // TODO: Update enqueueing logic to remove AuthRequests if the tab that requested them gets closed or we disconnect the wallet.
+        // TODO: Additional considerations when enqueueing new `AuthRequest`s:
+        //
+        // - We might want to push "connect" requests at the head (0), not at the end.
+        //
+        // - We might want to automatically merge/combine "connect" requests from the same site (regardless of tab). In
+        //   this case, `AuthRequests` might have to respond to multiple authIDs when accepted/rejected, which affects
+        //   both `completeAuthRequest` and `auth.hook.ts`.
+        //
+        // - `AuthRequest`s could be grouped/sorted by domain/app/tab. This means the auth popup could/should provide a
+        //   domain/app/tab selector and automatically select the active tab when the user switches it.
+        //
+        // - Separate `signDataItem`requests could/should automatically be combined into a single `batchSignDataItem`
+        //   (except maybe for the current `AuthRequest`, as otherwise the UI would constantly change as new requests
+        //   are added to the batch).
 
         return {
           authRequests: [
