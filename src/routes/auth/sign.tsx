@@ -39,6 +39,7 @@ import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { HeadAuth } from "~components/HeadAuth";
 import { useThrottledRequestAnimationFrame } from "@swyg/corre";
 import { prettyDate } from "~utils/pretty_date";
+import { AuthButtons } from "~components/auth/AuthButtons";
 
 export default function Sign() {
   const { authRequest, acceptRequest, rejectRequest } =
@@ -351,44 +352,35 @@ export default function Sign() {
       </div>
 
       <Section>
-        <p>{authRequest.status}</p>
-      </Section>
+        <AuthButtons
+          authRequest={authRequest}
+          primaryButtonProps={
+            page === "scanner"
+              ? undefined
+              : {
+                  label: !page
+                    ? browser.i18n.getMessage("sign_authorize")
+                    : browser.i18n.getMessage("keystone_scan"),
+                  disabled:
+                    !transaction || loading || authRequest.status !== "pending",
+                  loading: !transaction || loading,
+                  onClick: async () => {
+                    if (!transaction) return;
+                    if (wallet.type === "hardware") {
+                      // load tx ur
+                      if (!page) await loadTransactionUR();
 
-      <Section>
-        {page !== "scanner" && (
-          <>
-            <ButtonV2
-              fullWidth
-              disabled={
-                !transaction || loading || authRequest.status !== "pending"
-              }
-              loading={!!(!transaction || loading)}
-              onClick={async () => {
-                if (!transaction) return;
-                if (wallet.type === "hardware") {
-                  // load tx ur
-                  if (!page) await loadTransactionUR();
-
-                  // update page
-                  setPage((val) => (!val ? "qr" : "scanner"));
-                } else await acceptRequest();
-              }}
-            >
-              {!page
-                ? browser.i18n.getMessage("sign_authorize")
-                : browser.i18n.getMessage("keystone_scan")}
-            </ButtonV2>
-            <Spacer y={0.75} />
-          </>
-        )}
-        <ButtonV2
-          secondary
-          fullWidth
-          disabled={authRequest.status !== "pending"}
-          onClick={() => rejectRequest()}
-        >
-          {browser.i18n.getMessage("cancel")}
-        </ButtonV2>
+                      // update page
+                      setPage((val) => (!val ? "qr" : "scanner"));
+                    } else await acceptRequest();
+                  }
+                }
+          }
+          secondaryButtonProps={{
+            label: browser.i18n.getMessage("cancel"),
+            onClick: () => rejectRequest()
+          }}
+        />
       </Section>
     </Wrapper>
   );

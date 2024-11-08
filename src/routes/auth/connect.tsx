@@ -41,6 +41,7 @@ import Arweave from "arweave";
 import Permissions from "../../components/auth/Permissions";
 import { Flex } from "~routes/popup/settings/apps/[url]";
 import { HeadAuth } from "~components/HeadAuth";
+import { AuthButtons } from "~components/auth/AuthButtons";
 
 export default function Connect() {
   // active address
@@ -385,39 +386,32 @@ export default function Connect() {
       </div>
       {!edit && (
         <Section>
-          <>
-            <ButtonV2
-              fullWidth
-              onClick={async () => {
-                if (page === "unlock") {
-                  await unlock();
-                } else {
-                  await connect();
-                }
-              }}
-            >
-              {browser.i18n.getMessage(
+          <AuthButtons
+            authRequest={authRequest}
+            primaryButtonProps={{
+              label: browser.i18n.getMessage(
                 page === "unlock"
                   ? "sign_in"
                   : removedPermissions.length > 0
                   ? "allow_selected_permissions"
                   : "always_allow"
-              )}
-            </ButtonV2>
-            <Spacer y={0.75} />
-            <ButtonV2
-              fullWidth
-              secondary
-              // onClick={() => page === "unlock" ? rejectRequest() : connect(true)}
-              onClick={
-                page === "unlock" ? () => rejectRequest() : () => connect(true)
+              ),
+              onClick: async () => {
+                if (page === "unlock") {
+                  await unlock();
+                } else {
+                  await connect();
+                }
               }
-            >
-              {browser.i18n.getMessage(
+            }}
+            secondaryButtonProps={{
+              label: browser.i18n.getMessage(
                 page === "unlock" ? "cancel" : "always_ask_permission"
-              )}
-            </ButtonV2>
-          </>
+              ),
+              onClick: () =>
+                page === "unlock" ? rejectRequest() : connect(true)
+            }}
+          />
         </Section>
       )}
     </Wrapper>

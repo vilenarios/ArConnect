@@ -22,6 +22,7 @@ import browser from "webextension-polyfill";
 import Message from "~components/auth/Message";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { HeadAuth } from "~components/HeadAuth";
+import { AuthButtons } from "~components/auth/AuthButtons";
 
 export default function SignKeystone() {
   const { authRequest, acceptRequest, rejectRequest } =
@@ -142,31 +143,32 @@ export default function SignKeystone() {
         )}
       </div>
       <Section>
-        {page !== "scanner" && (
-          <>
-            <ButtonV2
-              fullWidth
-              disabled={!dataToSign || loading}
-              loading={!dataToSign || loading}
-              onClick={async () => {
-                if (!dataToSign) return;
-                if (wallet.type === "hardware") {
-                  // load tx ur
-                  if (!page) await loadTransactionUR();
+        <AuthButtons
+          authRequest={authRequest}
+          primaryButtonProps={
+            page === "scanner"
+              ? undefined
+              : {
+                  label: browser.i18n.getMessage("sign_authorize"),
+                  disabled: !dataToSign || loading,
+                  loading: !dataToSign || loading,
+                  onClick: async () => {
+                    if (!dataToSign) return;
+                    if (wallet.type === "hardware") {
+                      // load tx ur
+                      if (!page) await loadTransactionUR();
 
-                  // update page
-                  setPage((val) => (!val ? "qr" : "scanner"));
-                } else await acceptRequest();
-              }}
-            >
-              {browser.i18n.getMessage("sign_authorize")}
-            </ButtonV2>
-            <Spacer y={0.75} />
-          </>
-        )}
-        <ButtonV2 fullWidth secondary onClick={() => rejectRequest()}>
-          {browser.i18n.getMessage("cancel")}
-        </ButtonV2>
+                      // update page
+                      setPage((val) => (!val ? "qr" : "scanner"));
+                    } else await acceptRequest();
+                  }
+                }
+          }
+          secondaryButtonProps={{
+            label: browser.i18n.getMessage("cancel"),
+            onClick: () => rejectRequest()
+          }}
+        />
       </Section>
     </Wrapper>
   );

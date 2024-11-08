@@ -31,6 +31,7 @@ import { concatGatewayURL } from "~gateways/utils";
 import { findGateway, useGateway } from "~gateways/wayfinder";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { HeadAuth } from "~components/HeadAuth";
+import { AuthButtons } from "~components/auth/AuthButtons";
 
 export default function Token() {
   const { authRequest, acceptRequest, rejectRequest } =
@@ -230,13 +231,18 @@ export default function Token() {
         </AnimatePresence>
       </div>
       <Section>
-        <ButtonV2 fullWidth onClick={done} loading={loading}>
-          {browser.i18n.getMessage("addToken")}
-        </ButtonV2>
-        <Spacer y={0.75} />
-        <ButtonV2 fullWidth secondary onClick={() => rejectRequest()}>
-          {browser.i18n.getMessage("cancel")}
-        </ButtonV2>
+        <AuthButtons
+          authRequest={authRequest}
+          primaryButtonProps={{
+            label: browser.i18n.getMessage("addToken"),
+            loading,
+            onClick: done
+          }}
+          secondaryButtonProps={{
+            label: browser.i18n.getMessage("cancel"),
+            onClick: () => rejectRequest()
+          }}
+        />
       </Section>
     </Wrapper>
   );

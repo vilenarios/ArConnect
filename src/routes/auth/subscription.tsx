@@ -40,6 +40,7 @@ import { handleSubscriptionPayment } from "~subscriptions/payments";
 import BigNumber from "bignumber.js";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { HeadAuth } from "~components/HeadAuth";
+import { AuthButtons } from "~components/auth/AuthButtons";
 
 export default function Subscription() {
   const { authRequest, acceptRequest, rejectRequest } =
@@ -250,16 +251,19 @@ export default function Subscription() {
             gap: "8px"
           }}
         >
-          <ButtonV2 fullWidth style={{ fontWeight: "500" }} onClick={done}>
-            {browser.i18n.getMessage("confirm_subscription")}
-          </ButtonV2>
-          <ButtonV2
-            fullWidth
-            style={{ fontWeight: "500", backgroundColor: "#8C1A1A" }}
-            onClick={() => rejectRequest()}
-          >
-            {browser.i18n.getMessage("cancel")}
-          </ButtonV2>
+          <AuthButtons
+            authRequest={authRequest}
+            primaryButtonProps={{
+              label: browser.i18n.getMessage("confirm_subscription"),
+              onClick: done,
+              style: { fontWeight: "500" }
+            }}
+            secondaryButtonProps={{
+              label: browser.i18n.getMessage("cancel"),
+              onClick: () => rejectRequest(),
+              style: { fontWeight: "500", backgroundColor: "#8C1A1A" }
+            }}
+          />
         </div>
       </Wrapper>
     </>

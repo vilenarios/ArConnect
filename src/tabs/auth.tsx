@@ -32,12 +32,15 @@ import { LoadingPage } from "~components/LoadingPage";
 // DONE: Add auth popup close delay only in dev.
 
 // DONE: Show minutes/hours in the requested at label.
-// DOING: Extract AuthRequest buttons in their own component.
-// DOING: All screens should account for a tx being accepted/rejected already (change buttons) and show the requested at label.
+// DONE: Extract AuthRequest buttons in their own component.
+// DONE: All screens should account for a tx being accepted/rejected already (change buttons) and show the requested at label.
+// TODO: Add i18n for `AuthButtons` and remove "requested" from sign.tsx page.
 
 // TODO: Add env variable for message/auth-related logs.
 // TODO: Clean up alarms on auth_tab_closed
 
+// TODO: prevAuthRequest in auth.hook.ts is incorrect.
+// TODO: How to know which wallet is being used in the AuthRequests? What if I change the wallet, should the requests be cancelled?
 // TODO: Unify transaction details component (new PR).
 
 export function AuthApp() {

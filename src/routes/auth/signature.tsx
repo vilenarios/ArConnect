@@ -5,6 +5,7 @@ import browser from "webextension-polyfill";
 import { useEffect } from "react";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { HeadAuth } from "~components/HeadAuth";
+import { AuthButtons } from "~components/auth/AuthButtons";
 
 export default function Signature() {
   const { authRequest, acceptRequest, rejectRequest } =
@@ -37,14 +38,20 @@ export default function Signature() {
       </div>
       <Section>
         <Message message={message} />
-        <Spacer y={1.25} />
-        <ButtonV2 fullWidth onClick={acceptRequest}>
-          {browser.i18n.getMessage("signature_authorize")}
-        </ButtonV2>
-        <Spacer y={0.75} />
-        <ButtonV2 fullWidth secondary onClick={() => rejectRequest()}>
-          {browser.i18n.getMessage("cancel")}
-        </ButtonV2>
+      </Section>
+      <Spacer y={0.25} />
+      <Section>
+        <AuthButtons
+          authRequest={authRequest}
+          primaryButtonProps={{
+            label: browser.i18n.getMessage("signature_authorize"),
+            onClick: acceptRequest
+          }}
+          secondaryButtonProps={{
+            label: browser.i18n.getMessage("cancel"),
+            onClick: () => rejectRequest()
+          }}
+        />
       </Section>
     </Wrapper>
   );

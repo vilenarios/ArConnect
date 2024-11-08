@@ -13,6 +13,7 @@ import browser from "webextension-polyfill";
 import Head from "~components/popup/Head";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { HeadAuth } from "~components/HeadAuth";
+import { AuthButtons } from "~components/auth/AuthButtons";
 
 export default function Unlock() {
   const { acceptRequest } = useCurrentAuthRequest("unlock");
@@ -66,9 +67,12 @@ export default function Unlock() {
         </Section>
       </div>
       <Section>
-        <ButtonV2 fullWidth onClick={unlockWallet}>
-          {browser.i18n.getMessage("unlock")}
-        </ButtonV2>
+        <AuthButtons
+          primaryButtonProps={{
+            label: browser.i18n.getMessage("unlock"),
+            onClick: unlockWallet
+          }}
+        />
       </Section>
     </Wrapper>
   );

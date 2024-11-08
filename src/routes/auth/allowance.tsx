@@ -23,6 +23,7 @@ import { defaultGateway } from "~gateways/gateway";
 import BigNumber from "bignumber.js";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { HeadAuth } from "~components/HeadAuth";
+import { AuthButtons } from "~components/auth/AuthButtons";
 
 export default function Allowance() {
   const arweave = new Arweave(defaultGateway);
@@ -169,13 +170,17 @@ export default function Allowance() {
         </Section>
       </div>
       <Section>
-        <ButtonV2 fullWidth onClick={reset}>
-          {browser.i18n.getMessage("reset_spent")}
-        </ButtonV2>
-        <Spacer y={0.75} />
-        <ButtonV2 fullWidth secondary onClick={() => rejectRequest()}>
-          {browser.i18n.getMessage("cancel")}
-        </ButtonV2>
+        <AuthButtons
+          authRequest={authRequest}
+          primaryButtonProps={{
+            label: browser.i18n.getMessage("reset_spent"),
+            onClick: reset
+          }}
+          secondaryButtonProps={{
+            label: browser.i18n.getMessage("cancel"),
+            onClick: () => rejectRequest()
+          }}
+        />
       </Section>
     </Wrapper>
   );

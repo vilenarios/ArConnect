@@ -43,6 +43,7 @@ import { checkWalletBits, type WalletBitsCheck } from "~utils/analytics";
 import { Degraded, WarningWrapper } from "~routes/popup/send";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { HeadAuth } from "~components/HeadAuth";
+import { AuthButtons } from "~components/auth/AuthButtons";
 
 export default function SignDataItem() {
   const { authRequest, acceptRequest, rejectRequest } =
@@ -390,17 +391,18 @@ export default function SignDataItem() {
             <Spacer y={1} />
           </>
         )}
-        <ButtonV2
-          fullWidth
-          onClick={sign}
-          disabled={(password && !passwordInput.state) || loading}
-        >
-          {browser.i18n.getMessage("signature_authorize")}
-        </ButtonV2>
-        <Spacer y={0.75} />
-        <ButtonV2 fullWidth secondary onClick={() => rejectRequest()}>
-          {browser.i18n.getMessage("cancel")}
-        </ButtonV2>
+
+        <AuthButtons
+          authRequest={authRequest}
+          primaryButtonProps={{
+            label: browser.i18n.getMessage("signature_authorize"),
+            onClick: sign
+          }}
+          secondaryButtonProps={{
+            label: browser.i18n.getMessage("cancel"),
+            onClick: () => rejectRequest()
+          }}
+        />
       </Section>
     </Wrapper>
   );
