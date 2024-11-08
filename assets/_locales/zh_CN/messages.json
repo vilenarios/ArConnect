@@ -2315,5 +2315,35 @@
     "signDataItemRequestLoading": {
       "message": "Signing...",
       "description": "Loading message for AuthRequest of type signDataItem"
+    },
+    "formattedElapsedSeconds": {
+      "message": "$SECONDS$ seconds ago",
+      "description": "Format elapsed seconds",
+      "placeholders": {
+        "seconds": {
+          "content": "$1",
+          "example": "10"
+        }
+      }
+    },
+    "formattedElapsedMinutes": {
+      "message": "$MINUTES$ minutes ago",
+      "description": "Format elapsed minutes",
+      "placeholders": {
+        "minutes": {
+          "content": "$1",
+          "example": "10"
+        }
+      }
+    },
+    "formattedElapsedHours": {
+      "message": "$HOURS$ hours ago",
+      "description": "Format elapsed hours",
+      "placeholders": {
+        "hours": {
+          "content": "$1",
+          "example": "10"
+        }
+      }
     }
 }
