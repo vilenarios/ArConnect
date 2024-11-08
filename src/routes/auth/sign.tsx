@@ -38,20 +38,13 @@ import BigNumber from "bignumber.js";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { HeadAuth } from "~components/HeadAuth";
 import { useThrottledRequestAnimationFrame } from "@swyg/corre";
-
-function prettyDate(timestamp: number) {
-  const elapsedSeconds = Math.round((Date.now() - timestamp) / 1000);
-
-  return `${elapsedSeconds} seconds ago`;
-}
+import { prettyDate } from "~utils/pretty_date";
 
 export default function Sign() {
   const { authRequest, acceptRequest, rejectRequest } =
     useCurrentAuthRequest("sign");
 
   const { address, transaction, requestedAt } = authRequest;
-
-  // TODO: Maybe the requested at label would be useful on all AuthRequest types?
 
   const requestedAtElementRef = useRef<HTMLSpanElement>();
 

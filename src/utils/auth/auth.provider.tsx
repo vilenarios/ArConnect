@@ -100,6 +100,10 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
           nextAuthRequests[nextCurrentAuthRequestIndex].status !== "pending"
         );
 
+        if (nextCurrentAuthRequestIndex === currentAuthRequestIndex) {
+          nextCurrentAuthRequestIndex = nextAuthRequests.length;
+        }
+
         return {
           authRequests: nextAuthRequests,
           currentAuthRequestIndex: nextCurrentAuthRequestIndex
@@ -149,12 +153,23 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
         //   (except maybe for the current `AuthRequest`, as otherwise the UI would constantly change as new requests
         //   are added to the batch).
 
+        const nextAuthRequests = [
+          ...prevAuthRequests,
+          { ...authRequest.data, status: "pending" }
+        ] satisfies AuthRequest[];
+
+        // TODO: Add setting to decide whether we automatically jump to a new pending request when they arrive or stay
+        // in the one currently selected:
+
+        let nextCurrentAuthRequestIndex = currentAuthRequestIndex;
+
+        // if (nextAuthRequests[currentAuthRequestIndex].status !== "pending") {
+        //   nextCurrentAuthRequestIndex = nextAuthRequests.length - 1;
+        // }
+
         return {
-          authRequests: [
-            ...prevAuthRequests,
-            { ...authRequest.data, status: "pending" }
-          ],
-          currentAuthRequestIndex
+          authRequests: nextAuthRequests,
+          currentAuthRequestIndex: nextCurrentAuthRequestIndex
         };
       });
     });
@@ -169,8 +184,6 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
       const tabID = tabClosedMessage?.data;
 
       console.log(`AuthProvider - Tab ${tabID || "-"} closed`);
-
-      // TODO: Clean up chunks and alarm?
 
       if (!tabID) return;
 
