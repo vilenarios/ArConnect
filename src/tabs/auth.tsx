@@ -31,9 +31,11 @@ import { LoadingPage } from "~components/LoadingPage";
 // DONE: Add a requestedAt label (now, a minute ago, etc.). Added only to sign.tsx, not signDataItem, signKeystone or any other page.
 // DONE: Add auth popup close delay only in dev.
 
-// DOING: Add env variable for message/auth-related logs.
 // DOING: Extract AuthRequest buttons in their own component.
+// DOING: Show minutes/hours in the requested at label.
 // DOING: All screens should account for a tx being accepted/rejected already (change buttons) and show the requested at label.
+
+// DOING: Add env variable for message/auth-related logs.
 
 // TODO: Unify transaction details component (new PR).
 
