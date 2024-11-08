@@ -126,9 +126,11 @@ export default function SignDataItemDetails({ params }) {
     },
     ""
   );
+
   // adjust amount title font sizes
   const parentRef = useRef(null);
   const childRef = useRef(null);
+
   return (
     <>
       {params ? (

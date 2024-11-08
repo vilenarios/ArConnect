@@ -1,9 +1,7 @@
 import {
   onMessage as webExtBridgeOnMessage,
   sendMessage as webExtBridgeSendMessage,
-  type GetDataType,
-  type GetReturnType,
-  type OnMessageCallback,
+  type IBridgeMessage,
   type ProtocolMap
 } from "@arconnect/webext-bridge";
 
@@ -17,6 +15,11 @@ export interface MessageData<K extends MessageID> {
 
 let messageCounter = 0;
 
+/**
+ * Send a message of `<messageId>` type to the specific `tabId` or background straight away. If that message fails
+ * because no one is listening, listen for `<messageId>_ready` messages for 6 seconds, and try to send the message again
+ * once that's received, or throw a time out error otherwise.
+ */
 export async function isomorphicSendMessage<K extends MessageID>({
   messageId,
   tabId,
@@ -26,11 +29,13 @@ export async function isomorphicSendMessage<K extends MessageID>({
 
   const currentMessage = messageCounter++;
 
+  const destination = tabId ? `web_accessible@${tabId}` : "background";
+
   async function sendMessage() {
     const result = await webExtBridgeSendMessage(
       messageId,
-      data,
-      tabId ? `web_accessible@${tabId}` : "background"
+      data as any,
+      destination
     );
 
     // check the result
@@ -50,7 +55,22 @@ export async function isomorphicSendMessage<K extends MessageID>({
   }
 
   return new Promise(async (resolve, reject) => {
-    // TODO: Timeout and retry if it doesn't return in X seconds...
+    let timeoutTimeoutID = 0;
+    let retryIntervalID = 0;
+
+    function resolveAndClearTimeouts(value: unknown) {
+      clearTimeout(timeoutTimeoutID);
+      clearInterval(retryIntervalID);
+
+      resolve(value);
+    }
+
+    function rejectAndClearTimeouts(reason?: any) {
+      clearTimeout(timeoutTimeoutID);
+      clearInterval(retryIntervalID);
+
+      reject(reason);
+    }
 
     console.log(`- 3. ${currentMessage}. Sending ${messageId}...`);
 
@@ -58,89 +78,74 @@ export async function isomorphicSendMessage<K extends MessageID>({
       .then((result) => {
         console.log(`- 3. ${currentMessage}. Ok ${messageId}.`);
 
-        resolve(result);
+        resolveAndClearTimeouts(result);
       })
       .catch((err) => {
+        const errorMessage = `${err.message || ""}`;
+
         if (
-          !(err.message || "").endsWith(
-            `No handler registered in 'web_accessible' to accept messages with id '${messageId}'`
+          !/No handler registered in '.+' to accept messages with id '\d+'/.test(
+            errorMessage
           )
         ) {
           console.log(`- 3. ${currentMessage}. Error ${messageId}:`, err);
 
-          reject(err);
+          rejectAndClearTimeouts(err);
 
           return;
         }
 
         console.log(`- 4. ${currentMessage}. Waiting for ready...`);
 
-        // TODO: Make this generic:
-        webExtBridgeOnMessage(
-          `${messageId}_ready`,
-          async ({ sender, data }) => {
-            // console.log("ready received");
+        timeoutTimeoutID = setTimeout(() => {
+          reject(
+            new Error(
+              `Timed out waiting for ${messageId}_ready from ${destination}`
+            )
+          );
+        }, 6000);
 
-            // validate sender by it's tabId
-            if (sender.tabId !== tabId) {
-              return;
-            }
+        // TODO: Implement retry in case the initial call to `sendMessage()` above fails and the "ready" event is never
+        // received (e.g. popup opens, `sendMessage()` fails, background sends "ready" event, popup starts listening for
+        // ready event).
+        // retryIntervalID = setInterval(() => {}, 2000);
 
-            console.log(`- 5. ${currentMessage}. Sending message again...`);
-
-            await sendMessage()
-              .then((result) => {
-                console.log(`- 5. ${currentMessage}. Message again Ok`);
-
-                resolve(result);
-              })
-              .catch((err) => {
-                console.log(
-                  `- 5. ${currentMessage}. Message again error:`,
-                  err
-                );
-
-                reject(err);
-              });
+        async function handleTabReady({ sender }: IBridgeMessage<any>) {
+          // validate sender by it's tabId
+          if (sender.tabId !== tabId) {
+            return;
           }
-        );
+
+          console.log(`- 5. ${currentMessage}. Sending message again...`);
+
+          await sendMessage()
+            .then((result) => {
+              console.log(`- 5. ${currentMessage}. Message again Ok`);
+
+              resolveAndClearTimeouts(result);
+            })
+            .catch((err) => {
+              console.log(`- 5. ${currentMessage}. Message again error:`, err);
+
+              rejectAndClearTimeouts(err);
+            });
+        }
+
+        webExtBridgeOnMessage(`${messageId}_ready`, handleTabReady as any);
       });
   });
 }
 
-export function isomorphicOnMessage<K extends MessageID>(
+export function isomorphicOnMessage<K extends MessageID, R>(
   messageID: K,
-  callback: OnMessageCallback<GetDataType<K, Data>, GetReturnType<K, any>>
+  callback: (
+    message: Omit<IBridgeMessage<any>, "data"> & { data: ProtocolMap[K] }
+  ) => void
 ): void {
-  webExtBridgeOnMessage(messageID, callback);
+  webExtBridgeOnMessage(messageID, callback as any);
 
   isomorphicSendMessage({
-    messageId: `${messageID}_ready`,
-    data: {}
+    messageId: `${messageID}_ready` as any,
+    data: null
   });
-
-  // TODO: Can the first message submission from isomorphicSendMessage fail and the "ready" event never be received?
-  // TODO: Maybe not needed? This should be done automatically from isomorphicOnMessage
-
-  /*
-
-  retryWithDelay(() => {
-    return sendMessage("ready", {}).catch((err) => {
-      if (
-        err.message ===
-        "No handler registered in 'background' to accept messages with id 'ready'"
-      ) {
-        console.log(
-          "AuthProvider - Ready message sent before background started listening. Retrying...",
-          err
-        );
-      }
-
-      throw err;
-    });
-  }).catch((err) => {
-    console.log("AuthProvider - Ready message failed after retrying:", err);
-  });
-
-  */
 }

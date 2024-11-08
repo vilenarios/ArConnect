@@ -72,7 +72,6 @@ export function useCurrentAuthRequest<T extends AuthType>(
     authRequest,
     acceptRequest,
     rejectRequest
-    // closeWindow,
   };
 }
 
@@ -87,24 +86,3 @@ export const useAuthRequestsLocation: BaseLocationHook = () => {
 
   return [currentAuthRequestType, (path: string) => ""];
 };
-
-/**
- * Hook to parse auth params from the url
- */
-/*
-export function useAuthParams<T = {}>() {
-  const [params, setParams] = useState<AuthDataWithID & T>();
-
-  // fetch params
-  useEffect(() => {
-    const urlParams = window.location.href.split("?");
-    const params = objectFromUrlParams<AuthDataWithID & T>(
-      urlParams[urlParams.length - 1].replace(window.location.hash, "")
-    );
-
-    setParams(params);
-  }, []);
-
-  return params;
-}
-*/
