@@ -26,38 +26,22 @@ import { LoadingPage } from "~components/LoadingPage";
 // DONE: Add logo ("favicon") to the HeadV2 (and HeadAuth) components.
 // DONE: Hide the debug button in HeadAuth behind a flag.
 
-// TODO: Display "X more" to HeadAuth label if there are too many of them or add some kind of horizontal scroll or get rid of older ones...
-
-// DONE: Add a requestedAt label (now, a minute ago, etc.). Added only to sign.tsx, not signDataItem, signKeystone or any other page.
-// TODO: Unify transaction details component.
-
 // DONE: Load transactions from AuthRequests in the Provider, not in the sign.tsx route.
 // DONE: Abort transactions if the tab that requested them is closed.
+// DONE: Add a requestedAt label (now, a minute ago, etc.). Added only to sign.tsx, not signDataItem, signKeystone or any other page.
+// DONE: Add auth popup close delay only in dev.
+
+// DOING: Add env variable for message/auth-related logs.
 // DOING: Extract AuthRequest buttons in their own component.
 // DOING: All screens should account for a tx being accepted/rejected already (change buttons) and show the requested at label.
 
-// TODO: Remove delay in this PR and add setting to close or not close automatically.
-
-// TODO: initExtensionMessageForwarder();
+// TODO: Unify transaction details component (new PR).
 
 export function AuthApp() {
   const initialScreenType = useSetUp();
   const { authRequest, prevAuthRequest } = useCurrentAuthRequest("any");
 
   let content: React.ReactElement = null;
-
-  /*
-
-  // TODO: Automatically close if nothing happens relatively quick after the popup is opened.
-
-  useEffect(() => {
-    if (initialScreenType === "default" && authRequests.length <= 0) {
-      console.log("CLOSE POPUP");
-      // If there isn't anything to show, just close the /auth popup:
-      // window.top.close();
-    }
-  }, [])
-  */
 
   if (initialScreenType === "locked") {
     content = (

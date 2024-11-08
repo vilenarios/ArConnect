@@ -8,6 +8,7 @@ import {
 } from "react";
 import {
   AUTH_POPUP_CLOSING_DELAY_MS,
+  AUTH_POPUP_REQUEST_WAIT_MS,
   DEFAULT_UNLOCK_AUTH_REQUEST_ID
 } from "~utils/auth/auth.constants";
 import type {
@@ -98,7 +99,15 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
   );
 
   useEffect(() => {
+    // Close the popup if an AuthRequest doesn't arrive in less than `AUTH_POPUP_REQUEST_WAIT_MS` (1s):
+
+    const timeoutID = setTimeout(() => {
+      window.top.close();
+    }, AUTH_POPUP_REQUEST_WAIT_MS);
+
     isomorphicOnMessage("auth_request", (authRequest) => {
+      clearTimeout(timeoutID);
+
       console.log("AuthProvider - Request received", authRequest);
 
       // UnlockAuthRequests are not enqueued as those are simply used to open the popup to prompt users to enter their
@@ -147,6 +156,10 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
         };
       });
     });
+
+    return () => {
+      clearTimeout(timeoutID);
+    };
   }, []);
 
   useEffect(() => {
@@ -156,9 +169,6 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
       console.log(`AuthProvider - Tab ${tabID || "-"} closed`);
 
       // TODO: Clean up chunks and alarm?
-
-      // UnlockAuthRequests are not enqueued as those are simply used to open the popup to prompt users to enter their
-      // password and wait for the wallet to unlock:
 
       if (!tabID) return;
 
@@ -188,7 +198,8 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
 
     console.log("AuthProvider - WAITING FOR auth_chunk...");
 
-    // listen for chunks
+    // Listen for chunks needed in `sign.tsx` and `signKeystone.tsx`:
+
     isomorphicOnMessage("auth_chunk", ({ sender, data }) => {
       console.log("AuthProvider - auth_chunk", data);
 
@@ -277,27 +288,31 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
     });
   }, []);
 
-  const timeoutRef = useRef(0);
-
   useEffect(() => {
+    let timeoutID = 0;
+
     const done =
       authRequests.length > 0 &&
-      authRequests[authRequests.length - 1].status !== "pending";
+      authRequests.every((authRequest) => authRequest.status !== "pending");
 
-    // TODO: Add a timeout in case no transactions arrives, or return immediately if this was just opened to unlock the wallet?
+    // TODO: Add setting to decide whether this closes automatically or stays open in a "done" state:
 
     if (done) {
       // Close the window if the last request has been handled:
-      timeoutRef.current = setTimeout(() => {
+
+      if (process.env.NODE_ENV === "development") {
+        timeoutID = setTimeout(() => {
+          window.top.close();
+        }, AUTH_POPUP_CLOSING_DELAY_MS);
+      } else {
         window.top.close();
-      }, AUTH_POPUP_CLOSING_DELAY_MS);
+      }
     }
 
     function handleBeforeUnload() {
       // Send cancel event for all pending requests if the popup is closed by the user:
-      authRequests.forEach((authRequest) => {
-        console.log("CANCELLING PENDING REQUEST...");
 
+      authRequests.forEach((authRequest) => {
         if (authRequest.status !== "pending") return;
 
         replyToAuthRequest(
@@ -311,7 +326,7 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
-      clearTimeout(timeoutRef.current);
+      clearTimeout(timeoutID);
 
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };

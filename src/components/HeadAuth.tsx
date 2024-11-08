@@ -17,63 +17,66 @@ export const HeadAuth: React.FC<HeadAuthProps> = ({ title, back }) => {
 
   const url = authRequests[currentAuthRequestIndex]?.url || "";
 
+  // TODO: Add horizontal scroll to `DivTransactionsList` / `ButtonTransactionButton`.
+
   return (
     <>
       <HeadV2
         title={title}
         showOptions={false}
-        // allowOpen={false}
         showBack={!!back}
         back={back}
         url={url}
       />
 
-      <DivTransactionTracker>
-        <DivTransactionsList>
-          {process.env.NODE_ENV === "development" ? (
-            <ButtonExpandLogs
-              onClick={() =>
-                setAreLogsExpanded(
-                  (prevAreLogsExpanded) => !prevAreLogsExpanded
-                )
-              }
-            />
+      {process.env.NODE_ENV === "development" ? (
+        <DivTransactionTracker>
+          <DivTransactionsList>
+            {process.env.NODE_ENV === "development" ? (
+              <ButtonExpandLogs
+                onClick={() =>
+                  setAreLogsExpanded(
+                    (prevAreLogsExpanded) => !prevAreLogsExpanded
+                  )
+                }
+              />
+            ) : null}
+
+            {authRequests.map((authRequest, i) => (
+              <ButtonTransactionButton
+                key={authRequest.authID}
+                isCurrent={i === currentAuthRequestIndex}
+                status={authRequest.status}
+                onClick={() => setCurrentAuthRequestIndex(i)}
+              />
+            ))}
+
+            <DivTransactionButtonSpacer />
+          </DivTransactionsList>
+
+          {process.env.NODE_ENV === "development" && areLogsExpanded ? (
+            <DivLogWrapper>
+              {authRequests.map((authRequest, i) => {
+                if (authRequest.type === "sign") {
+                  // TODO: Consider removing `authRequest.transaction.data` if large
+                } else if (authRequest.type === "signKeystone") {
+                  // TODO: Consider removing `authRequest.data` if large.
+                }
+
+                return (
+                  <PreLogItem
+                    key={authRequest.authID}
+                    isCurrent={i === currentAuthRequestIndex}
+                    status={authRequest.status}
+                  >
+                    {JSON.stringify(authRequest, null, "  ")}
+                  </PreLogItem>
+                );
+              })}
+            </DivLogWrapper>
           ) : null}
-
-          {authRequests.map((authRequest, i) => (
-            <ButtonTransactionButton
-              key={authRequest.authID}
-              isCurrent={i === currentAuthRequestIndex}
-              status={authRequest.status}
-              onClick={() => setCurrentAuthRequestIndex(i)}
-            />
-          ))}
-
-          <DivTransactionButtonSpacer />
-        </DivTransactionsList>
-
-        {process.env.NODE_ENV === "development" && areLogsExpanded ? (
-          <DivLogWrapper>
-            {authRequests.map((authRequest, i) => {
-              if (authRequest.type === "sign") {
-                // TODO: Consider removing `authRequest.transaction.data` if large
-              } else if (authRequest.type === "signKeystone") {
-                // TODO: Consider removing `authRequest.data` if large.
-              }
-
-              return (
-                <PreLogItem
-                  key={authRequest.authID}
-                  isCurrent={i === currentAuthRequestIndex}
-                  status={authRequest.status}
-                >
-                  {JSON.stringify(authRequest, null, "  ")}
-                </PreLogItem>
-              );
-            })}
-          </DivLogWrapper>
-        ) : null}
-      </DivTransactionTracker>
+        </DivTransactionTracker>
+      ) : null}
     </>
   );
 };
