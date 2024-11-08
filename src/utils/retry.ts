@@ -6,7 +6,7 @@
  * @return A Promise that resolves with the result of the function or rejects after all attempts fail.
  */
 export async function retryWithDelay<T>(
-  fn: () => Promise<T>,
+  fn: (attemp: number) => Promise<T>,
   maxAttempts: number = 3,
   delay: number = 1000
 ): Promise<T> {
@@ -14,7 +14,7 @@ export async function retryWithDelay<T>(
 
   const attempt = async (): Promise<T> => {
     try {
-      return await fn();
+      return await fn(attempts);
     } catch (error) {
       attempts += 1;
       if (attempts < maxAttempts) {
