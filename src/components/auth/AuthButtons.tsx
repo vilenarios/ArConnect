@@ -18,11 +18,13 @@ export interface AuthButtonsProps {
 
 export function AuthButtons({
   authRequest,
-  primaryButtonProps: { label: primaryButtonLabel, ...primaryButtonProps },
-  secondaryButtonProps: { label: secondaryButtonLabel, ...secondaryButtonProps }
+  primaryButtonProps,
+  secondaryButtonProps
 }: AuthButtonsProps) {
+  const { label: primaryButtonLabel } = primaryButtonProps || {};
+  const { label: secondaryButtonLabel } = secondaryButtonProps || {};
   const showPrimaryButton = !!primaryButtonProps && primaryButtonLabel;
-  const showSecondaryButton = !!secondaryButtonProps && secondaryButtonProps;
+  const showSecondaryButton = !!secondaryButtonProps && secondaryButtonLabel;
 
   // TODO: Add default  label so that we only need to pass the onClick (for cancel)
   // TODO: Use the red Reset button used in batchSignDataItem.tsx
