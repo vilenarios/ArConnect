@@ -17,7 +17,7 @@ import {
 import { useHistory } from "~utils/hash_router";
 import { getArPrice } from "~lib/coingecko";
 import useSetting from "~settings/hook";
-import { suggestedGateways } from "~gateways/gateway";
+import { printTxWorkingGateways, txHistoryGateways } from "~gateways/gateway";
 import { ButtonV2, Loading } from "@arconnect/components";
 import type GQLResultInterface from "ar-gql/dist/faces";
 import {
@@ -31,6 +31,7 @@ import {
   getTransactionDescription
 } from "~lib/transactions";
 import BigNumber from "bignumber.js";
+import { retryWithDelay } from "~utils/retry";
 
 const defaultCursors = ["", "", "", "", ""];
 const defaultHasNextPages = [true, true, true, true, true];
@@ -72,11 +73,26 @@ export default function Transactions() {
         await Promise.allSettled(
           queries.map((query, idx) => {
             return hasNextPages[idx]
-              ? gql(
-                  query,
-                  { address: activeAddress, after: cursors[idx] },
-                  suggestedGateways[1]
-                )
+              ? retryWithDelay(async (attempt) => {
+                  const data = await gql(
+                    query,
+                    { address: activeAddress, after: cursors[idx] },
+                    idx !== 4
+                      ? txHistoryGateways[attempt % txHistoryGateways.length]
+                      : printTxWorkingGateways[
+                          attempt % printTxWorkingGateways.length
+                        ]
+                  );
+                  if (
+                    data?.data === null &&
+                    (data as any)?.errors?.length > 0
+                  ) {
+                    throw new Error(
+                      (data as any)?.errors?.[0]?.message || "GraphQL Error"
+                    );
+                  }
+                  return data;
+                }, 2)
               : ({
                   data: {
                     transactions: {
@@ -228,18 +244,16 @@ export default function Transactions() {
                             : "Pending"}
                         </Secondary>
                       </Section>
-                      {transaction.transactionType !== "printArchive" && (
-                        <Section alignRight>
-                          <Main>{getFormattedAmount(transaction)}</Main>
-                          <Secondary>
-                            {getFormattedFiatAmount(
-                              transaction,
-                              arPrice,
-                              currency
-                            )}
-                          </Secondary>
-                        </Section>
-                      )}
+                      <Section alignRight>
+                        <Main>{getFormattedAmount(transaction)}</Main>
+                        <Secondary>
+                          {getFormattedFiatAmount(
+                            transaction,
+                            arPrice,
+                            currency
+                          )}
+                        </Secondary>
+                      </Section>
                     </Transaction>
                   ))}
                 </TransactionItem>
