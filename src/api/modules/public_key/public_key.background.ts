@@ -4,9 +4,9 @@ import { isNotCancelError } from "~utils/assertions";
 import { getActiveKeyfile } from "~wallets";
 import browser from "webextension-polyfill";
 
-const background: BackgroundModuleFunction<string> = async () => {
+const background: BackgroundModuleFunction<string> = async (appData) => {
   // grab the user's keyfile
-  const decryptedWallet = await getActiveKeyfile().catch((e) => {
+  const decryptedWallet = await getActiveKeyfile(appData).catch((e) => {
     isNotCancelError(e);
 
     // if there are no wallets added, open the welcome page

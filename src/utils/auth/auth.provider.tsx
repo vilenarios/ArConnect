@@ -71,7 +71,7 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
 
       // If this is an Unlock request, we don't update anything here as those are not enqueued and it's just
       // `useCurrentAuthRequest()` who has to send a response back to the background using `replyToAuthRequest`:
-      if (authID === DEFAULT_UNLOCK_AUTH_REQUEST_ID) return;
+      // if (authID === DEFAULT_UNLOCK_AUTH_REQUEST_ID) return;
 
       // If it is any other type of `AuthRequest`, we mark it as accepted/cancelled and move on to the next one:
       setAuthRequestContextState((prevAuthRequestContextState) => {
@@ -127,12 +127,7 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
       // UnlockAuthRequests are not enqueued as those are simply used to open the popup to prompt users to enter their
       // password and wait for the wallet to unlock:
 
-      if (
-        !authRequest ||
-        !authRequest.data ||
-        authRequest.data.type === "unlock"
-      )
-        return;
+      if (!authRequest?.data) return;
 
       setAuthRequestContextState((prevAuthRequestContextState) => {
         const { authRequests: prevAuthRequests, currentAuthRequestIndex } =
@@ -153,10 +148,18 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
         //   (except maybe for the current `AuthRequest`, as otherwise the UI would constantly change as new requests
         //   are added to the batch).
 
-        const nextAuthRequests = [
-          ...prevAuthRequests,
-          { ...authRequest.data, status: "pending" }
-        ] satisfies AuthRequest[];
+        const nextAuthRequests = [...prevAuthRequests] satisfies AuthRequest[];
+
+        if (authRequest.data.type === "unlock") {
+          // TODO: When merging, all need to be notified when clicked...
+          if (prevAuthRequests[0]?.type !== "unlock")
+            nextAuthRequests.unshift({
+              ...authRequest.data,
+              status: "pending"
+            });
+        } else {
+          nextAuthRequests.push({ ...authRequest.data, status: "pending" });
+        }
 
         // TODO: Add setting to decide whether we automatically jump to a new pending request when they arrive or stay
         // in the one currently selected:

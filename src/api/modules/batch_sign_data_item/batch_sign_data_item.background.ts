@@ -31,7 +31,7 @@ const background: BackgroundModuleFunction<number[][]> = async (
   );
 
   // grab the user's keyfile
-  const decryptedWallet = await getActiveKeyfile().catch((e) => {
+  const decryptedWallet = await getActiveKeyfile(appData).catch((e) => {
     isNotCancelError(e);
 
     // if there are no wallets added, open the welcome page

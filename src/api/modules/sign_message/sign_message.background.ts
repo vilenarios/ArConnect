@@ -29,7 +29,7 @@ const background: BackgroundModuleFunction<number[]> = async (
   const hash = await crypto.subtle.digest(options.hashAlgorithm, dataToSign);
 
   // get user wallet
-  const activeWallet = await getActiveKeyfile().catch((e) => {
+  const activeWallet = await getActiveKeyfile(appData).catch((e) => {
     isNotCancelError(e);
 
     // if there are no wallets added, open the welcome page

@@ -84,7 +84,7 @@ export async function isomorphicSendMessage<K extends MessageID>({
         const errorMessage = `${err.message || ""}`;
 
         if (
-          !/No handler registered in '.+' to accept messages with id '\d+'/.test(
+          !/No handler registered in '.+' to accept messages with id '.+'/.test(
             errorMessage
           )
         ) {
@@ -97,6 +97,7 @@ export async function isomorphicSendMessage<K extends MessageID>({
 
         console.log(`- 4. ${currentMessage}. Waiting for ready...`);
 
+        // TODO: Review this is only for ready messages?
         timeoutTimeoutID = setTimeout(() => {
           reject(
             new Error(

@@ -16,8 +16,9 @@ import { ArweaveSigner } from "arbundles";
 import { handleSyncLabelsAlarm } from "~api/background/handlers/alarms/sync-labels/sync-labels-alarm.handler";
 import {
   DEFAULT_MODULE_APP_DATA,
-  DEFAULT_UNLOCK_AUTH_REQUEST
+  DEFAULT_UNLOCK_AUTH_REQUEST_DATA
 } from "~utils/auth/auth.constants";
+import type { ModuleAppData } from "~api/background/background-modules";
 
 /**
  * Locally stored wallet
@@ -233,8 +234,21 @@ export type DecryptedWallet = StoredWallet<JWKInterface>;
  *
  * @returns Active wallet with decrypted JWK
  */
-export async function getActiveKeyfile(): Promise<DecryptedWallet> {
+export async function getActiveKeyfile(
+  appData: ModuleAppData = DEFAULT_MODULE_APP_DATA
+): Promise<DecryptedWallet> {
   const activeWallet = await getActiveWallet();
+  /*
+  .catch((e) => {
+    isNotCancelError(e);
+
+    // TODO: DO NOT OPEN DUPLICATE TABS!
+    // if there are no wallets added, open the welcome page
+    browser.tabs.create({ url: browser.runtime.getURL("tabs/welcome.html") });
+
+    throw new Error("No wallets added");
+  });
+  */
 
   // return if hardware wallet
   if (activeWallet.type === "hardware") {
@@ -248,10 +262,18 @@ export async function getActiveKeyfile(): Promise<DecryptedWallet> {
   // this means that the user has to enter their decryption
   // key so it can be used later
   if (!decryptionKey && !!activeWallet) {
+    console.log("REQUEST UNLOCK");
+
     await requestUserAuthorization(
-      DEFAULT_UNLOCK_AUTH_REQUEST,
-      DEFAULT_MODULE_APP_DATA
-    );
+      DEFAULT_UNLOCK_AUTH_REQUEST_DATA,
+      appData
+    ).catch((err) => {
+      console.log("UNLOCK ERROR", err);
+
+      throw err;
+    });
+
+    console.log("UNLOCK AWAITED");
 
     // re-read the decryption key
     decryptionKey = await getDecryptionKey();
@@ -301,7 +323,7 @@ export async function getKeyfile(address: string): Promise<DecryptedWallet> {
   // key so it can be used later
   if (!decryptionKey && !!wallet) {
     await requestUserAuthorization(
-      DEFAULT_UNLOCK_AUTH_REQUEST,
+      DEFAULT_UNLOCK_AUTH_REQUEST_DATA,
       DEFAULT_MODULE_APP_DATA
     );
 

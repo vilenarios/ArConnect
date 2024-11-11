@@ -12,7 +12,7 @@ import {
 } from "~utils/assertions";
 
 const background: BackgroundModuleFunction<number[]> = async (
-  _,
+  appData,
   data: unknown,
   options: unknown
 ) => {
@@ -26,7 +26,7 @@ const background: BackgroundModuleFunction<number[]> = async (
   isArrayBuffer(dataToHash);
 
   // get user wallet
-  const activeWallet = await getActiveKeyfile().catch((e) => {
+  const activeWallet = await getActiveKeyfile(appData).catch((e) => {
     isNotCancelError(e);
 
     // if there are no wallets added, open the welcome page

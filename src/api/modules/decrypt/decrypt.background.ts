@@ -14,7 +14,7 @@ import {
 } from "~utils/assertions";
 
 const background: BackgroundModuleFunction<string | Uint8Array> = async (
-  _,
+  appData,
   data: unknown,
   options: Record<string, unknown>
 ) => {
@@ -27,7 +27,7 @@ const background: BackgroundModuleFunction<string | Uint8Array> = async (
   isArrayBuffer(data);
 
   // grab the user's keyfile
-  const decryptedWallet = await getActiveKeyfile().catch((e) => {
+  const decryptedWallet = await getActiveKeyfile(appData).catch((e) => {
     isNotCancelError(e);
 
     // if there are no wallets added, open the welcome page

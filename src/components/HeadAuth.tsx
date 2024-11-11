@@ -91,6 +91,7 @@ const DivTransactionsList = styled.div`
   gap: 8px;
   padding: 16px;
   border-bottom: 1px solid rgb(31, 30, 47);
+  height: 12px;
 `;
 
 interface AuthRequestIndicatorProps {
@@ -123,7 +124,7 @@ const ButtonTransactionButton = styled.button<AuthRequestIndicatorProps>`
   background: ${getAuthRequestButtonIndicatorBackgroundColor};
   border-radius: 128px;
   min-width: 20px;
-  height: 12px;
+  height: 100%;
   cursor: pointer;
 `;
 

@@ -27,7 +27,7 @@ const background: BackgroundModuleFunction<SubscriptionData> = async (
   }
 
   // if is hardware wallet
-  const decryptedWallet = await getActiveKeyfile();
+  const decryptedWallet = await getActiveKeyfile(appData);
   isLocalWallet(decryptedWallet);
 
   // check if subsciption exists

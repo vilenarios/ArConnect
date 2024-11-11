@@ -1,6 +1,5 @@
 import { unlock } from "~wallets/auth";
 import {
-  ButtonV2,
   InputV2,
   Section,
   Spacer,
@@ -10,13 +9,12 @@ import {
 } from "@arconnect/components";
 import Wrapper from "~components/auth/Wrapper";
 import browser from "webextension-polyfill";
-import Head from "~components/popup/Head";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { HeadAuth } from "~components/HeadAuth";
 import { AuthButtons } from "~components/auth/AuthButtons";
 
 export default function Unlock() {
-  const { acceptRequest } = useCurrentAuthRequest("unlock");
+  const { authRequest, acceptRequest } = useCurrentAuthRequest("unlock");
 
   // password input
   const passwordInput = useInput();
@@ -42,11 +40,15 @@ export default function Unlock() {
     }
   }
 
+  if (!authRequest) return null;
+
   return (
     <Wrapper>
       <div>
         <HeadAuth title={browser.i18n.getMessage("unlock")} />
+
         <Spacer y={0.75} />
+
         <Section>
           <Text noMargin>
             {browser.i18n.getMessage("unlock_wallet_to_use")}
@@ -59,6 +61,7 @@ export default function Unlock() {
             placeholder={browser.i18n.getMessage("enter_password")}
             fullWidth
             autoFocus
+            disabled={authRequest.status !== "pending"}
             onKeyDown={(e) => {
               if (e.key !== "Enter") return;
               unlockWallet();
@@ -66,8 +69,10 @@ export default function Unlock() {
           />
         </Section>
       </div>
+
       <Section>
         <AuthButtons
+          authRequest={authRequest}
           primaryButtonProps={{
             label: browser.i18n.getMessage("unlock"),
             onClick: unlockWallet

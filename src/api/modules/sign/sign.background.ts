@@ -37,7 +37,7 @@ const background: BackgroundModuleFunction<BackgroundResult> = async (
   if (options) isSignatureOptions(options);
 
   // grab the user's keyfile
-  const activeWallet = await getActiveKeyfile().catch((e) => {
+  const activeWallet = await getActiveKeyfile(appData).catch((e) => {
     isNotCancelError(e);
 
     // if there are no wallets added, open the welcome page

@@ -57,7 +57,7 @@ export async function requestUserAuthorization(
   authRequestData: AuthRequestData,
   moduleAppData: ModuleAppData
 ) {
-  console.log("- 1. Request user authorization");
+  console.log(`- 1. Request user ${authRequestData.type} authorization`);
 
   // create the popup
   const { authID, popupWindowTabID } = await createAuthPopup(
@@ -115,7 +115,7 @@ async function createAuthPopup(
 
   await isomorphicSendMessage({
     messageId: "auth_request",
-    tabId: popupWindowTab.id,
+    tabId: POPUP_TAB_ID,
     data: {
       ...authRequestData,
       url: moduleAppData.url,

@@ -12,7 +12,7 @@ import {
 } from "~utils/assertions";
 
 const background: BackgroundModuleFunction<boolean> = async (
-  _,
+  appData,
   data: unknown,
   signature: unknown,
   publicKey: unknown,
@@ -42,7 +42,7 @@ const background: BackgroundModuleFunction<boolean> = async (
   // set public key if it is needed
   if (typeof publicKey === "undefined") {
     // get user wallet
-    const activeWallet = await getActiveKeyfile().catch((e) => {
+    const activeWallet = await getActiveKeyfile(appData).catch((e) => {
       isNotCancelError(e);
 
       // if there are no wallets added, open the welcome page

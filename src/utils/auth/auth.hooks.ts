@@ -1,6 +1,5 @@
 import { useContext, useEffect } from "react";
 import type { BaseLocationHook } from "wouter";
-import { DEFAULT_UNLOCK_AUTH_REQUEST } from "~utils/auth/auth.constants";
 import { AuthRequestsContext } from "~utils/auth/auth.provider";
 import type {
   AuthRequest,
@@ -24,27 +23,40 @@ export function useCurrentAuthRequest<T extends AuthType>(
   const { authRequests, currentAuthRequestIndex, completeAuthRequest } =
     useContext(AuthRequestsContext);
 
+  // TODO: This is not right:
   const prevAuthRequest =
     authRequests[currentAuthRequestIndex - 1] || (null as AuthRequest | null);
 
+  /*
   const authRequest = (
     expectedAuthType === "unlock"
       ? DEFAULT_UNLOCK_AUTH_REQUEST
       : authRequests[currentAuthRequestIndex]
   ) as AuthRequestByType[T];
+  */
 
-  if (expectedAuthType !== "any" && expectedAuthType !== authRequest.type) {
-    throw new Error(
-      `${
-        authRequest ? "Unexpected" : "Missing"
-      } "${expectedAuthType}" AuthRequest.`
-    );
+  const authRequest = authRequests[
+    currentAuthRequestIndex
+  ] as AuthRequestByType[T];
+  const authRequestType = authRequest?.type;
+
+  if (expectedAuthType !== "any" && expectedAuthType !== "unlock") {
+    if (!authRequest) {
+      throw new Error(`Missing "${expectedAuthType}" AuthRequest.`);
+    } else if (expectedAuthType !== authRequestType) {
+      throw new Error(
+        `Unexpected "${authRequestType}" AuthRequest. ${expectedAuthType} expected.`
+      );
+    }
   }
 
   const { type, authID, status } = authRequest || {};
 
   async function acceptRequest(data?: any) {
-    if (status !== "pending") throw new Error(`AuthRequest already ${status}`);
+    // TODO: Add a catch block to keep track of failed ones?
+
+    if (status !== "pending")
+      throw new Error(`AuthRequest ${type}(${authID}) already ${status}`);
 
     console.log("acceptRequest", type, data);
 
@@ -54,7 +66,8 @@ export function useCurrentAuthRequest<T extends AuthType>(
   }
 
   async function rejectRequest(errorMessage?: string) {
-    if (status !== "pending") throw new Error(`AuthRequest already ${status}`);
+    if (status !== "pending")
+      throw new Error(`AuthRequest ${type}(${authID}) already ${status}`);
 
     console.log("rejectRequest", type, errorMessage);
 
