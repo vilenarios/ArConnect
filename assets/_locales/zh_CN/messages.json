@@ -1285,10 +1285,6 @@
       "message": "大小",
       "description": "Transaction \"size\" label"
   },
-  "transaction_requestedAt": {
-    "message": "Requested",
-    "description": "AuthRequest \"requestedAt\" label"
-  },
   "transaction_confirmations": {
       "message": "确认",
       "description": "Transaction \"confirmations\" label"
@@ -2315,6 +2311,22 @@
     "signDataItemRequestLoading": {
       "message": "Signing...",
       "description": "Loading message for AuthRequest of type signDataItem"
+    },
+    "pendingTransactionStatusAt": {
+      "message": "Requested",
+      "description": "Label to display next to the elapsed time since the AuthRequest was created"
+    },
+    "acceptedTransactionStatusAt": {
+      "message": "Accepted",
+      "description": "Label to display next to the elapsed time since the AuthRequest was accepted"
+    },
+    "rejectedTransactionStatusAt": {
+      "message": "Rejected",
+      "description": "Label to display next to the elapsed time since the AuthRequest was rejected"
+    },
+    "abortedTransactionStatusAt": {
+      "message": "Aborted",
+      "description": "Label to display next to the elapsed time since the AuthRequest was aborted"
     },
     "formattedElapsedSeconds": {
       "message": "$SECONDS$ seconds ago",

@@ -33,6 +33,7 @@ import { LoadingPage } from "~components/LoadingPage";
 
 // DONE: Show minutes/hours in the requested at label.
 // DONE: Extract AuthRequest buttons in their own component.
+// DONE: Add i18n for `AuthButtons` and remove "requested" from sign.tsx page.
 // DONE: All screens should account for a tx being accepted/rejected already (change buttons) and show the requested at label.
 // DONE: Add unlock to route...
 // DONE: Properly keep track of `prevAuthRequest` in auth.provider.ts (rather than auth.hook.ts).
@@ -40,7 +41,6 @@ import { LoadingPage } from "~components/LoadingPage";
 // TODO: Properly merge and "complete" unlock and connect auth requests in auth.provider and auth.hook.
 // TODO: Check timeout issue in messaging.utils - is this why Bazar doesn't work the same when the wallet has just been unlocked?
 // TODO: Why the first transaction arrives without tags?
-// TODO: Add i18n for `AuthButtons` and remove "requested" from sign.tsx page.
 
 // TODO: Add env variable for message/auth-related logs.
 // TODO: Clean up alarms on auth_tab_closed

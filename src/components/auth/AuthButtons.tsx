@@ -4,6 +4,7 @@ import { useRef, type MouseEvent } from "react";
 import styled from "styled-components";
 import type { AuthRequest, AuthRequestStatus } from "~utils/auth/auth.types";
 import { prettyDate } from "~utils/pretty_date";
+import browser from "webextension-polyfill";
 
 interface AuthButtonProps extends ButtonV2Props {
   label: string;
@@ -48,8 +49,8 @@ export function AuthButtons({
     <>
       {authRequest ? (
         <PStatusLabel status={authRequest.status}>
-          {authRequest.status}
-
+          {browser.i18n.getMessage(`${authRequest.status}TransactionStatusAt`) +
+            " "}
           <span ref={requestedAtElementRef}>{prettyDate(requestedAt)}</span>
         </PStatusLabel>
       ) : null}

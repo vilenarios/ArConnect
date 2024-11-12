@@ -37,8 +37,6 @@ import { defaultGateway } from "~gateways/gateway";
 import BigNumber from "bignumber.js";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { HeadAuth } from "~components/HeadAuth";
-import { useThrottledRequestAnimationFrame } from "@swyg/corre";
-import { prettyDate } from "~utils/pretty_date";
 import { AuthButtons } from "~components/auth/AuthButtons";
 
 export default function Sign() {
@@ -46,18 +44,6 @@ export default function Sign() {
     useCurrentAuthRequest("sign");
 
   const { address, transaction, requestedAt } = authRequest;
-
-  const requestedAtElementRef = useRef<HTMLSpanElement>();
-
-  useThrottledRequestAnimationFrame(() => {
-    const requestedAtElement = requestedAtElementRef.current;
-
-    if (!requestedAtElement) return;
-
-    requestedAtElement.textContent = prettyDate(requestedAt);
-
-    // TODO: After one minute, change the interval wait time to 5 seconds or so. Consider adding this to @swyg/corre and adding a function/hook useFormattedTime
-  }, 250);
 
   // quantity
   const quantity = useMemo(() => {
@@ -292,17 +278,6 @@ export default function Sign() {
                   {browser.i18n.getMessage("transaction_size")}
                 </PropertyName>
                 <PropertyValue>{prettyBytes(size)}</PropertyValue>
-              </TransactionProperty>
-
-              <TransactionProperty>
-                <PropertyName>
-                  {browser.i18n.getMessage("transaction_requestedAt")}
-                </PropertyName>
-                <PropertyValue>
-                  <span ref={requestedAtElementRef}>
-                    {prettyDate(requestedAt)}
-                  </span>
-                </PropertyValue>
               </TransactionProperty>
 
               <Spacer y={0.1} />

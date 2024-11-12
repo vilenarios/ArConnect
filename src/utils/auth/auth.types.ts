@@ -16,6 +16,7 @@ interface CommonAuthRequestProps {
   tabID: number;
   authID: string;
   requestedAt: number;
+  completedAt?: number;
   status: AuthRequestStatus;
 }
 

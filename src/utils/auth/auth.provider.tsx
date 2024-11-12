@@ -91,6 +91,7 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
           currentAuthRequestIndex
         ] = {
           ...nextAuthRequests[currentAuthRequestIndex],
+          completedAt: Date.now(),
           status: accepted ? "accepted" : "rejected"
         });
 
@@ -211,6 +212,7 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
           return authRequest.tabID === tabID
             ? ({
                 ...authRequest,
+                completedAt: Date.now(),
                 status: "aborted"
               } satisfies AuthRequest)
             : authRequest;
