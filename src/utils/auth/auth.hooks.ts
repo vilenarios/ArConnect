@@ -20,20 +20,12 @@ export function useAuthRequests() {
 export function useCurrentAuthRequest<T extends AuthType>(
   expectedAuthType: T | "any"
 ) {
-  const { authRequests, currentAuthRequestIndex, completeAuthRequest } =
-    useContext(AuthRequestsContext);
-
-  // TODO: This is not right:
-  const prevAuthRequest =
-    authRequests[currentAuthRequestIndex - 1] || (null as AuthRequest | null);
-
-  /*
-  const authRequest = (
-    expectedAuthType === "unlock"
-      ? DEFAULT_UNLOCK_AUTH_REQUEST
-      : authRequests[currentAuthRequestIndex]
-  ) as AuthRequestByType[T];
-  */
+  const {
+    authRequests,
+    currentAuthRequestIndex,
+    lastCompletedAuthRequest,
+    completeAuthRequest
+  } = useContext(AuthRequestsContext);
 
   const authRequest = authRequests[
     currentAuthRequestIndex
@@ -81,8 +73,8 @@ export function useCurrentAuthRequest<T extends AuthType>(
   }
 
   return {
-    prevAuthRequest,
     authRequest,
+    lastCompletedAuthRequest,
     acceptRequest,
     rejectRequest
   };

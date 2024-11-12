@@ -35,8 +35,8 @@ import { LoadingPage } from "~components/LoadingPage";
 // DONE: Extract AuthRequest buttons in their own component.
 // DONE: All screens should account for a tx being accepted/rejected already (change buttons) and show the requested at label.
 // DONE: Add unlock to route...
+// DONE: Properly keep track of `prevAuthRequest` in auth.provider.ts (rather than auth.hook.ts).
 
-// TODO: Keep track of prev auth request in auth.provider.ts
 // TODO: Properly merge and "complete" unlock and connect auth requests in auth.provider and auth.hook.
 // TODO: Check timeout issue in messaging.utils - is this why Bazar doesn't work the same when the wallet has just been unlocked?
 // TODO: Why the first transaction arrives without tags?
@@ -45,13 +45,13 @@ import { LoadingPage } from "~components/LoadingPage";
 // TODO: Add env variable for message/auth-related logs.
 // TODO: Clean up alarms on auth_tab_closed
 
-// TODO: prevAuthRequest in auth.hook.ts is incorrect.
 // TODO: How to know which wallet is being used in the AuthRequests? What if I change the wallet, should the requests be cancelled?
 // TODO: Unify transaction details component (new PR).
 
 export function AuthApp() {
   const initialScreenType = useSetUp();
-  const { authRequest, prevAuthRequest } = useCurrentAuthRequest("any");
+  const { authRequest, lastCompletedAuthRequest } =
+    useCurrentAuthRequest("any");
 
   let content: React.ReactElement = null;
 
@@ -65,7 +65,7 @@ export function AuthApp() {
     content = (
       <LoadingPage
         label={browser.i18n.getMessage(
-          `${prevAuthRequest?.type || "default"}RequestLoading`
+          `${lastCompletedAuthRequest?.type || "default"}RequestLoading`
         )}
       />
     );

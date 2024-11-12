@@ -30,6 +30,7 @@ import { isomorphicOnMessage } from "~utils/messaging/messaging.utils";
 interface AuthRequestContextState {
   authRequests: AuthRequest[];
   currentAuthRequestIndex: number;
+  lastCompletedAuthRequest: null | AuthRequest;
 }
 
 interface AuthRequestContextData extends AuthRequestContextState {
@@ -40,17 +41,19 @@ interface AuthRequestContextData extends AuthRequestContextState {
 export const AuthRequestsContext = createContext<AuthRequestContextData>({
   authRequests: [],
   currentAuthRequestIndex: 0,
+  lastCompletedAuthRequest: null,
   setCurrentAuthRequestIndex: () => {},
   completeAuthRequest: () => {}
 });
 
 export function AuthRequestsProvider({ children }: PropsWithChildren) {
   const [
-    { authRequests, currentAuthRequestIndex },
+    { authRequests, currentAuthRequestIndex, lastCompletedAuthRequest },
     setAuthRequestContextState
   ] = useState<AuthRequestContextState>({
     authRequests: [],
-    currentAuthRequestIndex: 0
+    currentAuthRequestIndex: 0,
+    lastCompletedAuthRequest: null
   });
 
   const setCurrentAuthRequestIndex = useCallback(
@@ -84,10 +87,12 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
         const nextAuthRequests = authRequests;
 
         // Mark the current `AuthRequest` as "accepted" or "rejected":
-        nextAuthRequests[currentAuthRequestIndex] = {
+        const lastCompletedAuthRequest = (nextAuthRequests[
+          currentAuthRequestIndex
+        ] = {
           ...nextAuthRequests[currentAuthRequestIndex],
           status: accepted ? "accepted" : "rejected"
-        };
+        });
 
         // Find the index of the next "pending" `AuthRequest`, or keep it unchanged if there are none left:
         let nextCurrentAuthRequestIndex = currentAuthRequestIndex;
@@ -106,7 +111,8 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
 
         return {
           authRequests: nextAuthRequests,
-          currentAuthRequestIndex: nextCurrentAuthRequestIndex
+          currentAuthRequestIndex: nextCurrentAuthRequestIndex,
+          lastCompletedAuthRequest
         };
       });
     },
@@ -130,8 +136,11 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
       if (!authRequest?.data) return;
 
       setAuthRequestContextState((prevAuthRequestContextState) => {
-        const { authRequests: prevAuthRequests, currentAuthRequestIndex } =
-          prevAuthRequestContextState;
+        const {
+          authRequests: prevAuthRequests,
+          currentAuthRequestIndex,
+          lastCompletedAuthRequest
+        } = prevAuthRequestContextState;
 
         // TODO: Additional considerations when enqueueing new `AuthRequest`s:
         //
@@ -172,7 +181,8 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
 
         return {
           authRequests: nextAuthRequests,
-          currentAuthRequestIndex: nextCurrentAuthRequestIndex
+          currentAuthRequestIndex: nextCurrentAuthRequestIndex,
+          lastCompletedAuthRequest
         };
       });
     });
@@ -191,8 +201,11 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
       if (!tabID) return;
 
       setAuthRequestContextState((prevAuthRequestContextState) => {
-        const { authRequests: prevAuthRequests, currentAuthRequestIndex } =
-          prevAuthRequestContextState;
+        const {
+          authRequests: prevAuthRequests,
+          currentAuthRequestIndex,
+          lastCompletedAuthRequest
+        } = prevAuthRequestContextState;
 
         const authRequests = prevAuthRequests.map((authRequest) => {
           return authRequest.tabID === tabID
@@ -203,9 +216,12 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
             : authRequest;
         });
 
+        // TODO: Consider automatically selecting the next pending AuthRequest.
+
         return {
           authRequests,
-          currentAuthRequestIndex
+          currentAuthRequestIndex,
+          lastCompletedAuthRequest
         };
       });
     });
@@ -235,8 +251,11 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
         const arweave = new Arweave(defaultGateway);
 
         setAuthRequestContextState((prevAuthRequestContextState) => {
-          const { authRequests: prevAuthRequests, currentAuthRequestIndex } =
-            prevAuthRequestContextState;
+          const {
+            authRequests: prevAuthRequests,
+            currentAuthRequestIndex,
+            lastCompletedAuthRequest
+          } = prevAuthRequestContextState;
 
           const targetAuthRequest = prevAuthRequests.find((authRequest) => {
             return (
@@ -270,7 +289,8 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
 
             return {
               authRequests,
-              currentAuthRequestIndex
+              currentAuthRequestIndex,
+              lastCompletedAuthRequest
             };
           }
 
@@ -291,7 +311,8 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
 
           return {
             authRequests,
-            currentAuthRequestIndex
+            currentAuthRequestIndex,
+            lastCompletedAuthRequest
           };
         });
       } else {
@@ -355,6 +376,7 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
       value={{
         authRequests,
         currentAuthRequestIndex,
+        lastCompletedAuthRequest,
         setCurrentAuthRequestIndex,
         completeAuthRequest
       }}
