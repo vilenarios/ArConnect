@@ -69,6 +69,39 @@ query($address: String!) {
 }
 `;
 
+export const AF_ERROR_QUERY = `
+query {
+  transactions(
+    first: 10,
+    tags: [
+      {name: "Data-Protocol", values: ["ao"]},
+      {name: "Action", values: ["Transfer-Error"]},
+      {name: "Message-Id", values: ["L-nExyvrfVv5oJQtBnk6VD7-Hgisf-WLC55MMCqQq7A"]},
+    ]
+  ) {
+    edges {
+      cursor
+      node {
+        recipient
+        id
+        owner {
+          address
+        }
+        block {
+          timestamp
+          height
+        }
+        tags {
+          name
+          value
+        }
+      }
+    }
+  }
+}
+
+`;
+
 export const AO_SENT_QUERY = `
 query($address: String!) {
   transactions(
