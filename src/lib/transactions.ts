@@ -1,7 +1,7 @@
 import type GQLResultInterface from "ar-gql/dist/faces";
 import type { GQLEdgeInterface } from "ar-gql/dist/faces";
 import type { RawTransaction } from "~notifications/api";
-import type { TokenInfo } from "~tokens/aoTokens/ao";
+import { type TokenInfo } from "~tokens/aoTokens/ao";
 import { formatAddress } from "~utils/format";
 import { ExtensionStorage } from "~utils/storage";
 import { getTokenInfo } from "~tokens/aoTokens/router";
@@ -9,6 +9,7 @@ import type { Token } from "~tokens/token";
 import BigNumber from "bignumber.js";
 import browser from "webextension-polyfill";
 import { balanceToFractioned, formatFiatBalance } from "~tokens/currency";
+import { timeoutPromise } from "~utils/promises/timeout";
 
 let tokens: TokenInfo[] = null;
 export let tokenInfoMap = new Map<string, TokenInfo | Token>();
@@ -91,7 +92,10 @@ const processAoTransaction = async (
   transaction: GQLEdgeInterface,
   type: string
 ) => {
-  const tokenData = await fetchTokenByProcessId(transaction.node.recipient);
+  const tokenData = await timeoutPromise(
+    fetchTokenByProcessId(transaction.node.recipient),
+    10000
+  ).catch(() => null);
   const quantityTag = transaction.node.tags.find(
     (tag) => tag.name === "Quantity"
   );

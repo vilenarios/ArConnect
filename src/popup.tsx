@@ -1,7 +1,7 @@
 import Route, { Page } from "~components/popup/Route";
 import { useHashLocation } from "~utils/hash_router";
 import { useSetUp } from "~wallets";
-import { Router } from "wouter";
+import { Router, Switch } from "wouter";
 
 import HistoryProvider from "~components/popup/HistoryProvider";
 
@@ -113,17 +113,21 @@ export default function Popup() {
             {(params: { url: string }) => <AppPermissions url={params?.url} />}
           </Route>
           <Route path="/quick-settings/tokens" component={QuickTokens} />
-          <Route path="/quick-settings/tokens/:id">
-            {(params: { id: string }) => <TokenSettings id={params?.id} />}
-          </Route>
-          <Route path="/quick-settings/tokens/new" component={NewToken} />
+          <Switch>
+            <Route path="/quick-settings/tokens/new" component={NewToken} />
+            <Route path="/quick-settings/tokens/:id">
+              {(params: { id: string }) => <TokenSettings id={params?.id} />}
+            </Route>
+          </Switch>
           <Route path="/quick-settings/contacts" component={Contacts} />
-          <Route path="/quick-settings/contacts/:address">
-            {(params: { address: string }) => (
-              <ContactSettings address={params?.address} />
-            )}
-          </Route>
-          <Route path="/quick-settings/contacts/new" component={NewContact} />
+          <Switch>
+            <Route path="/quick-settings/contacts/new" component={NewContact} />
+            <Route path="/quick-settings/contacts/:address">
+              {(params: { address: string }) => (
+                <ContactSettings address={params?.address} />
+              )}
+            </Route>
+          </Switch>
           <Route
             path="/quick-settings/notifications"
             component={NotificationSettings}

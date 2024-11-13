@@ -8,13 +8,16 @@ import styled from "styled-components";
  */
 const Route: typeof BaseRoute = ({ path, component, children }) => {
   const [matches, params] = useRoute(path);
+
+  if (!matches) return null;
+
   const routeContent = component
     ? createElement(component, { params })
     : typeof children === "function"
     ? children(params)
     : children;
 
-  return matches ? <Page>{routeContent}</Page> : null;
+  return <Page>{routeContent}</Page>;
 };
 
 const PageWrapper = styled(motion.main)`

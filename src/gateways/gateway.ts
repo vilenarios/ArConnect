@@ -24,7 +24,7 @@ export const suggestedGateways: Gateway[] = [
     protocol: "https"
   },
   {
-    host: "arweave.live",
+    host: "g8way.io",
     port: 443,
     protocol: "https"
   }
@@ -48,5 +48,34 @@ export const fallbackGateway = {
   port: 443,
   protocol: "https"
 };
+
+export const printTxWorkingGateways: Gateway[] = [
+  {
+    host: "arweave-search.goldsky.com",
+    port: 443,
+    protocol: "https"
+  },
+  {
+    host: "permagate.io",
+    port: 443,
+    protocol: "https"
+  },
+  {
+    host: "ar-io.dev",
+    port: 443,
+    protocol: "https"
+  },
+  {
+    host: "arweave.dev",
+    port: 443,
+    protocol: "https"
+  }
+];
+
+export const txHistoryGateways = [
+  suggestedGateways[1],
+  suggestedGateways[0],
+  suggestedGateways[3]
+];
 
 export const defaultGateway = suggestedGateways[0];
