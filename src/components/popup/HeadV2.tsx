@@ -126,13 +126,16 @@ export default function HeadV2({
     loadAppInfo();
   }, [url]);
 
+  const appName = appInfo?.name || url;
+  const appIconPlaceholderText = appName.slice(0, 2).toUpperCase();
+
   return (
     <HeadWrapper
       displayTheme={theme}
       collapse={scrollDirection === "down"}
       scrolled={scrolled}
       padding={padding}
-      center={url === undefined}
+      center={appName === undefined}
     >
       {showBack ? (
         <BackButton
@@ -147,11 +150,11 @@ export default function HeadV2({
 
       <PageTitle>{title}</PageTitle>
 
-      {url ? (
-        <TooltipV2 content={appInfo?.name || url} position="bottomEnd">
+      {appName ? (
+        <TooltipV2 content={appName} position="bottomEnd">
           <SquircleImg
             img={appInfo?.logo}
-            placeholderText={appInfo?.name?.[0]}
+            placeholderText={appIconPlaceholderText}
           />
         </TooltipV2>
       ) : null}

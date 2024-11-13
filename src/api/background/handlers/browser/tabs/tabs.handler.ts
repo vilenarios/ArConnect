@@ -12,6 +12,16 @@ import { isomorphicSendMessage } from "~utils/messaging/messaging.utils";
  * @param tabId ID of the tab to get.
  */
 export async function handleTabUpdate(tabID: number) {
+  const popupTabID = getCachedAuthPopupWindowTabID();
+
+  if (popupTabID !== -1) {
+    isomorphicSendMessage({
+      messageId: "auth_tab_updated",
+      tabId: popupTabID,
+      data: tabID
+    });
+  }
+
   // construct app
   const tab = await getTab(tabID);
 
@@ -39,8 +49,6 @@ export async function handleTabUpdate(tabID: number) {
  * @param tabId ID of the closed tab.
  */
 export function handleTabClosed(closedTabID: number) {
-  console.log(`handleTabClosed - sending auth_tab_closed...`);
-
   const popupTabID = getCachedAuthPopupWindowTabID();
 
   if (popupTabID === -1) return;

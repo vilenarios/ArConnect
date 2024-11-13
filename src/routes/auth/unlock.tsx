@@ -14,6 +14,12 @@ import { HeadAuth } from "~components/HeadAuth";
 import { AuthButtons } from "~components/auth/AuthButtons";
 
 export default function Unlock() {
+  // Note this screen can be presented:
+  //
+  // a) When an unlock AuthRequest is received.
+  // b) When an unlock AuthRequest is manually selected by the user (which might have been completed already).
+  // c) When the wallet is locked again, but in this case there's no AuthRequest to display or complete.
+
   const { authRequest, acceptRequest } = useCurrentAuthRequest("unlock");
 
   // password input
@@ -28,7 +34,8 @@ export default function Unlock() {
     const res = await unlock(passwordInput.state);
 
     if (res) {
-      acceptRequest();
+      // If the wallet is locked again, this screen is presented but there's no AuthRequest to accept:
+      if (authRequest) acceptRequest();
     } else {
       passwordInput.setStatus("error");
 
@@ -39,8 +46,6 @@ export default function Unlock() {
       });
     }
   }
-
-  if (!authRequest) return null;
 
   return (
     <Wrapper>
@@ -61,7 +66,7 @@ export default function Unlock() {
             placeholder={browser.i18n.getMessage("enter_password")}
             fullWidth
             autoFocus
-            disabled={authRequest.status !== "pending"}
+            disabled={authRequest && authRequest.status !== "pending"}
             onKeyDown={(e) => {
               if (e.key !== "Enter") return;
               unlockWallet();

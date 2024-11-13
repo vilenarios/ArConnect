@@ -4,7 +4,11 @@ import { nanoid } from "nanoid";
 import browser from "webextension-polyfill";
 import { Mutex } from "~utils/mutex";
 import { isomorphicSendMessage } from "~utils/messaging/messaging.utils";
-import type { AuthRequestData, AuthType } from "~utils/auth/auth.types";
+import type {
+  AuthRequestData,
+  AuthType,
+  ConnectAuthRequest
+} from "~utils/auth/auth.types";
 import { DEFAULT_UNLOCK_AUTH_REQUEST_ID } from "~utils/auth/auth.constants";
 import type { ModuleAppData } from "~api/background/background-modules";
 
@@ -247,4 +251,20 @@ export async function stopKeepAlive(authID: string) {
   } finally {
     unlock();
   }
+}
+
+/**
+ * Returns true if both ConnectAuthRequest are the same.
+ */
+export function compareConnectAuthRequests(
+  authRequest1: ConnectAuthRequest,
+  authRequest2: ConnectAuthRequest
+): boolean {
+  return (
+    authRequest1.appInfo.name === authRequest2.appInfo.name &&
+    authRequest1.appInfo.logo === authRequest2.appInfo.logo &&
+    authRequest1.gateway === authRequest2.gateway &&
+    authRequest1.permissions.toSorted().join("-") ===
+      authRequest2.permissions.toSorted().join("-")
+  );
 }

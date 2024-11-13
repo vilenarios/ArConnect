@@ -103,7 +103,8 @@ const colorsByStatus: Record<AuthRequestStatus, string> = {
   pending: "white",
   accepted: "green",
   rejected: "red",
-  aborted: "grey"
+  aborted: "grey",
+  error: "red"
 };
 
 function getAuthRequestButtonIndicatorBorderColor({

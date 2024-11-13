@@ -12,7 +12,7 @@ interface AuthButtonProps extends ButtonV2Props {
 }
 
 export interface AuthButtonsProps {
-  authRequest: AuthRequest;
+  authRequest?: AuthRequest;
   primaryButtonProps?: AuthButtonProps;
   secondaryButtonProps?: AuthButtonProps;
 }

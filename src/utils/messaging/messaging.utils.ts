@@ -137,7 +137,7 @@ export async function isomorphicSendMessage<K extends MessageID>({
   });
 }
 
-export function isomorphicOnMessage<K extends MessageID, R>(
+export function isomorphicOnMessage<K extends MessageID>(
   messageID: K,
   callback: (
     message: Omit<IBridgeMessage<any>, "data"> & { data: ProtocolMap[K] }

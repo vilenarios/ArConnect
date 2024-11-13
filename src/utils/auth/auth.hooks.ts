@@ -44,32 +44,26 @@ export function useCurrentAuthRequest<T extends AuthType>(
 
   const { type, authID, status } = authRequest || {};
 
-  async function acceptRequest(data?: any) {
-    // TODO: Add a catch block to keep track of failed ones?
-
+  function acceptRequest(data?: any) {
     if (status !== "pending")
       throw new Error(`AuthRequest ${type}(${authID}) already ${status}`);
 
     console.log("acceptRequest", type, data);
 
-    await replyToAuthRequest(type, authID, undefined, data);
-
-    completeAuthRequest(authID, true);
+    return completeAuthRequest(authID, true, data);
   }
 
-  async function rejectRequest(errorMessage?: string) {
+  function rejectRequest(errorMessage?: string) {
     if (status !== "pending")
       throw new Error(`AuthRequest ${type}(${authID}) already ${status}`);
 
     console.log("rejectRequest", type, errorMessage);
 
-    await replyToAuthRequest(
-      type,
+    return completeAuthRequest(
       authID,
+      false,
       errorMessage || "User cancelled the auth"
     );
-
-    completeAuthRequest(authID, false);
   }
 
   return {

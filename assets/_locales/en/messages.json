@@ -2342,6 +2342,10 @@
     "message": "Aborted",
     "description": "Label to display next to the elapsed time since the AuthRequest was aborted"
   },
+  "errorTransactionStatusAt": {
+    "message": "Failed",
+    "description": "Label to display next to the elapsed time since the AuthRequest was aborted"
+  },
   "formattedElapsedSeconds": {
     "message": "$SECONDS$ seconds ago",
     "description": "Format elapsed seconds",

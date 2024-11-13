@@ -38,13 +38,18 @@ import { LoadingPage } from "~components/LoadingPage";
 // DONE: Add unlock to route...
 // DONE: Properly keep track of `prevAuthRequest` in auth.provider.ts (rather than auth.hook.ts).
 
-// TODO: Properly merge and "complete" unlock and connect auth requests in auth.provider and auth.hook.
+// DONE: Properly merge and "complete" unlock and connect auth requests in auth.provider and auth.hook.
+// DONE: The unlock screen needs to work both with and without a AuthRequest.
+// DONE: Clean up alarms on auth_tab_closed
+
+// TODO: Unlocking the wallet seems to automatically accept an AuthRequest.
+// TODO: Disconnecting the wallet should also abort AuthRequests.
+// TODO: Stop listening for _ready_ready messages.
+
 // TODO: Check timeout issue in messaging.utils - is this why Bazar doesn't work the same when the wallet has just been unlocked?
-// TODO: Why the first transaction arrives without tags?
+// TODO: Why the first transaction arrives without tags? Also, reloading the tab seems to "abort" a request from the "new batch" (this needs tpo be implemented)
 
 // TODO: Add env variable for message/auth-related logs.
-// TODO: Clean up alarms on auth_tab_closed
-
 // TODO: How to know which wallet is being used in the AuthRequests? What if I change the wallet, should the requests be cancelled?
 // TODO: Unify transaction details component (new PR).
 

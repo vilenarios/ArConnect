@@ -9,7 +9,12 @@ import type { Transaction } from "arbundles";
 
 // COMMON:
 
-export type AuthRequestStatus = "pending" | "accepted" | "rejected" | "aborted";
+export type AuthRequestStatus =
+  | "pending"
+  | "accepted"
+  | "rejected"
+  | "aborted"
+  | "error";
 
 interface CommonAuthRequestProps {
   url: string;

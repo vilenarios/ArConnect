@@ -13,10 +13,16 @@ import {
 } from "~utils/auth/auth.constants";
 import type {
   AuthRequest,
+  AuthRequestStatus,
   SignAuthRequest,
-  SignKeystoneAuthRequest
+  SignKeystoneAuthRequest,
+  UnlockAuthRequest
 } from "~utils/auth/auth.types";
-import { replyToAuthRequest } from "~utils/auth/auth.utils";
+import {
+  compareConnectAuthRequests,
+  replyToAuthRequest,
+  stopKeepAlive
+} from "~utils/auth/auth.utils";
 import type { Chunk } from "~api/modules/sign/chunks";
 import { defaultGateway } from "~gateways/gateway";
 import Arweave from "arweave";
@@ -26,6 +32,7 @@ import {
   type SplitTransaction
 } from "~api/modules/sign/transaction_builder";
 import { isomorphicOnMessage } from "~utils/messaging/messaging.utils";
+import type { IBridgeMessage } from "@arconnect/webext-bridge";
 
 interface AuthRequestContextState {
   authRequests: AuthRequest[];
@@ -35,7 +42,11 @@ interface AuthRequestContextState {
 
 interface AuthRequestContextData extends AuthRequestContextState {
   setCurrentAuthRequestIndex: (currentAuthRequestIndex: number) => void;
-  completeAuthRequest: (authID: string, accepted: boolean) => void;
+  completeAuthRequest: (
+    authID: string,
+    accepted: boolean,
+    data: any
+  ) => Promise<void>;
 }
 
 export const AuthRequestsContext = createContext<AuthRequestContextData>({
@@ -43,7 +54,7 @@ export const AuthRequestsContext = createContext<AuthRequestContextData>({
   currentAuthRequestIndex: 0,
   lastCompletedAuthRequest: null,
   setCurrentAuthRequestIndex: () => {},
-  completeAuthRequest: () => {}
+  completeAuthRequest: async () => {}
 });
 
 export function AuthRequestsProvider({ children }: PropsWithChildren) {
@@ -69,8 +80,64 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
   );
 
   const completeAuthRequest = useCallback(
-    (authID: string, accepted: boolean) => {
-      console.log(`completeAuthRequest(${authID}, ${accepted})`);
+    async (authID: string, accepted: boolean, data: any) => {
+      const completedAuthRequest = authRequests.find(
+        (authRequest) => authRequest.authID === authID
+      );
+      const completedAuthRequests = [completedAuthRequest];
+      const completedAuthRequestType = completedAuthRequest.type;
+
+      if (completedAuthRequestType === "unlock") {
+        // When an unlock request is completed, we automatically also mark as completed and respond to any other unlock
+        // request from any domain:
+
+        authRequests.forEach((authRequest) => {
+          if (authRequest.type === "unlock")
+            completedAuthRequests.push(authRequest);
+        });
+      } else if (completedAuthRequestType === "connect") {
+        // For connect request, however, we'll only do it for those that have the exact same params, including the
+        // domain that sent the request:
+
+        authRequests.forEach((authRequest) => {
+          if (
+            authRequest.type === "connect" &&
+            compareConnectAuthRequests(authRequest, completedAuthRequest)
+          ) {
+            completedAuthRequests.push(authRequest);
+          }
+        });
+      }
+
+      const status: AuthRequestStatus = accepted ? "accepted" : "rejected";
+
+      const authRequestRepliesPromises: Promise<AuthRequestStatus>[] =
+        completedAuthRequests.map((completedAuthRequest) => {
+          return replyToAuthRequest(
+            completedAuthRequest.type,
+            completedAuthRequest.authID,
+            accepted ? data : undefined,
+            accepted ? undefined : data
+          )
+            .then(() => {
+              return status;
+            })
+            .catch((err) => {
+              console.warn(`replyToAuthRequest(${authID}) failed:`, err);
+
+              return "error";
+            });
+        });
+
+      const completedAuthRequestsStatus = await Promise.all(
+        authRequestRepliesPromises
+      );
+
+      console.log(
+        `completeAuthRequest(${authID}, ${accepted}) => ${completedAuthRequestsStatus.join(
+          ", "
+        )}`
+      );
 
       // If this is an Unlock request, we don't update anything here as those are not enqueued and it's just
       // `useCurrentAuthRequest()` who has to send a response back to the background using `replyToAuthRequest`:
@@ -81,18 +148,48 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
         const { authRequests, currentAuthRequestIndex } =
           prevAuthRequestContextState;
 
-        if (authRequests[currentAuthRequestIndex]?.authID !== authID)
+        if (authID !== authRequests[currentAuthRequestIndex]?.authID) {
+          console.warn(
+            `Mismatch between authID="${authID}" and AuthRequest[${currentAuthRequestIndex}]?.authID`
+          );
+
           return prevAuthRequestContextState;
+        }
+
+        if (authID !== completedAuthRequests[0]?.authID) {
+          console.warn(
+            `Mismatch between authID="${authID}" and completedAuthRequests[0]?.authID`
+          );
+
+          return prevAuthRequestContextState;
+        }
 
         const nextAuthRequests = authRequests;
 
-        // Mark the current `AuthRequest` as "accepted" or "rejected":
-        const lastCompletedAuthRequest = (nextAuthRequests[
-          currentAuthRequestIndex
-        ] = {
-          ...nextAuthRequests[currentAuthRequestIndex],
-          completedAt: Date.now(),
-          status: accepted ? "accepted" : "rejected"
+        let nextLastCompletedAuthRequest: AuthRequest;
+
+        completedAuthRequests.forEach((completedAuthRequest, i) => {
+          const completedAuthRequestIndex = nextAuthRequests.findIndex(
+            (authRequest) => authRequest.authID === completedAuthRequest.authID
+          );
+
+          if (completedAuthRequestIndex === -1) {
+            console.warn(
+              `Could not find AuthRequest with authID="${completedAuthRequestsStatus}"`
+            );
+
+            return;
+          }
+
+          nextAuthRequests[completedAuthRequestIndex] = {
+            ...nextAuthRequests[completedAuthRequestIndex],
+            completedAt: Date.now(),
+            status: completedAuthRequestsStatus[i]
+          };
+
+          if (i === 0)
+            nextLastCompletedAuthRequest =
+              nextAuthRequests[completedAuthRequestIndex];
         });
 
         // Find the index of the next "pending" `AuthRequest`, or keep it unchanged if there are none left:
@@ -113,11 +210,11 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
         return {
           authRequests: nextAuthRequests,
           currentAuthRequestIndex: nextCurrentAuthRequestIndex,
-          lastCompletedAuthRequest
+          lastCompletedAuthRequest: nextLastCompletedAuthRequest
         };
       });
     },
-    []
+    [authRequests]
   );
 
   useEffect(() => {
@@ -138,47 +235,45 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
 
       setAuthRequestContextState((prevAuthRequestContextState) => {
         const {
-          authRequests: prevAuthRequests,
+          authRequests,
           currentAuthRequestIndex,
           lastCompletedAuthRequest
         } = prevAuthRequestContextState;
 
         // TODO: Additional considerations when enqueueing new `AuthRequest`s:
         //
-        // - We might want to push "connect" requests at the head (0), not at the end.
-        //
-        // - We might want to automatically merge/combine "connect" requests from the same site (regardless of tab). In
-        //   this case, `AuthRequests` might have to respond to multiple authIDs when accepted/rejected, which affects
-        //   both `completeAuthRequest` and `auth.hook.ts`.
-        //
-        // - `AuthRequest`s could be grouped/sorted by domain/app/tab. This means the auth popup could/should provide a
-        //   domain/app/tab selector and automatically select the active tab when the user switches it.
+        // - `AuthRequest`s could be grouped by domain and/or tab. This means the auth popup could/should provide a
+        //   domain/tab selector and automatically select the active tab when the user switches it.
         //
         // - Separate `signDataItem`requests could/should automatically be combined into a single `batchSignDataItem`
         //   (except maybe for the current `AuthRequest`, as otherwise the UI would constantly change as new requests
         //   are added to the batch).
 
-        const nextAuthRequests = [...prevAuthRequests] satisfies AuthRequest[];
+        const nextAuthRequests = [...authRequests] satisfies AuthRequest[];
+
+        let nextCurrentAuthRequestIndex = currentAuthRequestIndex;
 
         if (authRequest.data.type === "unlock") {
-          // TODO: When merging, all need to be notified when clicked...
-          if (prevAuthRequests[0]?.type !== "unlock")
-            nextAuthRequests.unshift({
-              ...authRequest.data,
-              status: "pending"
-            });
+          // Automatically select unlock request. Also, note unlock requests are always added from the head, not from
+          // the tail, but they are kept in the same order they are requested:
+          nextCurrentAuthRequestIndex = nextAuthRequests.findLastIndex(
+            (authRequest) => authRequest.type === "unlock"
+          );
+
+          if (nextCurrentAuthRequestIndex === -1)
+            nextCurrentAuthRequestIndex = 0;
+
+          nextAuthRequests.splice(nextCurrentAuthRequestIndex, 0, {
+            ...authRequest.data,
+            status: "pending"
+          });
         } else {
+          // Any other request type, including connect requests, are added to the queue in order:
           nextAuthRequests.push({ ...authRequest.data, status: "pending" });
         }
 
         // TODO: Add setting to decide whether we automatically jump to a new pending request when they arrive or stay
-        // in the one currently selected:
-
-        let nextCurrentAuthRequestIndex = currentAuthRequestIndex;
-
-        // if (nextAuthRequests[currentAuthRequestIndex].status !== "pending") {
-        //   nextCurrentAuthRequestIndex = nextAuthRequests.length - 1;
-        // }
+        // in the one currently selected.
 
         return {
           authRequests: nextAuthRequests,
@@ -194,10 +289,10 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
   }, []);
 
   useEffect(() => {
-    isomorphicOnMessage("auth_tab_closed", (tabClosedMessage) => {
-      const tabID = tabClosedMessage?.data;
+    function handleTabUpdatedOrClosed(message: IBridgeMessage<number>) {
+      const tabID = message?.data;
 
-      console.log(`AuthProvider - Tab ${tabID || "-"} closed`);
+      console.log(`AuthProvider - Tab ${tabID || "-"} closed or reloaded`);
 
       if (!tabID) return;
 
@@ -209,6 +304,8 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
         } = prevAuthRequestContextState;
 
         const authRequests = prevAuthRequests.map((authRequest) => {
+          stopKeepAlive(authRequest.authID);
+
           return authRequest.tabID === tabID
             ? ({
                 ...authRequest,
@@ -226,7 +323,10 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
           lastCompletedAuthRequest
         };
       });
-    });
+    }
+
+    // isomorphicOnMessage("auth_tab_updated", handleTabUpdatedOrClosed)
+    isomorphicOnMessage("auth_tab_closed", handleTabUpdatedOrClosed);
   }, []);
 
   useEffect(() => {
