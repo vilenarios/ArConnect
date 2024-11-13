@@ -9,7 +9,6 @@ import type {
   AuthType,
   ConnectAuthRequest
 } from "~utils/auth/auth.types";
-import { DEFAULT_UNLOCK_AUTH_REQUEST_ID } from "~utils/auth/auth.constants";
 import type { ModuleAppData } from "~api/background/background-modules";
 
 const popupMutex = new Mutex();
@@ -112,10 +111,7 @@ async function createAuthPopup(
   unlock();
 
   // Generate an unique id for the authentication to be checked later:
-  const authID =
-    authRequestData.type === "unlock"
-      ? DEFAULT_UNLOCK_AUTH_REQUEST_ID
-      : nanoid();
+  const authID = nanoid();
 
   await isomorphicSendMessage({
     messageId: "auth_request",

@@ -32,6 +32,17 @@ export function useCurrentAuthRequest<T extends AuthType>(
   ] as AuthRequestByType[T];
   const authRequestType = authRequest?.type;
 
+  console.log("DEBUG DATA =", { expectedAuthType, authRequestType });
+
+  if (expectedAuthType === "unlock" && authRequestType !== "unlock") {
+    return {
+      authRequest: undefined,
+      lastCompletedAuthRequest,
+      acceptRequest: () => Promise.resolve(),
+      rejectRequest: () => Promise.resolve()
+    };
+  }
+
   if (expectedAuthType !== "any" && expectedAuthType !== "unlock") {
     if (!authRequest) {
       throw new Error(`Missing "${expectedAuthType}" AuthRequest.`);

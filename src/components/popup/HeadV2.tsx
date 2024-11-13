@@ -127,7 +127,7 @@ export default function HeadV2({
   }, [url]);
 
   const appName = appInfo?.name || url;
-  const appIconPlaceholderText = appName.slice(0, 2).toUpperCase();
+  const appIconPlaceholderText = appName?.slice(0, 2).toUpperCase();
 
   return (
     <HeadWrapper

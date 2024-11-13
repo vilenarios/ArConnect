@@ -2,21 +2,18 @@ import {
   createContext,
   useCallback,
   useEffect,
-  useRef,
   useState,
   type PropsWithChildren
 } from "react";
 import {
   AUTH_POPUP_CLOSING_DELAY_MS,
-  AUTH_POPUP_REQUEST_WAIT_MS,
-  DEFAULT_UNLOCK_AUTH_REQUEST_ID
+  AUTH_POPUP_REQUEST_WAIT_MS
 } from "~utils/auth/auth.constants";
 import type {
   AuthRequest,
   AuthRequestStatus,
   SignAuthRequest,
-  SignKeystoneAuthRequest,
-  UnlockAuthRequest
+  SignKeystoneAuthRequest
 } from "~utils/auth/auth.types";
 import {
   compareConnectAuthRequests,
@@ -138,10 +135,6 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
           ", "
         )}`
       );
-
-      // If this is an Unlock request, we don't update anything here as those are not enqueued and it's just
-      // `useCurrentAuthRequest()` who has to send a response back to the background using `replyToAuthRequest`:
-      // if (authID === DEFAULT_UNLOCK_AUTH_REQUEST_ID) return;
 
       // If it is any other type of `AuthRequest`, we mark it as accepted/cancelled and move on to the next one:
       setAuthRequestContextState((prevAuthRequestContextState) => {
@@ -443,10 +436,10 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
 
       if (process.env.NODE_ENV === "development") {
         timeoutID = setTimeout(() => {
-          window.top.close();
+          // window.top.close();
         }, AUTH_POPUP_CLOSING_DELAY_MS);
       } else {
-        window.top.close();
+        // window.top.close();
       }
     }
 
