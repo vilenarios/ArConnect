@@ -32,8 +32,6 @@ export function useCurrentAuthRequest<T extends AuthType>(
   ] as AuthRequestByType[T];
   const authRequestType = authRequest?.type;
 
-  console.log("DEBUG DATA =", { expectedAuthType, authRequestType });
-
   if (expectedAuthType === "unlock" && authRequestType !== "unlock") {
     return {
       authRequest: undefined,

@@ -13,11 +13,13 @@ export interface MessageData<K extends MessageID> {
   data: ProtocolMap[K];
 }
 
+const READY_MESSAGE_SUFFIX = "_ready" as const;
+
 let messageCounter = 0;
 
 /**
  * Send a message of `<messageId>` type to the specific `tabId` or background straight away. If that message fails
- * because no one is listening, listen for `<messageId>_ready` messages for 6 seconds, and try to send the message again
+ * because no one is listening, listen for `<messageId>${ READY_MESSAGE_SUFFIX }` messages for 6 seconds, and try to send the message again
  * once that's received, or throw a time out error otherwise.
  */
 export async function isomorphicSendMessage<K extends MessageID>({
@@ -101,7 +103,7 @@ export async function isomorphicSendMessage<K extends MessageID>({
         timeoutTimeoutID = setTimeout(() => {
           reject(
             new Error(
-              `Timed out waiting for ${messageId}_ready from ${destination}`
+              `Timed out waiting for ${messageId}${READY_MESSAGE_SUFFIX} from ${destination}`
             )
           );
         }, 6000);
@@ -132,7 +134,10 @@ export async function isomorphicSendMessage<K extends MessageID>({
             });
         }
 
-        webExtBridgeOnMessage(`${messageId}_ready`, handleTabReady as any);
+        webExtBridgeOnMessage(
+          `${messageId}${READY_MESSAGE_SUFFIX}`,
+          handleTabReady as any
+        );
       });
   });
 }
@@ -146,7 +151,7 @@ export function isomorphicOnMessage<K extends MessageID>(
   webExtBridgeOnMessage(messageID, callback as any);
 
   isomorphicSendMessage({
-    messageId: `${messageID}_ready` as any,
+    messageId: `${messageID}${READY_MESSAGE_SUFFIX}` as any,
     data: null
   });
 }

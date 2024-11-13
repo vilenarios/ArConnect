@@ -30,7 +30,7 @@ export async function handleActiveAddressChange({
     // app not connected
     if (permissionCheck.has.length === 0) return;
 
-    // trigger emiter
+    // trigger emitter
     await sendMessage(
       "event",
       {

@@ -17,6 +17,7 @@ import type {
 } from "~utils/auth/auth.types";
 import {
   compareConnectAuthRequests,
+  getCachedAuthPopupWindowTabID,
   replyToAuthRequest,
   stopKeepAlive
 } from "~utils/auth/auth.utils";
@@ -216,15 +217,20 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
       window.top.close();
     }, AUTH_POPUP_REQUEST_WAIT_MS);
 
-    isomorphicOnMessage("auth_request", (authRequest) => {
+    isomorphicOnMessage("auth_request", (authRequestMessage) => {
       clearTimeout(timeoutID);
 
-      console.log("AuthProvider - Request received", authRequest);
+      console.log("AuthProvider - Request received", authRequestMessage);
 
       // UnlockAuthRequests are not enqueued as those are simply used to open the popup to prompt users to enter their
       // password and wait for the wallet to unlock:
 
-      if (!authRequest?.data) return;
+      if (!authRequestMessage?.data) {
+        console.warn("auth_request without data");
+        return;
+      }
+
+      const authRequest = authRequestMessage.data;
 
       setAuthRequestContextState((prevAuthRequestContextState) => {
         const {
@@ -246,7 +252,7 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
 
         let nextCurrentAuthRequestIndex = currentAuthRequestIndex;
 
-        if (authRequest.data.type === "unlock") {
+        if (authRequest.type === "unlock") {
           // Automatically select unlock request. Also, note unlock requests are always added from the head, not from
           // the tail, but they are kept in the same order they are requested:
           nextCurrentAuthRequestIndex = nextAuthRequests.findLastIndex(
@@ -257,12 +263,12 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
             nextCurrentAuthRequestIndex = 0;
 
           nextAuthRequests.splice(nextCurrentAuthRequestIndex, 0, {
-            ...authRequest.data,
+            ...authRequest,
             status: "pending"
           });
         } else {
           // Any other request type, including connect requests, are added to the queue in order:
-          nextAuthRequests.push({ ...authRequest.data, status: "pending" });
+          nextAuthRequests.push({ ...authRequest, status: "pending" });
         }
 
         // TODO: Add setting to decide whether we automatically jump to a new pending request when they arrive or stay
@@ -436,10 +442,10 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
 
       if (process.env.NODE_ENV === "development") {
         timeoutID = setTimeout(() => {
-          // window.top.close();
+          window.top.close();
         }, AUTH_POPUP_CLOSING_DELAY_MS);
       } else {
-        // window.top.close();
+        window.top.close();
       }
     }
 

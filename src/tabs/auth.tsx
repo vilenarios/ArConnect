@@ -45,12 +45,12 @@ import { LoadingPage } from "~components/LoadingPage";
 // DONE: Get rid of constant UNLOCK_AUTH_REQUEST_ID and fix duplicate unlock requests when the wallet is initially locked.
 
 // TODO: Disconnecting the wallet should also abort AuthRequests.
-
-// TODO: Stop listening for _ready_ready messages.
+// TODO: Reloading the tab should also abort AuthRequests.
 // TODO: Add env variable for message/auth-related logs.
 
 // TODO: Check timeout issue in messaging.utils - is this why Bazar doesn't work the same when the wallet has just been unlocked?
-// TODO: Why the first transaction arrives without tags? Also, reloading the tab seems to "abort" a request from the "new batch" (this needs tpo be implemented)
+// TODO: Why the first transaction arrives without tags?
+// TODO: Stop listening for _ready_ready messages.
 
 // TODO: How to know which wallet is being used in the AuthRequests? What if I change the wallet, should the requests be cancelled?
 // TODO: Unify transaction details component (new PR).
