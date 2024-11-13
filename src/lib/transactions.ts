@@ -106,6 +106,11 @@ export async function checkTransactionError(
       { messageId: transaction.node.id },
       txHistoryGateways[attempt % txHistoryGateways.length]
     );
+
+    if (data?.data === null && (data as any)?.errors?.length > 0) {
+      throw new Error((data as any)?.errors?.[0]?.message || "GraphQL Error");
+    }
+
     return data.data.transactions.edges.length > 0;
   }, 2);
 }

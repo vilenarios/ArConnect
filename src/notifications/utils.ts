@@ -70,13 +70,13 @@ query($address: String!) {
 `;
 
 export const AF_ERROR_QUERY = `
-query {
+query($messageId: String!) {
   transactions(
     first: 10,
     tags: [
       {name: "Data-Protocol", values: ["ao"]},
       {name: "Action", values: ["Transfer-Error"]},
-      {name: "Message-Id", values: ["L-nExyvrfVv5oJQtBnk6VD7-Hgisf-WLC55MMCqQq7A"]},
+      {name: "Message-Id", values: [$messageId]},
     ]
   ) {
     edges {
@@ -99,7 +99,6 @@ query {
     }
   }
 }
-
 `;
 
 export const AO_SENT_QUERY = `
