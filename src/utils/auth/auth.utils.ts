@@ -22,6 +22,8 @@ let POPUP_TAB_ID = -1;
 function setPopupTabID(popupTabID: number) {
   POPUP_TAB_ID = popupTabID;
 
+  if (popupTabID === -1) return;
+
   popupUpdatedCallbacks.forEach((cb) => {
     cb(popupTabID);
   });
@@ -33,6 +35,10 @@ function onPopupTabUpdated(cb: PopupUpdatedCallback) {
   if (POPUP_TAB_ID !== -1) return cb(POPUP_TAB_ID);
 
   popupUpdatedCallbacks.push(cb);
+}
+
+export function resetPopupTabID() {
+  setPopupTabID(-1);
 }
 
 export function getCachedAuthPopupWindowTabID() {
@@ -79,7 +85,7 @@ export async function requestUserAuthorization(
  *
  * @returns ID of the authentication
  */
-async function createAuthPopup(
+export async function createAuthPopup(
   authRequestData: AuthRequestData,
   moduleAppData: ModuleAppData
 ) {

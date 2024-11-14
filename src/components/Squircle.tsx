@@ -26,8 +26,6 @@ export default function Squircle({
   // weird for a second
   useEffect(() => {
     (async () => {
-      console.log("loading image", img);
-
       if (!img) {
         return setImageData(img);
       }

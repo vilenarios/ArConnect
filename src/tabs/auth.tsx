@@ -45,12 +45,12 @@ import { LoadingPage } from "~components/LoadingPage";
 // DONE: Get rid of constant UNLOCK_AUTH_REQUEST_ID and fix duplicate unlock requests when the wallet is initially locked.
 // DONE: If the last transaction was cancelled, the message should be different.
 // DONE: Reloading the tab should also abort AuthRequests.
+// DONE: Fix transactions with no tags by resetting the popup tab ID if the popup is closed.
+
+// TODO: Check timeout issue in messaging.utils - is this why Bazar doesn't work the same when the wallet has just been unlocked?
 
 // TODO: Disconnecting the wallet should also abort AuthRequests.
 // TODO: Add env variable for message/auth-related logs.
-
-// TODO: Check timeout issue in messaging.utils - is this why Bazar doesn't work the same when the wallet has just been unlocked?
-// TODO: Why the first transaction after closing the popup arrives without tags?
 // TODO: Stop listening for _ready_ready messages.
 
 // TODO: How to know which wallet is being used in the AuthRequests? What if I change the wallet, should the requests be cancelled?

@@ -212,6 +212,8 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
   );
 
   useEffect(() => {
+    console.log("\n\n\nNEW POPUP:\n\n\n\n");
+
     // Close the popup if an AuthRequest doesn't arrive in less than `AUTH_POPUP_REQUEST_WAIT_MS` (1s):
     const timeoutID = setTimeout(() => {
       window.top.close();

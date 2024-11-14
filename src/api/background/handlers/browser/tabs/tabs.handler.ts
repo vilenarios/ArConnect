@@ -1,6 +1,9 @@
 import Application from "~applications/application";
 import { getTab } from "~applications/tab";
-import { getCachedAuthPopupWindowTabID } from "~utils/auth/auth.utils";
+import {
+  getCachedAuthPopupWindowTabID,
+  resetPopupTabID
+} from "~utils/auth/auth.utils";
 import { createContextMenus } from "~utils/context_menus";
 import { getAppURL } from "~utils/format";
 import { updateIcon } from "~utils/icon";
@@ -18,7 +21,7 @@ export async function handleTabUpdate(
 ) {
   const popupTabID = getCachedAuthPopupWindowTabID();
 
-  if (popupTabID !== -1 && changeInfo.status === "loading") {
+  if (popupTabID !== -1 && changeInfo?.status === "loading") {
     isomorphicSendMessage({
       messageId: "auth_tab_reloaded",
       tabId: popupTabID,
@@ -55,8 +58,17 @@ export async function handleTabUpdate(
 export function handleTabClosed(closedTabID: number) {
   const popupTabID = getCachedAuthPopupWindowTabID();
 
+  // If there's no popup, then we do nothing:
   if (popupTabID === -1) return;
 
+  // If the closed tab was the popup, we reset its ID.
+  if (closedTabID === popupTabID) {
+    resetPopupTabID();
+
+    return;
+  }
+
+  // If some other tab was closed and there's a popup, notify the popup in case it has AuthRequest from the closed tab:
   isomorphicSendMessage({
     messageId: "auth_tab_closed",
     tabId: popupTabID,
