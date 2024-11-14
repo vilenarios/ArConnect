@@ -43,13 +43,14 @@ import { LoadingPage } from "~components/LoadingPage";
 // DONE: Clean up alarms on auth_tab_closed
 // DONE: Unlocking the wallet seems to automatically accept an AuthRequest.
 // DONE: Get rid of constant UNLOCK_AUTH_REQUEST_ID and fix duplicate unlock requests when the wallet is initially locked.
+// DONE: If the last transaction was cancelled, the message should be different.
 
 // TODO: Disconnecting the wallet should also abort AuthRequests.
 // TODO: Reloading the tab should also abort AuthRequests.
 // TODO: Add env variable for message/auth-related logs.
 
 // TODO: Check timeout issue in messaging.utils - is this why Bazar doesn't work the same when the wallet has just been unlocked?
-// TODO: Why the first transaction arrives without tags?
+// TODO: Why the first transaction after closing the popup arrives without tags?
 // TODO: Stop listening for _ready_ready messages.
 
 // TODO: How to know which wallet is being used in the AuthRequests? What if I change the wallet, should the requests be cancelled?
@@ -72,7 +73,9 @@ export function AuthApp() {
     content = (
       <LoadingPage
         label={browser.i18n.getMessage(
-          `${lastCompletedAuthRequest?.type || "default"}RequestLoading`
+          lastCompletedAuthRequest?.status === "accepted"
+            ? `${lastCompletedAuthRequest?.type || "default"}RequestLoading`
+            : `abortingRequestLoading`
         )}
       />
     );

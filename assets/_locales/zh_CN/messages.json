@@ -2312,6 +2312,10 @@
       "message": "Signing...",
       "description": "Loading message for AuthRequest of type signDataItem"
     },
+    "abortingRequestLoading": {
+      "message": "Aborting...",
+      "description": "Loading message for rejected/aborted AuthRequests"
+    },
     "pendingTransactionStatusAt": {
       "message": "Requested",
       "description": "Label to display next to the elapsed time since the AuthRequest was created"
