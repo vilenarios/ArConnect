@@ -17,7 +17,7 @@ import { retryWithDelay } from "~utils/retry";
 let tokens: TokenInfo[] = null;
 export let tokenInfoMap = new Map<string, TokenInfo | Token>();
 
-const AGENT_TOKEN_ADDRESS = "JwjzLSbwIDIouY0iIMyVEbjMbVMOkL2TTEzdJWwtly8";
+const AGENT_TOKEN_ADDRESS = "8rbAftv7RaPxFjFk5FGUVAVCSjGQB4JHDcb9P9wCVhQ";
 
 export type ExtendedTransaction = RawTransaction & {
   cursor: string;
@@ -96,7 +96,7 @@ const processTransaction = (transaction: GQLEdgeInterface, type: string) => ({
 export async function checkTransactionError(
   transaction: GQLEdgeInterface | Transaction
 ): Promise<boolean> {
-  if (transaction.node.owner.address !== AGENT_TOKEN_ADDRESS) {
+  if (transaction.node.recipient !== AGENT_TOKEN_ADDRESS) {
     return false;
   }
 
@@ -112,7 +112,7 @@ export async function checkTransactionError(
     }
 
     return data.data.transactions.edges.length > 0;
-  }, 2);
+  }, 2).catch(() => false);
 }
 
 const processAoTransaction = async (
