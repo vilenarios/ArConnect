@@ -5,18 +5,22 @@ import { createContextMenus } from "~utils/context_menus";
 import { getAppURL } from "~utils/format";
 import { updateIcon } from "~utils/icon";
 import { isomorphicSendMessage } from "~utils/messaging/messaging.utils";
+import browser from "webextension-polyfill";
 
 /**
  * Handle tab updates (icon change, context menus, etc.)
  *
  * @param tabId ID of the tab to get.
  */
-export async function handleTabUpdate(tabID: number) {
+export async function handleTabUpdate(
+  tabID: number,
+  changeInfo?: browser.Tabs.OnUpdatedChangeInfoType
+) {
   const popupTabID = getCachedAuthPopupWindowTabID();
 
-  if (popupTabID !== -1) {
+  if (popupTabID !== -1 && changeInfo.status === "loading") {
     isomorphicSendMessage({
-      messageId: "auth_tab_updated",
+      messageId: "auth_tab_reloaded",
       tabId: popupTabID,
       data: tabID
     });

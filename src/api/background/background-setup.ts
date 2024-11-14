@@ -83,9 +83,11 @@ export function setupBackgroundService() {
   browser.windows.onRemoved.addListener(handleWindowClose);
 
   // handle tab change (icon, context menus)
-  browser.tabs.onUpdated.addListener((tabId) => handleTabUpdate(tabId));
+  browser.tabs.onUpdated.addListener((tabId, changeInfo) =>
+    handleTabUpdate(tabId, changeInfo)
+  );
   browser.tabs.onActivated.addListener(({ tabId }) => handleTabUpdate(tabId));
-  browser.tabs.onRemoved.addListener((tabId) => handleTabClosed(tabId));
+  browser.tabs.onRemoved.addListener(handleTabClosed);
 
   // handle ar:// protocol
   browser.webNavigation.onBeforeNavigate.addListener(handleProtocol);

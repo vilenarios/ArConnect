@@ -44,9 +44,9 @@ import { LoadingPage } from "~components/LoadingPage";
 // DONE: Unlocking the wallet seems to automatically accept an AuthRequest.
 // DONE: Get rid of constant UNLOCK_AUTH_REQUEST_ID and fix duplicate unlock requests when the wallet is initially locked.
 // DONE: If the last transaction was cancelled, the message should be different.
+// DONE: Reloading the tab should also abort AuthRequests.
 
 // TODO: Disconnecting the wallet should also abort AuthRequests.
-// TODO: Reloading the tab should also abort AuthRequests.
 // TODO: Add env variable for message/auth-related logs.
 
 // TODO: Check timeout issue in messaging.utils - is this why Bazar doesn't work the same when the wallet has just been unlocked?

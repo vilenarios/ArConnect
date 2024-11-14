@@ -288,7 +288,7 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
   }, []);
 
   useEffect(() => {
-    function handleTabUpdatedOrClosed(message: IBridgeMessage<number>) {
+    function handleTabReloadedOrClosed(message: IBridgeMessage<number>) {
       const tabID = message?.data;
 
       console.log(`AuthProvider - Tab ${tabID || "-"} closed or reloaded`);
@@ -303,15 +303,17 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
         } = prevAuthRequestContextState;
 
         const authRequests = prevAuthRequests.map((authRequest) => {
-          stopKeepAlive(authRequest.authID);
+          if (authRequest.tabID === tabID) {
+            stopKeepAlive(authRequest.authID);
 
-          return authRequest.tabID === tabID
-            ? ({
-                ...authRequest,
-                completedAt: Date.now(),
-                status: "aborted"
-              } satisfies AuthRequest)
-            : authRequest;
+            return {
+              ...authRequest,
+              completedAt: Date.now(),
+              status: "aborted"
+            } satisfies AuthRequest;
+          }
+
+          return authRequest;
         });
 
         // TODO: Consider automatically selecting the next pending AuthRequest.
@@ -324,8 +326,8 @@ export function AuthRequestsProvider({ children }: PropsWithChildren) {
       });
     }
 
-    // isomorphicOnMessage("auth_tab_updated", handleTabUpdatedOrClosed)
-    isomorphicOnMessage("auth_tab_closed", handleTabUpdatedOrClosed);
+    isomorphicOnMessage("auth_tab_reloaded", handleTabReloadedOrClosed);
+    isomorphicOnMessage("auth_tab_closed", handleTabReloadedOrClosed);
   }, []);
 
   useEffect(() => {

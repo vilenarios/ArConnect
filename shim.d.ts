@@ -41,9 +41,9 @@ declare module "@arconnect/webext-bridge" {
     auth_tab_closed: number;
 
     /**
-     * The background sends `auth_tab_updated` messages to notify the auth popup of reloaded tabs.
+     * The background sends `auth_tab_reloaded` messages to notify the auth popup of reloaded tabs.
      */
-    auth_tab_updated: number;
+    auth_tab_reloaded: number;
 
     // OTHER:
 
