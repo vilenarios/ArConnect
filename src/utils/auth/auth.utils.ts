@@ -13,16 +13,27 @@ import type { ModuleAppData } from "~api/background/background-modules";
 
 const popupMutex = new Mutex();
 
-type PopupUpdatedCallback = (popupTabID: number) => void;
+type PopupCallback = (popupTabID: number) => void;
 
-let popupUpdatedCallbacks: PopupUpdatedCallback[] = [];
+let popupUpdatedCallbacks: PopupCallback[] = [];
+let popupClosedCallbacks: PopupCallback[] = [];
 
 let POPUP_TAB_ID = -1;
 
 function setPopupTabID(popupTabID: number) {
+  console.log("setPopupTabID =", popupTabID);
+
   POPUP_TAB_ID = popupTabID;
 
-  if (popupTabID === -1) return;
+  if (popupTabID === -1) {
+    popupClosedCallbacks.forEach((cb) => {
+      cb(popupTabID);
+    });
+
+    popupClosedCallbacks = [];
+
+    return;
+  }
 
   popupUpdatedCallbacks.forEach((cb) => {
     cb(popupTabID);
@@ -31,10 +42,20 @@ function setPopupTabID(popupTabID: number) {
   popupUpdatedCallbacks = [];
 }
 
-function onPopupTabUpdated(cb: PopupUpdatedCallback) {
+function onPopupTabUpdated(cb: PopupCallback) {
   if (POPUP_TAB_ID !== -1) return cb(POPUP_TAB_ID);
 
   popupUpdatedCallbacks.push(cb);
+}
+
+export function onPopupClosed(cb: PopupCallback) {
+  popupClosedCallbacks.push(cb);
+
+  return () => {
+    const cbIndex = popupClosedCallbacks.indexOf(cb);
+
+    if (cbIndex !== -1) popupClosedCallbacks.splice(cbIndex, 1);
+  };
 }
 
 export function resetPopupTabID() {
@@ -86,7 +107,7 @@ export async function requestUserAuthorization(
  * @returns ID of the authentication
  */
 export async function createAuthPopup(
-  authRequestData: AuthRequestData,
+  authRequestData: null | AuthRequestData,
   moduleAppData: ModuleAppData
 ) {
   const unlock = await popupMutex.lock();
@@ -116,21 +137,25 @@ export async function createAuthPopup(
 
   unlock();
 
-  // Generate an unique id for the authentication to be checked later:
-  const authID = nanoid();
+  let authID: string | undefined;
 
-  await isomorphicSendMessage({
-    messageId: "auth_request",
-    tabId: POPUP_TAB_ID,
-    data: {
-      ...authRequestData,
-      url: moduleAppData.url,
-      tabID: moduleAppData.tabID,
-      authID,
-      requestedAt: Date.now(),
-      status: "pending"
-    }
-  });
+  if (authRequestData) {
+    // Generate an unique id for the authentication to be checked later:
+    authID = nanoid();
+
+    await isomorphicSendMessage({
+      messageId: "auth_request",
+      tabId: POPUP_TAB_ID,
+      data: {
+        ...authRequestData,
+        url: moduleAppData.url,
+        tabID: moduleAppData.tabID,
+        authID,
+        requestedAt: Date.now(),
+        status: "pending"
+      }
+    });
+  }
 
   return {
     authID,
@@ -245,6 +270,27 @@ export async function stopKeepAlive(authID: string) {
 
     if (activePopups <= 0 && keepAliveInterval !== null) {
       console.log("Stopped keep-alive messages...");
+
+      browser.alarms.clear("keep-alive");
+      clearInterval(keepAliveInterval);
+      keepAliveInterval = null;
+    }
+  } finally {
+    unlock();
+  }
+}
+
+/**
+ *
+ */
+export async function resetKeepAlive() {
+  const unlock = await mutex.lock();
+
+  try {
+    activeAuthRequests.clear();
+
+    if (keepAliveInterval !== null) {
+      console.log("Reset keep-alive messages...");
 
       browser.alarms.clear("keep-alive");
       clearInterval(keepAliveInterval);

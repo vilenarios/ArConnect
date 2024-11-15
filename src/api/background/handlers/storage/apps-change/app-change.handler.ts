@@ -39,6 +39,8 @@ export async function handleAppsChange({
     if (!newValue && !!oldValue) {
       if (!oldValue.includes(appURL)) return;
 
+      // TODO: isomorphicSendMessage("authDisconnect")
+
       return await triggerEvent(tab.id, "disconnect");
     } else if (!newValue) {
       // if the new value is undefined
@@ -58,6 +60,7 @@ export async function handleAppsChange({
       await triggerEvent(tab.id, "connect");
     } else if (!newValue.includes(appURL) && oldAppsList.includes(appURL)) {
       await triggerEvent(tab.id, "disconnect");
+      // TODO: isomorphicSendMessage("authDisconnect")
     }
   });
 

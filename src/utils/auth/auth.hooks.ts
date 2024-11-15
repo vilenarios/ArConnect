@@ -1,5 +1,6 @@
 import { useContext, useEffect } from "react";
 import type { BaseLocationHook } from "wouter";
+import { ERR_MSG_USER_CANCELLED_AUTH } from "~utils/assertions";
 import { AuthRequestsContext } from "~utils/auth/auth.provider";
 import type {
   AuthRequest,
@@ -32,16 +33,7 @@ export function useCurrentAuthRequest<T extends AuthType>(
   ] as AuthRequestByType[T];
   const authRequestType = authRequest?.type;
 
-  if (expectedAuthType === "unlock" && authRequestType !== "unlock") {
-    return {
-      authRequest: undefined,
-      lastCompletedAuthRequest,
-      acceptRequest: () => Promise.resolve(),
-      rejectRequest: () => Promise.resolve()
-    };
-  }
-
-  if (expectedAuthType !== "any" && expectedAuthType !== "unlock") {
+  if (expectedAuthType !== "any") {
     if (!authRequest) {
       throw new Error(`Missing "${expectedAuthType}" AuthRequest.`);
     } else if (expectedAuthType !== authRequestType) {
@@ -71,7 +63,7 @@ export function useCurrentAuthRequest<T extends AuthType>(
     return completeAuthRequest(
       authID,
       false,
-      errorMessage || "User cancelled the auth"
+      errorMessage || ERR_MSG_USER_CANCELLED_AUTH
     );
   }
 

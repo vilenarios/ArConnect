@@ -43,12 +43,6 @@ export interface AllowanceAuthRequestData {
   spendingLimitReached: boolean;
 }
 
-// UNLOCK:
-
-export interface UnlockAuthRequestData {
-  type: "unlock";
-}
-
 // TOKEN AUTH:
 
 export interface TokenAuthRequestData {
@@ -108,8 +102,6 @@ export type ConnectAuthRequestMessageData = ConnectAuthRequestData &
   CommonAuthRequestProps;
 export type AllowanceAuthRequestMessageData = AllowanceAuthRequestData &
   CommonAuthRequestProps;
-export type UnlockAuthRequestMessageData = UnlockAuthRequestData &
-  CommonAuthRequestProps;
 export type TokenAuthRequestMessageData = TokenAuthRequestData &
   CommonAuthRequestProps;
 export type SignAuthRequestMessageData = SignAuthRequestData &
@@ -129,7 +121,6 @@ export type BatchSignDataItemAuthRequestMessageData =
 
 export type ConnectAuthRequest = ConnectAuthRequestMessageData;
 export type AllowanceAuthRequest = AllowanceAuthRequestMessageData;
-export type UnlockAuthRequest = UnlockAuthRequestMessageData;
 export type TokenAuthRequest = TokenAuthRequestMessageData;
 
 export interface SignAuthRequest
@@ -156,7 +147,6 @@ export type AuthType = AuthRequestData["type"];
 export type AuthRequestData =
   | ConnectAuthRequestData
   | AllowanceAuthRequestData
-  | UnlockAuthRequestData
   | TokenAuthRequestData
   | SignAuthRequestData
   | SubscriptionAuthRequestData
@@ -168,7 +158,6 @@ export type AuthRequestData =
 export type AuthRequestMessageData =
   | ConnectAuthRequestMessageData
   | AllowanceAuthRequestMessageData
-  | UnlockAuthRequestMessageData
   | TokenAuthRequestMessageData
   | SignAuthRequestMessageData
   | SubscriptionAuthRequestMessageData
@@ -180,7 +169,6 @@ export type AuthRequestMessageData =
 export type AuthRequest =
   | ConnectAuthRequest
   | AllowanceAuthRequest
-  | UnlockAuthRequest
   | TokenAuthRequest
   | SignAuthRequest
   | SubscriptionAuthRequest
@@ -192,7 +180,6 @@ export type AuthRequest =
 export type AuthRequestByType = {
   connect: ConnectAuthRequest;
   allowance: AllowanceAuthRequest;
-  unlock: UnlockAuthRequest;
   token: TokenAuthRequest;
   sign: SignAuthRequest;
   subscription: SubscriptionAuthRequest;

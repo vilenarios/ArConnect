@@ -2,6 +2,7 @@ import Application from "~applications/application";
 import { getTab } from "~applications/tab";
 import {
   getCachedAuthPopupWindowTabID,
+  resetKeepAlive,
   resetPopupTabID
 } from "~utils/auth/auth.utils";
 import { createContextMenus } from "~utils/context_menus";
@@ -55,15 +56,26 @@ export async function handleTabUpdate(
  *
  * @param tabId ID of the closed tab.
  */
-export function handleTabClosed(closedTabID: number) {
+export async function handleTabClosed(closedTabID: number) {
   const popupTabID = getCachedAuthPopupWindowTabID();
 
   // If there's no popup, then we do nothing:
   if (popupTabID === -1) return;
 
-  // If the closed tab was the popup, we reset its ID.
   if (closedTabID === popupTabID) {
+    // If the closed tab was the popup, we reset its ID and the keep-alive alarm:
     resetPopupTabID();
+    resetKeepAlive();
+
+    // Make sure there were no duplicate auth popups and, if so, close them too:
+    try {
+      const url = browser.runtime.getURL("tabs/auth.html");
+      const authPopups = await browser.tabs.query({ url });
+
+      browser.tabs.remove(authPopups.map((authPopup) => authPopup.id));
+    } catch (err) {
+      console.warn("Error trying to close other auth popups:", err);
+    }
 
     return;
   }

@@ -4,6 +4,7 @@ import { loadTokens } from "~tokens/token";
 import { initializeARBalanceMonitor } from "~utils/analytics";
 import { updateAoToken } from "~utils/ao_import";
 import { handleGatewayUpdateAlarm } from "~api/background/handlers/alarms/gateway-update/gateway-update-alarm.handler";
+import { openOrSelectWelcomePage } from "~wallets";
 
 /**
  * On extension installed event handler
@@ -11,10 +12,7 @@ import { handleGatewayUpdateAlarm } from "~api/background/handlers/alarms/gatewa
 export async function handleInstall(details: Runtime.OnInstalledDetailsType) {
   // only run on install
   if (details.reason === "install") {
-    // open welcome page
-    browser.tabs.create({
-      url: browser.runtime.getURL("tabs/welcome.html")
-    });
+    openOrSelectWelcomePage(true);
   }
 
   // init monthly AR

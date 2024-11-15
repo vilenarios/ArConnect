@@ -29,7 +29,7 @@ export const HeadAuth: React.FC<HeadAuthProps> = ({ title, back }) => {
         url={url}
       />
 
-      {process.env.NODE_ENV === "development" ? (
+      {process.env.NODE_ENV === "development" && authRequests.length > 0 ? (
         <DivTransactionTracker>
           <DivTransactionsList>
             {process.env.NODE_ENV === "development" ? (

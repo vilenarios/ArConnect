@@ -1,5 +1,5 @@
 import Route, { Page } from "~components/popup/Route";
-import { useSetUp } from "~wallets";
+import { useSetUp, type InitialScreenType } from "~wallets";
 import { Router } from "wouter";
 
 import { ArConnectThemeProvider } from "~components/hardware/HardwareWalletTheme";
@@ -46,18 +46,30 @@ import { LoadingPage } from "~components/LoadingPage";
 // DONE: If the last transaction was cancelled, the message should be different.
 // DONE: Reloading the tab should also abort AuthRequests.
 // DONE: Fix transactions with no tags by resetting the popup tab ID if the popup is closed.
+// DONE: Implement listeners for wallet unlock rather than relying on AuthRequests for that (based on storage listeners/watchers)
+// DONE: Close popup immediately if all tabs that sent AuthRequests are closed/reloaded.
+// DONE: Change "Aborting" message when unlocking.
+// DONE: Abort AuthRequests (and cancel alarms) when:
+// - An AuthRequest is rejected.
+// - A tab that sent AuthRequests is closed or reloaded.
+// - The auth popup itself is closed - check if there are duplicate popups, kill all and reset alarm.
+// - TODO: Disconnecting the wallet.
+// - TODO: How to know which wallet is being used in the AuthRequests? What if I change the wallet, should the requests be cancelled?
+// - Note locking the wallet DOES NOT update AuthRequests in any way.
 
-// TODO: Check timeout issue in messaging.utils - is this why Bazar doesn't work the same when the wallet has just been unlocked?
+// TODO: Test common error handling for unlock screen.
+// TODO: Verify only one welcome page can be opened at a time (review connect.background.ts). Check if the auth popup opens and closes just ot request opening the welcome page and if that step can be avoided.
 
-// TODO: Disconnecting the wallet should also abort AuthRequests.
 // TODO: Add env variable for message/auth-related logs.
 // TODO: Stop listening for _ready_ready messages.
 
-// TODO: How to know which wallet is being used in the AuthRequests? What if I change the wallet, should the requests be cancelled?
 // TODO: Unify transaction details component (new PR).
 
-export function AuthApp() {
-  const initialScreenType = useSetUp();
+interface AuthAppProps {
+  initialScreenType: InitialScreenType;
+}
+
+export function AuthApp({ initialScreenType }: AuthAppProps) {
   const { authRequest, lastCompletedAuthRequest } =
     useCurrentAuthRequest("any");
 
@@ -73,7 +85,8 @@ export function AuthApp() {
     content = (
       <LoadingPage
         label={browser.i18n.getMessage(
-          lastCompletedAuthRequest?.status === "accepted"
+          !lastCompletedAuthRequest ||
+            lastCompletedAuthRequest.status === "accepted"
             ? `${lastCompletedAuthRequest?.type || "default"}RequestLoading`
             : `abortingRequestLoading`
         )}
@@ -82,7 +95,6 @@ export function AuthApp() {
   } else if (initialScreenType === "default") {
     content = (
       <Router hook={useAuthRequestsLocation}>
-        <Route path="/unlock" component={Unlock} />
         <Route path="/connect" component={Connect} />
         <Route path="/allowance" component={Allowance} />
         <Route path="/token" component={Token} />
@@ -100,11 +112,13 @@ export function AuthApp() {
 }
 
 export default function AuthAppRoot() {
+  const initialScreenType = useSetUp();
+
   return (
     <ArConnectThemeProvider>
-      <AuthRequestsProvider>
+      <AuthRequestsProvider isReady={initialScreenType === "default"}>
         <AnimatePresence initial={false}>
-          <AuthApp />
+          <AuthApp initialScreenType={initialScreenType} />
         </AnimatePresence>
       </AuthRequestsProvider>
     </ArConnectThemeProvider>

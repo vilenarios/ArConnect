@@ -1,10 +1,9 @@
 import { isArray, isArrayOfType, isNumber, isString } from "typed-assert";
 import { freeDecryptedWallet } from "~wallets/encryption";
-import { isNotCancelError, isSignatureAlgorithm } from "~utils/assertions";
+import { isSignatureAlgorithm } from "~utils/assertions";
 import type { BackgroundModuleFunction } from "~api/background/background-modules";
 import { getWhitelistRegExp } from "./whitelist";
 import { getActiveKeyfile } from "~wallets";
-import browser from "webextension-polyfill";
 import { requestUserAuthorization } from "../../../utils/auth/auth.utils";
 
 const background: BackgroundModuleFunction<number[]> = async (
@@ -40,14 +39,7 @@ const background: BackgroundModuleFunction<number[]> = async (
   }
 
   // grab the user's keyfile
-  const decryptedWallet = await getActiveKeyfile(appData).catch((e) => {
-    isNotCancelError(e);
-
-    // if there are no wallets added, open the welcome page
-    browser.tabs.create({ url: browser.runtime.getURL("tabs/welcome.html") });
-
-    throw new Error("No wallets added");
-  });
+  const decryptedWallet = await getActiveKeyfile(appData);
 
   // check if hardware wallet
   if (decryptedWallet.type === "hardware") {

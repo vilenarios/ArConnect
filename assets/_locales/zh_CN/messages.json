@@ -2284,10 +2284,6 @@
       "message": "Updating allowance...",
       "description": "Loading message for AuthRequest of type allowance"
     },
-    "unlockRequestLoading": {
-      "message": "Unlocking...",
-      "description": "Loading message for AuthRequest of type unlock"
-    },
     "tokenRequestLoading": {
       "message": "Adding token...",
       "description": "Loading message for AuthRequest of type token"

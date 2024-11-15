@@ -366,6 +366,8 @@ export function isValidURL(
   isOneOf(url.protocol, ["http:", "https:"], message);
 }
 
+export const ERR_MSG_USER_CANCELLED_AUTH = "User cancelled the AuthRequest";
+
 export function isNotCancelError(input: unknown): asserts input is Error {
   let message = "";
 
@@ -373,7 +375,7 @@ export function isNotCancelError(input: unknown): asserts input is Error {
   else if (input instanceof Error) message = input.message;
 
   assert(
-    !message.includes("User cancelled the auth"),
+    !message.includes(ERR_MSG_USER_CANCELLED_AUTH),
     "User cancelled the operation"
   );
 }

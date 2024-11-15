@@ -3,11 +3,7 @@ import { allowanceAuth, getAllowance, updateAllowance } from "./allowance";
 import { freeDecryptedWallet } from "~wallets/encryption";
 import type { BackgroundModuleFunction } from "~api/background/background-modules";
 import { type JWKInterface } from "arweave/web/lib/wallet";
-import {
-  isNotCancelError,
-  isSignatureOptions,
-  isSplitTransaction
-} from "~utils/assertions";
+import { isSignatureOptions, isSplitTransaction } from "~utils/assertions";
 import { cleanUpChunks, getChunks } from "./chunks";
 import type { BackgroundResult } from "./index";
 import { getActiveKeyfile } from "~wallets";
@@ -37,14 +33,7 @@ const background: BackgroundModuleFunction<BackgroundResult> = async (
   if (options) isSignatureOptions(options);
 
   // grab the user's keyfile
-  const activeWallet = await getActiveKeyfile(appData).catch((e) => {
-    isNotCancelError(e);
-
-    // if there are no wallets added, open the welcome page
-    browser.tabs.create({ url: browser.runtime.getURL("tabs/welcome.html") });
-
-    throw new Error("No wallets added");
-  });
+  const activeWallet = await getActiveKeyfile(appData);
 
   // app instance
   const app = new Application(appData.url);

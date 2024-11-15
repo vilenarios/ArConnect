@@ -1,6 +1,5 @@
-import { isNotCancelError, isRawDataItem } from "~utils/assertions";
+import { isRawDataItem } from "~utils/assertions";
 import { requestUserAuthorization } from "../../../utils/auth/auth.utils";
-import browser from "webextension-polyfill";
 import { getActiveKeyfile } from "~wallets";
 import { freeDecryptedWallet } from "~wallets/encryption";
 import { ArweaveSigner, createData } from "arbundles";
@@ -31,14 +30,7 @@ const background: BackgroundModuleFunction<number[][]> = async (
   );
 
   // grab the user's keyfile
-  const decryptedWallet = await getActiveKeyfile(appData).catch((e) => {
-    isNotCancelError(e);
-
-    // if there are no wallets added, open the welcome page
-    browser.tabs.create({ url: browser.runtime.getURL("tabs/welcome.html") });
-
-    throw new Error("No wallets added");
-  });
+  const decryptedWallet = await getActiveKeyfile(appData);
 
   try {
     if (decryptedWallet.type !== "local") {

@@ -1,7 +1,11 @@
 import { decryptWallet, freeDecryptedWallet } from "./encryption";
-import browser, { type Alarms } from "webextension-polyfill";
+import browser from "webextension-polyfill";
 import { getWallets, type LocalWallet } from "./index";
 import { ExtensionStorage } from "~utils/storage";
+import { createAuthPopup, onPopupClosed } from "~utils/auth/auth.utils";
+import type { ModuleAppData } from "~api/background/background-modules";
+import { ERR_MSG_USER_CANCELLED_AUTH } from "~utils/assertions";
+import type { StorageChange } from "~utils/runtime";
 
 /**
  * Unlock wallets and save decryption key
@@ -62,6 +66,78 @@ export async function checkPassword(password: string) {
   }
 }
 
+type UnlockCallback = (decryptionKey: string) => void;
+
+function onUnlock(cb: UnlockCallback) {
+  const watchFn = ({ newValue }: StorageChange<string>) => {
+    const decryptionKey = newValue ? atob(newValue) : undefined;
+
+    cb(decryptionKey);
+  };
+
+  ExtensionStorage.watch({
+    decryption_key: watchFn
+  });
+
+  return () => {
+    ExtensionStorage.unwatch({
+      decryption_key: watchFn
+    });
+  };
+}
+
+/**
+ * Returns the `decryptionKey` if the wallet is unlocked. Otherwise, it opens an auth popup and waits for the user to
+ * enter their password to unlock the wallet.
+ */
+export async function getDecryptionKeyOrRequestUnlock(appData: ModuleAppData) {
+  return new Promise<string>(async (resolve, reject) => {
+    const decryptionKey = await getDecryptionKey();
+
+    if (decryptionKey) {
+      resolve(decryptionKey);
+
+      return;
+    }
+
+    console.log(`[WALLET AUTH] Requesting unlock...`);
+
+    let removePopupClosedListener = () => {};
+    let removeUnlockListener = () => {};
+
+    removePopupClosedListener = onPopupClosed(() => {
+      console.log(`[WALLET AUTH] Popup closed. Rejecting...`);
+
+      removeUnlockListener();
+
+      reject(new Error(ERR_MSG_USER_CANCELLED_AUTH));
+    });
+
+    removeUnlockListener = onUnlock((decryptionKey) => {
+      console.log(
+        `[WALLET AUTH] ${decryptionKey ? "Unlocked." : "No key. Rejecting..."}`
+      );
+
+      removePopupClosedListener();
+
+      if (decryptionKey) {
+        resolve(decryptionKey);
+      } else {
+        reject(new Error("The key could not be read"));
+      }
+    });
+
+    // Open the auth popup to prompt the user to unlock the wallet but do not wait for the response (thus, we use
+    // `createAuthPopup` rather than `requestUserAuthorization`), as `UnlockRequest`s are not enqueued:
+
+    createAuthPopup(null, appData).catch((err) => {
+      console.log(`Unlock popup could not be opened:`, err);
+
+      reject(err);
+    });
+  });
+}
+
 /**
  * Get wallet decryption key
  */
@@ -75,13 +151,16 @@ export async function getDecryptionKey() {
 
   return atob(val);
 }
+
 /**
  * Set wallet decryption key
  *
  * @param val Decryption key to set
  */
 export async function setDecryptionKey(val: string) {
-  return await ExtensionStorage.set("decryption_key", btoa(val));
+  const decryptionKey = btoa(val);
+
+  return await ExtensionStorage.set("decryption_key", decryptionKey);
 }
 
 /**

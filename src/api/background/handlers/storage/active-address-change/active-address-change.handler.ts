@@ -40,6 +40,8 @@ export async function handleActiveAddressChange({
       `content-script@${tab.id}`
     );
 
+    // TODO: isomorphicSendMessage("authAddressSwitch")
+
     // trigger event via message
     await sendMessage(
       "switch_wallet_event",

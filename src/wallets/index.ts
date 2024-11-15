@@ -1,5 +1,4 @@
 import type { JWKInterface } from "arweave/node/lib/wallet";
-import { requestUserAuthorization } from "~utils/auth/auth.utils";
 import { useStorage } from "@plasmohq/storage/hook";
 import { ExtensionStorage } from "~utils/storage";
 import type { HardwareWallet } from "./hardware";
@@ -11,14 +10,17 @@ import {
   encryptWallet,
   freeDecryptedWallet
 } from "./encryption";
-import { checkPassword, getDecryptionKey, setDecryptionKey } from "./auth";
+import {
+  checkPassword,
+  getDecryptionKey,
+  getDecryptionKeyOrRequestUnlock,
+  setDecryptionKey
+} from "./auth";
 import { ArweaveSigner } from "arbundles";
 import { handleSyncLabelsAlarm } from "~api/background/handlers/alarms/sync-labels/sync-labels-alarm.handler";
-import {
-  DEFAULT_MODULE_APP_DATA,
-  DEFAULT_UNLOCK_AUTH_REQUEST_DATA
-} from "~utils/auth/auth.constants";
+import { DEFAULT_MODULE_APP_DATA } from "~utils/auth/auth.constants";
 import type { ModuleAppData } from "~api/background/background-modules";
+import { isNotCancelError } from "~utils/assertions";
 
 /**
  * Locally stored wallet
@@ -50,7 +52,7 @@ export async function getWallets() {
   return wallets || [];
 }
 
-type InitialScreenType = "cover" | "locked" | "generating" | "default";
+export type InitialScreenType = "cover" | "locked" | "generating" | "default";
 
 /**
  * Hook that opens a new tab if ArConnect has not been set up yet
@@ -77,10 +79,9 @@ export function useSetUp() {
         case undefined:
         case "extension": {
           if (!hasWallets) {
-            await browser.tabs.create({
-              url: browser.runtime.getURL("tabs/welcome.html")
-            });
+            openOrSelectWelcomePage(true);
 
+            // TODO: Maybe not for the auth popup?
             window.top.close();
           } else if (!decryptionKey) {
             nextInitialScreenType = "locked";
@@ -223,6 +224,26 @@ export async function setActiveWallet(address?: string) {
 
 export type DecryptedWallet = StoredWallet<JWKInterface>;
 
+export async function openOrSelectWelcomePage(force = false) {
+  console.log("OPEN WELCOME PAGE");
+
+  const url = browser.runtime.getURL("tabs/welcome.html");
+  const welcomePageTabs = await browser.tabs.query({ url });
+  const welcomePageTabID = welcomePageTabs[0]?.id;
+
+  if (welcomePageTabID) {
+    if (force) {
+      // More aggressive version, just select the existing tab:
+      browser.tabs.update(welcomePageTabID, { active: true });
+    } else {
+      // Less aggressive version, just highlight the existing tab but do not select it:
+      browser.tabs.highlight({ tabs: welcomePageTabID });
+    }
+  } else {
+    browser.tabs.create({ url });
+  }
+}
+
 /**
  * Get the active wallet with decrypted JWK
  *
@@ -238,46 +259,33 @@ export async function getActiveKeyfile(
   appData: ModuleAppData = DEFAULT_MODULE_APP_DATA
 ): Promise<DecryptedWallet> {
   const activeWallet = await getActiveWallet();
-  /*
-  .catch((e) => {
-    isNotCancelError(e);
 
-    // TODO: DO NOT OPEN DUPLICATE TABS!
-    // if there are no wallets added, open the welcome page
-    browser.tabs.create({ url: browser.runtime.getURL("tabs/welcome.html") });
-
-    throw new Error("No wallets added");
-  });
-  */
+  if (!activeWallet) {
+    throw new Error("No active wallet");
+  }
 
   // return if hardware wallet
   if (activeWallet.type === "hardware") {
     return activeWallet;
   }
 
-  // get decryption key
-  let decryptionKey = await getDecryptionKey();
+  // Get the `decryptionKey` if ArConnect is already unlocked, or unlock ArConnect if needed. This means the auth popup
+  // will be displayed, prompting the user to enter their password:
+  const decryptionKey = await getDecryptionKeyOrRequestUnlock(appData).catch(
+    async (e) => {
+      console.log("THIS IS THE ERROR =", e);
 
-  // unlock ArConnect if the decryption key is undefined
-  // this means that the user has to enter their decryption
-  // key so it can be used later
-  if (!decryptionKey && !!activeWallet) {
-    console.log("REQUEST UNLOCK");
+      isNotCancelError(e);
 
-    await requestUserAuthorization(
-      DEFAULT_UNLOCK_AUTH_REQUEST_DATA,
-      appData
-    ).catch((err) => {
-      console.log("UNLOCK ERROR", err);
+      // TODO: Maybe this catch needs to wrap everything...
 
-      throw err;
-    });
+      // If we ended up here due to an error other than the user closing the auth modal, such as there are no wallets
+      // added, open the welcome page:
+      openOrSelectWelcomePage();
 
-    console.log("UNLOCK AWAITED");
-
-    // re-read the decryption key
-    decryptionKey = await getDecryptionKey();
-  }
+      throw new Error("No wallets added");
+    }
+  );
 
   // decrypt keyfile
   const decryptedKeyfile = await decryptWallet(
@@ -310,26 +318,20 @@ export async function getKeyfile(address: string): Promise<DecryptedWallet> {
   const wallets = await getWallets();
   const wallet = wallets.find((wallet) => wallet.address === address);
 
+  if (!wallet) {
+    throw new Error(`Wallet ${address} not found`);
+  }
+
   // return if hardware wallet
   if (wallet.type === "hardware") {
     return wallet;
   }
 
-  // get decryption key
-  let decryptionKey = await getDecryptionKey();
-
-  // unlock ArConnect if the decryption key is undefined
-  // this means that the user has to enter their decryption
-  // key so it can be used later
-  if (!decryptionKey && !!wallet) {
-    await requestUserAuthorization(
-      DEFAULT_UNLOCK_AUTH_REQUEST_DATA,
-      DEFAULT_MODULE_APP_DATA
-    );
-
-    // re-read the decryption key
-    decryptionKey = await getDecryptionKey();
-  }
+  // Get the `decryptionKey` if ArConnect is already unlocked, or unlock ArConnect if needed. This means the auth popup
+  // will be displayed, prompting the user to enter their password:
+  const decryptionKey = await getDecryptionKeyOrRequestUnlock(
+    DEFAULT_MODULE_APP_DATA
+  );
 
   // decrypt keyfile
   const decryptedKeyfile = await decryptWallet(wallet.keyfile, decryptionKey);
