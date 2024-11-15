@@ -47,18 +47,20 @@ import { LoadingPage } from "~components/LoadingPage";
 // DONE: Reloading the tab should also abort AuthRequests.
 // DONE: Fix transactions with no tags by resetting the popup tab ID if the popup is closed.
 // DONE: Implement listeners for wallet unlock rather than relying on AuthRequests for that (based on storage listeners/watchers)
-// DONE: Close popup immediately if all tabs that sent AuthRequests are closed/reloaded.
+// DONE: Close popup immediately if all tabs that sent AuthRequests are closed/reloaded/disconnected.
 // DONE: Change "Aborting" message when unlocking.
 // DONE: Abort AuthRequests (and cancel alarms) when:
 // - An AuthRequest is rejected.
 // - A tab that sent AuthRequests is closed or reloaded.
 // - The auth popup itself is closed - check if there are duplicate popups, kill all and reset alarm.
-// - TODO: Disconnecting the wallet.
-// - TODO: How to know which wallet is being used in the AuthRequests? What if I change the wallet, should the requests be cancelled?
+// - Disconnecting the wallet.
+// - Changing the active wallet.
 // - Note locking the wallet DOES NOT update AuthRequests in any way.
 
-// TODO: Test common error handling for unlock screen.
 // TODO: Verify only one welcome page can be opened at a time (review connect.background.ts). Check if the auth popup opens and closes just ot request opening the welcome page and if that step can be avoided.
+// TODO: Bazar app icon not appearing in the connect screen.
+// TODO: Test common error handling for unlock screen.
+// TODO: How to know which wallet is being used in the AuthRequests
 
 // TODO: Add env variable for message/auth-related logs.
 // TODO: Stop listening for _ready_ready messages.

@@ -3,6 +3,8 @@ import type { StorageChange } from "~utils/runtime";
 import Application from "~applications/application";
 import { forEachTab } from "~applications/tab";
 import { getAppURL } from "~utils/format";
+import { isomorphicSendMessage } from "~utils/messaging/messaging.utils";
+import { getCachedAuthPopupWindowTabID } from "~utils/auth/auth.utils";
 
 /**
  * Active address change event listener.
@@ -40,7 +42,15 @@ export async function handleActiveAddressChange({
       `content-script@${tab.id}`
     );
 
-    // TODO: isomorphicSendMessage("authAddressSwitch")
+    const popupTabID = getCachedAuthPopupWindowTabID();
+
+    if (popupTabID) {
+      isomorphicSendMessage({
+        messageId: "auth_active_wallet_change",
+        tabId: popupTabID,
+        data: tab.id
+      });
+    }
 
     // trigger event via message
     await sendMessage(

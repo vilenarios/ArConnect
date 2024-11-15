@@ -6,6 +6,8 @@ import { updateIcon } from "~utils/icon";
 import { forEachTab } from "~applications/tab";
 import { getActiveTab } from "~applications";
 import Application from "~applications/application";
+import { isomorphicSendMessage } from "~utils/messaging/messaging.utils";
+import { getCachedAuthPopupWindowTabID } from "~utils/auth/auth.utils";
 
 /**
  * App disconnected listener. Sends a message
@@ -39,7 +41,15 @@ export async function handleAppsChange({
     if (!newValue && !!oldValue) {
       if (!oldValue.includes(appURL)) return;
 
-      // TODO: isomorphicSendMessage("authDisconnect")
+      const popupTabID = getCachedAuthPopupWindowTabID();
+
+      if (popupTabID) {
+        isomorphicSendMessage({
+          messageId: "auth_app_disconnected",
+          tabId: popupTabID,
+          data: tab.id
+        });
+      }
 
       return await triggerEvent(tab.id, "disconnect");
     } else if (!newValue) {
@@ -59,8 +69,17 @@ export async function handleAppsChange({
     if (newValue.includes(appURL) && !oldAppsList.includes(appURL)) {
       await triggerEvent(tab.id, "connect");
     } else if (!newValue.includes(appURL) && oldAppsList.includes(appURL)) {
+      const popupTabID = getCachedAuthPopupWindowTabID();
+
+      if (popupTabID) {
+        isomorphicSendMessage({
+          messageId: "auth_app_disconnected",
+          tabId: popupTabID,
+          data: tab.id
+        });
+      }
+
       await triggerEvent(tab.id, "disconnect");
-      // TODO: isomorphicSendMessage("authDisconnect")
     }
   });
 

@@ -45,6 +45,16 @@ declare module "@arconnect/webext-bridge" {
      */
     auth_tab_reloaded: number;
 
+    /**
+     * The background sends `auth_active_wallet_change` messages to notify the auth popup of active wallet changes.
+     */
+    auth_active_wallet_change: number;
+
+    /**
+     * The background sends `auth_app_disconnected` messages to notify the auth popup of disconnected apps.
+     */
+    auth_app_disconnected: number;
+
     // OTHER:
 
     switch_wallet_event: string | null;

@@ -293,7 +293,7 @@ export function AuthRequestsProvider({
         });
 
         if (pendingRequestsCount === 0 && authRequests.length > 0) {
-          // All tabs that sent AuthRequest also got closed/reloaded, so close the popup immediately:
+          // All tabs that sent AuthRequest also got closed/reloaded/disconnected, so close the popup immediately:
           window.top.close();
         }
 
@@ -309,6 +309,8 @@ export function AuthRequestsProvider({
 
     isomorphicOnMessage("auth_tab_reloaded", handleTabReloadedOrClosed);
     isomorphicOnMessage("auth_tab_closed", handleTabReloadedOrClosed);
+    isomorphicOnMessage("auth_active_wallet_change", handleTabReloadedOrClosed);
+    isomorphicOnMessage("auth_app_disconnected", handleTabReloadedOrClosed);
   }, []);
 
   useEffect(() => {
