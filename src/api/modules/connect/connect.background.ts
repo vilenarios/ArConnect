@@ -26,7 +26,7 @@ const background: BackgroundModuleFunction<void> = async (
 
   if (gateway) isGateway(gateway);
 
-  // Note we are nto checking if there are any wallets added anymore, as `requestUserAuthorization` (actually
+  // Note we are not checking if there are any wallets added anymore, as `requestUserAuthorization` (actually
   // `createAuthPopup`) do that automatically now and will open the Welcome page and throw a "No wallets" added error if
   // there are no wallets.
 
