@@ -7,7 +7,8 @@ import {
 } from "react";
 import {
   AUTH_POPUP_CLOSING_DELAY_MS,
-  AUTH_POPUP_REQUEST_WAIT_MS
+  AUTH_POPUP_REQUEST_WAIT_MS,
+  ERR_MSG_USER_CANCELLED_AUTH
 } from "~utils/auth/auth.constants";
 import type {
   AuthRequest,
@@ -30,7 +31,6 @@ import {
 } from "~api/modules/sign/transaction_builder";
 import { isomorphicOnMessage } from "~utils/messaging/messaging.utils";
 import type { IBridgeMessage } from "@arconnect/webext-bridge";
-import { ERR_MSG_USER_CANCELLED_AUTH } from "~utils/assertions";
 
 interface AuthRequestContextState {
   authRequests: AuthRequest[];

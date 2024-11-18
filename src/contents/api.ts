@@ -46,7 +46,7 @@ window.addEventListener(
       throw new Error("The call does not have a callID");
     }
 
-    console.log("content script message");
+    console.log(`[${data.callID}] ${data.type}`);
 
     // send call to the background
     const res = await sendMessage(
@@ -54,6 +54,8 @@ window.addEventListener(
       data,
       "background"
     );
+
+    console.log(`[${data.callID}] ${data.type} =`, res);
 
     // send the response to the injected script
     window.postMessage(res, window.location.origin);

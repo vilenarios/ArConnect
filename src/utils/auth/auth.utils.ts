@@ -10,6 +10,12 @@ import type {
   ConnectAuthRequest
 } from "~utils/auth/auth.types";
 import type { ModuleAppData } from "~api/background/background-modules";
+import {
+  getActiveAddress,
+  getWallets,
+  openOrSelectWelcomePage
+} from "~wallets";
+import { ERR_MSG_NO_WALLETS_ADDED } from "~utils/auth/auth.constants";
 
 const popupMutex = new Mutex();
 
@@ -111,6 +117,15 @@ export async function createAuthPopup(
   moduleAppData: ModuleAppData
 ) {
   const unlock = await popupMutex.lock();
+  const wallets = await getWallets();
+
+  // TODO: What about getActiveAddress()?
+
+  if (wallets.length === 0) {
+    openOrSelectWelcomePage(true);
+
+    throw new Error(ERR_MSG_NO_WALLETS_ADDED);
+  }
 
   const popupWindowTab: browser.Tabs.Tab | null = await browser.tabs
     .get(POPUP_TAB_ID)

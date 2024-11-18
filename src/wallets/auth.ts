@@ -4,8 +4,8 @@ import { getWallets, type LocalWallet } from "./index";
 import { ExtensionStorage } from "~utils/storage";
 import { createAuthPopup, onPopupClosed } from "~utils/auth/auth.utils";
 import type { ModuleAppData } from "~api/background/background-modules";
-import { ERR_MSG_USER_CANCELLED_AUTH } from "~utils/assertions";
 import type { StorageChange } from "~utils/runtime";
+import { ERR_MSG_USER_CANCELLED_AUTH } from "~utils/auth/auth.constants";
 
 /**
  * Unlock wallets and save decryption key
@@ -105,6 +105,8 @@ export async function getDecryptionKeyOrRequestUnlock(appData: ModuleAppData) {
     let removePopupClosedListener = () => {};
     let removeUnlockListener = () => {};
 
+    // TODO: Include an expiration if more than 15 minutes pass
+
     removePopupClosedListener = onPopupClosed(() => {
       console.log(`[WALLET AUTH] Popup closed. Rejecting...`);
 
@@ -129,6 +131,8 @@ export async function getDecryptionKeyOrRequestUnlock(appData: ModuleAppData) {
 
     // Open the auth popup to prompt the user to unlock the wallet but do not wait for the response (thus, we use
     // `createAuthPopup` rather than `requestUserAuthorization`), as `UnlockRequest`s are not enqueued:
+
+    // TODO: We could also show the logo of the app that first requested the unlock...
 
     createAuthPopup(null, appData).catch((err) => {
       console.log(`Unlock popup could not be opened:`, err);

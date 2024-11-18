@@ -1,13 +1,8 @@
 import { useContext, useEffect } from "react";
 import type { BaseLocationHook } from "wouter";
-import { ERR_MSG_USER_CANCELLED_AUTH } from "~utils/assertions";
+import { ERR_MSG_USER_CANCELLED_AUTH } from "~utils/auth/auth.constants";
 import { AuthRequestsContext } from "~utils/auth/auth.provider";
-import type {
-  AuthRequest,
-  AuthRequestByType,
-  AuthType
-} from "~utils/auth/auth.types";
-import { replyToAuthRequest } from "~utils/auth/auth.utils";
+import type { AuthRequestByType, AuthType } from "~utils/auth/auth.types";
 
 export function useAuthRequests() {
   return useContext(AuthRequestsContext);

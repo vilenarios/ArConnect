@@ -56,16 +56,20 @@ import { LoadingPage } from "~components/LoadingPage";
 // - Disconnecting the wallet.
 // - Changing the active wallet.
 // - Note locking the wallet DOES NOT update AuthRequests in any way.
+// DONE: Verify only one Welcome page can be opened at a time (review connect.background.ts)
+// DONE: Update logic to open the Welcome page to avoid opening and closing the auth popup just to run the check.
 
-// TODO: Verify only one welcome page can be opened at a time (review connect.background.ts). Check if the auth popup opens and closes just ot request opening the welcome page and if that step can be avoided.
+// TODO: Add unlock expiration in auth.ts and AuthRequest expiration (only if more than 100) in auth.provider.ts.
 // TODO: Bazar app icon not appearing in the connect screen.
 // TODO: Test common error handling for unlock screen.
-// TODO: How to know which wallet is being used in the AuthRequests
 
 // TODO: Add env variable for message/auth-related logs.
 // TODO: Stop listening for _ready_ready messages.
 
-// TODO: Unify transaction details component (new PR).
+// TODO: Create new issues for this:
+// TODO: Unify address and transaction details components.
+// TODO: XSS using the app url/favicon? Add sanitization in the TransactionDetails components as well as an experimental "descriptionMapper" API?
+// TODO: How to know which wallet is being used in the AuthRequests.
 
 interface AuthAppProps {
   initialScreenType: InitialScreenType;

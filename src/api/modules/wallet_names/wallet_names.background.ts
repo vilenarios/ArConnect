@@ -1,4 +1,5 @@
 import type { BackgroundModuleFunction } from "~api/background/background-modules";
+import { ERR_MSG_NO_WALLETS_ADDED } from "~utils/auth/auth.constants";
 import { getWallets } from "~wallets";
 
 type WalletNamesResult = {
@@ -9,7 +10,9 @@ const background: BackgroundModuleFunction<WalletNamesResult> = async () => {
   const wallets = await getWallets();
 
   if (wallets.length === 0) {
-    throw new Error("No wallets added");
+    // TODO: No Welcome page here?
+
+    throw new Error(ERR_MSG_NO_WALLETS_ADDED);
   }
 
   // construct wallet names object

@@ -18,7 +18,10 @@ import {
 } from "./auth";
 import { ArweaveSigner } from "arbundles";
 import { handleSyncLabelsAlarm } from "~api/background/handlers/alarms/sync-labels/sync-labels-alarm.handler";
-import { DEFAULT_MODULE_APP_DATA } from "~utils/auth/auth.constants";
+import {
+  DEFAULT_MODULE_APP_DATA,
+  ERR_MSG_NO_WALLETS_ADDED
+} from "~utils/auth/auth.constants";
 import type { ModuleAppData } from "~api/background/background-modules";
 import { isNotCancelError } from "~utils/assertions";
 
@@ -79,9 +82,11 @@ export function useSetUp() {
         case undefined:
         case "extension": {
           if (!hasWallets) {
+            // This should only happen when opening the regular popup, but not for the auth popup, as the
+            // `createAuthPopup` will open the welcome page directly, instead of the popup, if needed:
+
             openOrSelectWelcomePage(true);
 
-            // TODO: Maybe not for the auth popup?
             window.top.close();
           } else if (!decryptionKey) {
             nextInitialScreenType = "locked";
@@ -283,7 +288,7 @@ export async function getActiveKeyfile(
       // added, open the welcome page:
       openOrSelectWelcomePage();
 
-      throw new Error("No wallets added");
+      throw new Error(ERR_MSG_NO_WALLETS_ADDED);
     }
   );
 

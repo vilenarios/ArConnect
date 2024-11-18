@@ -8,10 +8,10 @@ import { getMissingPermissions } from "~applications/permissions";
 import { createContextMenus } from "~utils/context_menus";
 import type { BackgroundModuleFunction } from "~api/background/background-modules";
 import { updateIcon } from "~utils/icon";
-import { getWallets } from "~wallets";
 import Application from "~applications/application";
-import browser from "webextension-polyfill";
 import { requestUserAuthorization } from "../../../utils/auth/auth.utils";
+import { getWallets, openOrSelectWelcomePage } from "~wallets";
+import { ERR_MSG_NO_WALLETS_ADDED } from "~utils/auth/auth.constants";
 
 const background: BackgroundModuleFunction<void> = async (
   appData,
@@ -26,16 +26,9 @@ const background: BackgroundModuleFunction<void> = async (
 
   if (gateway) isGateway(gateway);
 
-  // check if there are any wallets added
-  const wallets = await getWallets();
-
-  if (wallets.length === 0) {
-    // open setup
-    await browser.tabs.create({
-      url: browser.runtime.getURL("tabs/welcome.html")
-    });
-    throw new Error("No wallets added");
-  }
+  // Note we are nto checking if there are any wallets added anymore, as `requestUserAuthorization` (actually
+  // `createAuthPopup`) do that automatically now and will open the Welcome page and throw a "No wallets" added error if
+  // there are no wallets.
 
   // get permissions
   const app = new Application(appData.url);

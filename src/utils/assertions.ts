@@ -37,6 +37,7 @@ import {
   RecurringPaymentFrequency,
   type SubscriptionData
 } from "~subscriptions/subscription";
+import { ERR_MSG_USER_CANCELLED_AUTH } from "~utils/auth/auth.constants";
 
 export function isGateway(input: unknown): asserts input is Gateway {
   isRecordWithKeys(
@@ -365,8 +366,6 @@ export function isValidURL(
 
   isOneOf(url.protocol, ["http:", "https:"], message);
 }
-
-export const ERR_MSG_USER_CANCELLED_AUTH = "User cancelled the AuthRequest";
 
 export function isNotCancelError(input: unknown): asserts input is Error {
   let message = "";

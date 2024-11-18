@@ -11,6 +11,7 @@ import browser from "webextension-polyfill";
 import axios from "axios";
 import { isLocalWallet } from "./assertions";
 import { freeDecryptedWallet } from "~wallets/encryption";
+import { ERR_MSG_NO_WALLETS_ADDED } from "~utils/auth/auth.constants";
 
 const PUBLIC_SEGMENT_WRITEKEY = "J97E4cvSZqmpeEdiUQNC2IxS1Kw4Cwxm";
 
@@ -243,7 +244,7 @@ export const checkWalletBits = async (): Promise<boolean | null> => {
 
   try {
     const decryptedWallet = await getActiveKeyfile().catch((e) => {
-      throw new Error("No wallets added");
+      throw new Error(ERR_MSG_NO_WALLETS_ADDED);
     });
     isLocalWallet(decryptedWallet);
 
