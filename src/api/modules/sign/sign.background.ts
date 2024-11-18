@@ -54,8 +54,6 @@ const background: BackgroundModuleFunction<BackgroundResult> = async (
     owner: keyfile?.n
   });
 
-  // TODO: REVIEW THIS
-
   // clean up chunks
   cleanUpChunks(chunkCollectionID);
 
