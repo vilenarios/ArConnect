@@ -4,7 +4,7 @@ import { nanoid } from "nanoid";
 import { foregroundModules } from "~api/foreground/foreground-modules";
 import mitt from "mitt";
 import { log, LOG_GROUP } from "~utils/log/log.utils";
-import { getVersion } from "~utils/runtime";
+import { version } from "../../../package.json";
 
 export function setupWalletSDK(targetWindow: Window = window) {
   log(LOG_GROUP.SETUP, "setupWalletSDK()");
@@ -15,7 +15,7 @@ export function setupWalletSDK(targetWindow: Window = window) {
   /** Init wallet API */
   const WalletAPI: Record<string, any> = {
     walletName: "ArConnect",
-    walletVersion: getVersion(),
+    walletVersion: version,
     events
   };
 
