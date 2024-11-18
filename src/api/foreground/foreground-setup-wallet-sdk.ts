@@ -1,11 +1,10 @@
 import type { ApiCall, ApiResponse, Event } from "shim";
 import type { InjectedEvents } from "~utils/events";
-// import { version } from "../../../package.json";
 import { nanoid } from "nanoid";
 import { foregroundModules } from "~api/foreground/foreground-modules";
 import mitt from "mitt";
 import { log, LOG_GROUP } from "~utils/log/log.utils";
-// import { getFullVersionLabel } from "~utils/runtime";
+import { getVersion } from "~utils/runtime";
 
 export function setupWalletSDK(targetWindow: Window = window) {
   log(LOG_GROUP.SETUP, "setupWalletSDK()");
@@ -16,7 +15,7 @@ export function setupWalletSDK(targetWindow: Window = window) {
   /** Init wallet API */
   const WalletAPI: Record<string, any> = {
     walletName: "ArConnect",
-    walletVersion: "123",
+    walletVersion: getVersion(),
     events
   };
 
