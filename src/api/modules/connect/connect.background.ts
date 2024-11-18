@@ -10,8 +10,6 @@ import type { BackgroundModuleFunction } from "~api/background/background-module
 import { updateIcon } from "~utils/icon";
 import Application from "~applications/application";
 import { requestUserAuthorization } from "../../../utils/auth/auth.utils";
-import { getWallets, openOrSelectWelcomePage } from "~wallets";
-import { ERR_MSG_NO_WALLETS_ADDED } from "~utils/auth/auth.constants";
 
 const background: BackgroundModuleFunction<void> = async (
   appData,
