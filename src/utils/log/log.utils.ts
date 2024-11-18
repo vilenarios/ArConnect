@@ -7,11 +7,11 @@ export enum LOG_GROUP {
 }
 
 const LOG_GROUPS_ENABLED: Record<LOG_GROUP, boolean> = {
-  [LOG_GROUP.API]: false,
+  [LOG_GROUP.API]: process.env.NODE_ENV === "development",
   [LOG_GROUP.AUTH]: process.env.NODE_ENV === "development",
   [LOG_GROUP.CHUNKS]: false,
   [LOG_GROUP.MSG]: false,
-  [LOG_GROUP.SETUP]: false
+  [LOG_GROUP.SETUP]: process.env.NODE_ENV === "development"
 };
 
 function getColor() {

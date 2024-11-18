@@ -26,6 +26,4 @@ There are 3 contexts here:
 
 ### ArConnect Embedded
 
-The iframe context listens for... and sends messages to parent with...
-
-The parent context listens for... and sends messages to the iframe with...
+TODO: Document `isomorphicSendMessage()` and `@arconnect/webext-bridge`'s `sendMessage()`.
