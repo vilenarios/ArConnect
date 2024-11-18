@@ -58,11 +58,10 @@ import { LoadingPage } from "~components/LoadingPage";
 // - Note locking the wallet DOES NOT update AuthRequests in any way.
 // DONE: Verify only one Welcome page can be opened at a time (review connect.background.ts)
 // DONE: Update logic to open the Welcome page to avoid opening and closing the auth popup just to run the check.
+// DONE: `auth.provider.ts` will automatically close if users take more than 15 minutes to unlock the wallet.
 
-// TODO: Add unlock expiration in auth.ts and AuthRequest expiration (only if more than 100) in auth.provider.ts.
 // TODO: Bazar app icon not appearing in the connect screen.
 // TODO: Test common error handling for unlock screen.
-
 // TODO: Add env variable for message/auth-related logs.
 // TODO: Stop listening for _ready_ready messages.
 
@@ -122,7 +121,7 @@ export default function AuthAppRoot() {
 
   return (
     <ArConnectThemeProvider>
-      <AuthRequestsProvider isReady={initialScreenType === "default"}>
+      <AuthRequestsProvider initialScreenType={initialScreenType}>
         <AnimatePresence initial={false}>
           <AuthApp initialScreenType={initialScreenType} />
         </AnimatePresence>

@@ -5,7 +5,12 @@ import { ExtensionStorage } from "~utils/storage";
 import { createAuthPopup, onPopupClosed } from "~utils/auth/auth.utils";
 import type { ModuleAppData } from "~api/background/background-modules";
 import type { StorageChange } from "~utils/runtime";
-import { ERR_MSG_USER_CANCELLED_AUTH } from "~utils/auth/auth.constants";
+import {
+  AUTH_POPUP_UNLOCK_REQUEST_TTL_MS,
+  ERR_MSG_NO_KEY,
+  ERR_MSG_UNLOCK_TIMEOUT,
+  ERR_MSG_USER_CANCELLED_AUTH
+} from "~utils/auth/auth.constants";
 
 /**
  * Unlock wallets and save decryption key
@@ -105,12 +110,15 @@ export async function getDecryptionKeyOrRequestUnlock(appData: ModuleAppData) {
     let removePopupClosedListener = () => {};
     let removeUnlockListener = () => {};
 
-    // TODO: Include an expiration if more than 15 minutes pass
+    const removeAllListeners = () => {
+      removePopupClosedListener();
+      removeUnlockListener();
+    };
 
     removePopupClosedListener = onPopupClosed(() => {
       console.log(`[WALLET AUTH] Popup closed. Rejecting...`);
 
-      removeUnlockListener();
+      removeAllListeners();
 
       reject(new Error(ERR_MSG_USER_CANCELLED_AUTH));
     });
@@ -120,12 +128,12 @@ export async function getDecryptionKeyOrRequestUnlock(appData: ModuleAppData) {
         `[WALLET AUTH] ${decryptionKey ? "Unlocked." : "No key. Rejecting..."}`
       );
 
-      removePopupClosedListener();
+      removeAllListeners();
 
       if (decryptionKey) {
         resolve(decryptionKey);
       } else {
-        reject(new Error("The key could not be read"));
+        reject(new Error(ERR_MSG_NO_KEY));
       }
     });
 
@@ -136,6 +144,8 @@ export async function getDecryptionKeyOrRequestUnlock(appData: ModuleAppData) {
 
     createAuthPopup(null, appData).catch((err) => {
       console.log(`Unlock popup could not be opened:`, err);
+
+      removeAllListeners();
 
       reject(err);
     });

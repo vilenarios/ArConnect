@@ -8,6 +8,7 @@ import {
 import {
   AUTH_POPUP_CLOSING_DELAY_MS,
   AUTH_POPUP_REQUEST_WAIT_MS,
+  AUTH_POPUP_UNLOCK_REQUEST_TTL_MS,
   ERR_MSG_USER_CANCELLED_AUTH
 } from "~utils/auth/auth.constants";
 import type {
@@ -31,6 +32,7 @@ import {
 } from "~api/modules/sign/transaction_builder";
 import { isomorphicOnMessage } from "~utils/messaging/messaging.utils";
 import type { IBridgeMessage } from "@arconnect/webext-bridge";
+import type { InitialScreenType } from "~wallets";
 
 interface AuthRequestContextState {
   authRequests: AuthRequest[];
@@ -56,12 +58,12 @@ export const AuthRequestsContext = createContext<AuthRequestContextData>({
 });
 
 interface AuthRequestProviderPRops extends PropsWithChildren {
-  isReady: boolean;
+  initialScreenType: InitialScreenType;
 }
 
 export function AuthRequestsProvider({
   children,
-  isReady
+  initialScreenType
 }: AuthRequestProviderPRops) {
   const [
     { authRequests, currentAuthRequestIndex, lastCompletedAuthRequest },
@@ -93,8 +95,7 @@ export function AuthRequestsProvider({
       const completedAuthRequestType = completedAuthRequest.type;
 
       if (completedAuthRequestType === "connect") {
-        // For connect request, however, we'll only do it for those that have the exact same params, including the
-        // domain that sent the request:
+        // Find equivalent ConnectAuthRequest to also accept/reject those:
 
         authRequests.forEach((authRequest) => {
           if (
@@ -105,6 +106,8 @@ export function AuthRequestsProvider({
           }
         });
       }
+
+      // TODO: Consider automatically rejecting (expiring) AuthRequest if there are more than 100.
 
       const status: AuthRequestStatus = accepted ? "accepted" : "rejected";
 
@@ -420,13 +423,18 @@ export function AuthRequestsProvider({
       authRequests.length > 0 &&
       authRequests.every((authRequest) => authRequest.status !== "pending");
 
-    if (isReady && authRequests.length === 0) {
+    if (initialScreenType === "default" && authRequests.length === 0) {
       // Close the popup if an AuthRequest doesn't arrive in less than `AUTH_POPUP_REQUEST_WAIT_MS` (1s), unless the
       // wallet is locked (no timeout in that case):
-
       timeoutID = setTimeout(() => {
         window.top.close();
       }, AUTH_POPUP_REQUEST_WAIT_MS);
+    } else if (initialScreenType !== "default") {
+      // If the user doesn't unlock the wallet in 15 minutes, or somehow the popup gets stuck into any other state for
+      // more than that, we close it:
+      timeoutID = setTimeout(() => {
+        window.top.close();
+      }, AUTH_POPUP_UNLOCK_REQUEST_TTL_MS);
     } else if (isDone) {
       // Close the window if the last request has been handled:
 
@@ -462,7 +470,7 @@ export function AuthRequestsProvider({
 
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [isReady, authRequests, currentAuthRequestIndex]);
+  }, [initialScreenType, authRequests, currentAuthRequestIndex]);
 
   return (
     <AuthRequestsContext.Provider
