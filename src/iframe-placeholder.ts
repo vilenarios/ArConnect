@@ -31,9 +31,3 @@ setupEventListeners(iframeElement);
 document.addEventListener("DOMContentLoaded", async () => {
   replaceArProtocolLinks();
 });
-
-// TODO: Document message flow.
-
-// TODO: ArConnect Mobile also needs to call injected.ts, ar_protocol.ts and events.ts, so these changes can be reused.
-
-// TODO: Add env variables to log auth flow?
