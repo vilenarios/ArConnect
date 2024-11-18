@@ -44,16 +44,12 @@ export function useCurrentAuthRequest<T extends AuthType>(
     if (status !== "pending")
       throw new Error(`AuthRequest ${type}(${authID}) already ${status}`);
 
-    console.log("acceptRequest", type, data);
-
     return completeAuthRequest(authID, true, data);
   }
 
   function rejectRequest(errorMessage?: string) {
     if (status !== "pending")
       throw new Error(`AuthRequest ${type}(${authID}) already ${status}`);
-
-    console.log("rejectRequest", type, errorMessage);
 
     return completeAuthRequest(
       authID,

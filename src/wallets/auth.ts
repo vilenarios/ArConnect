@@ -11,6 +11,7 @@ import {
   ERR_MSG_UNLOCK_TIMEOUT,
   ERR_MSG_USER_CANCELLED_AUTH
 } from "~utils/auth/auth.constants";
+import { log, LOG_GROUP } from "~utils/log/log.utils";
 
 /**
  * Unlock wallets and save decryption key
@@ -105,7 +106,7 @@ export async function getDecryptionKeyOrRequestUnlock(appData: ModuleAppData) {
       return;
     }
 
-    console.log(`[WALLET AUTH] Requesting unlock...`);
+    log(LOG_GROUP.AUTH, `getDecryptionKeyOrRequestUnlock()`);
 
     let removePopupClosedListener = () => {};
     let removeUnlockListener = () => {};
@@ -116,7 +117,10 @@ export async function getDecryptionKeyOrRequestUnlock(appData: ModuleAppData) {
     };
 
     removePopupClosedListener = onPopupClosed(() => {
-      console.log(`[WALLET AUTH] Popup closed. Rejecting...`);
+      log(
+        LOG_GROUP.AUTH,
+        `getDecryptionKeyOrRequestUnlock() rejected - Popup closed`
+      );
 
       removeAllListeners();
 
@@ -124,8 +128,11 @@ export async function getDecryptionKeyOrRequestUnlock(appData: ModuleAppData) {
     });
 
     removeUnlockListener = onUnlock((decryptionKey) => {
-      console.log(
-        `[WALLET AUTH] ${decryptionKey ? "Unlocked." : "No key. Rejecting..."}`
+      log(
+        LOG_GROUP.AUTH,
+        `getDecryptionKeyOrRequestUnlock() ${
+          decryptionKey ? "accepted" : "rejected"
+        }`
       );
 
       removeAllListeners();
@@ -143,7 +150,7 @@ export async function getDecryptionKeyOrRequestUnlock(appData: ModuleAppData) {
     // TODO: We could also show the logo of the app that first requested the unlock...
 
     createAuthPopup(null, appData).catch((err) => {
-      console.log(`Unlock popup could not be opened:`, err);
+      log(LOG_GROUP.AUTH, `getDecryptionKeyOrRequestUnlock() error =`, err);
 
       removeAllListeners();
 

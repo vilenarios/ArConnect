@@ -55,8 +55,6 @@ const background: BackgroundModuleFunction<number[]> = async (
       }
     }
     try {
-      console.log("SIGN requestUserAuthorization");
-
       await requestUserAuthorization(
         {
           type: "signDataItem",

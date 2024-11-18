@@ -33,6 +33,7 @@ import {
 import { isomorphicOnMessage } from "~utils/messaging/messaging.utils";
 import type { IBridgeMessage } from "@arconnect/webext-bridge";
 import type { InitialScreenType } from "~wallets";
+import { log, LOG_GROUP } from "~utils/log/log.utils";
 
 interface AuthRequestContextState {
   authRequests: AuthRequest[];
@@ -133,8 +134,9 @@ export function AuthRequestsProvider({
         authRequestRepliesPromises
       );
 
-      console.log(
-        `completeAuthRequest(${authID}, ${accepted}) => ${completedAuthRequestsStatus.join(
+      log(
+        LOG_GROUP.AUTH,
+        `completeAuthRequest(authID = "${authID}", status = "${status}") => ${completedAuthRequestsStatus.join(
           ", "
         )}`
       );
@@ -214,10 +216,10 @@ export function AuthRequestsProvider({
   );
 
   useEffect(() => {
-    console.log("\n\n\nNEW POPUP:\n\n\n\n");
+    log(LOG_GROUP.AUTH, "Auth popup initialized. Waiting for AuthRequests");
 
     isomorphicOnMessage("auth_request", (authRequestMessage) => {
-      console.log("AuthProvider - Request received", authRequestMessage);
+      log(LOG_GROUP.AUTH, "auth_request =", authRequestMessage);
 
       // UnlockAuthRequests are not enqueued as those are simply used to open the popup to prompt users to enter their
       // password and wait for the wallet to unlock:
@@ -319,24 +321,21 @@ export function AuthRequestsProvider({
   useEffect(() => {
     const chunksByCollectionID: Record<string, Chunk[]> = {};
 
-    console.log("AuthProvider - WAITING FOR auth_chunk...");
-
     // Listen for chunks needed in `sign.tsx` and `signKeystone.tsx`:
 
     isomorphicOnMessage("auth_chunk", ({ sender, data }) => {
-      console.log("AuthProvider - auth_chunk", data);
-
       if (sender.context !== "background") return;
 
       const { type, collectionID } = data;
 
-      if (type === "start") {
-        console.log(`AuthProvider - ${collectionID} START`);
+      log(
+        LOG_GROUP.CHUNKS,
+        `auth_chunk(type ="${type}", collectionID = "${collectionID})"`
+      );
 
+      if (type === "start") {
         chunksByCollectionID[collectionID] = [];
       } else if (type === "end") {
-        console.log(`AuthProvider - ${collectionID} END`);
-
         const arweave = new Arweave(defaultGateway);
 
         setAuthRequestContextState((prevAuthRequestContextState) => {
@@ -405,8 +404,6 @@ export function AuthRequestsProvider({
           };
         });
       } else {
-        console.log(`AuthProvider - ${collectionID} chunk...`);
-
         if (!chunksByCollectionID[collectionID]) {
           chunksByCollectionID[collectionID] = [data];
         } else {
@@ -440,7 +437,7 @@ export function AuthRequestsProvider({
 
       // TODO: Add setting to decide whether this closes automatically or stays open in a "done" state.
 
-      if (process.env.NODE_ENV === "development") {
+      if (AUTH_POPUP_CLOSING_DELAY_MS > 0) {
         timeoutID = setTimeout(() => {
           window.top.close();
         }, AUTH_POPUP_CLOSING_DELAY_MS);

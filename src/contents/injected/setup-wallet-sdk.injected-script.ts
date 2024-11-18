@@ -1,5 +1,6 @@
 import { setupWalletSDK } from "~api/foreground/foreground-setup-wallet-sdk";
+import { log, LOG_GROUP } from "~utils/log/log.utils";
 
-console.log("injected/setup-wallet-sdk.injected-script.ts");
+log(LOG_GROUP.SETUP, "injected/setup-wallet-sdk.injected-script.ts");
 
 setupWalletSDK();

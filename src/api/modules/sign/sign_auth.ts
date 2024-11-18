@@ -10,6 +10,7 @@ import { nanoid } from "nanoid";
 import type { ModuleAppData } from "~api/background/background-modules";
 import { isomorphicSendMessage } from "~utils/messaging/messaging.utils";
 import type { Chunk } from "~api/modules/sign/chunks";
+import { log, LOG_GROUP } from "~utils/log/log.utils";
 
 /**
  * Request a manual signature for the transaction.
@@ -25,7 +26,7 @@ export function signAuth(
   transaction: Transaction,
   address: string
 ) {
-  console.log("signAuth", transaction);
+  log(LOG_GROUP.AUTH, "signAuth()", transaction);
 
   return new Promise<AuthResult<{ id: string; signature: string } | undefined>>(
     async (resolve, reject) => {
@@ -57,10 +58,13 @@ export function signAuth(
       const popupWindowTabID = await getAuthPopupWindowTabID();
 
       try {
-        console.log(
-          `Sending ${dataChunks.concat(tagChunks).length || 0} txs chunks for`,
+        log(
+          LOG_GROUP.CHUNKS,
+          `Sending ${
+            dataChunks.concat(tagChunks).length || 0
+          } txs chunks for collection`,
           collectionID,
-          "to",
+          "to popup",
           popupWindowTabID
         );
 
@@ -72,10 +76,11 @@ export function signAuth(
           });
         }
 
-        console.log(
-          `Sending "end" chunk for`,
+        log(
+          LOG_GROUP.CHUNKS,
+          `Sending "end" chunk for collection`,
           collectionID,
-          "to",
+          "to popup",
           popupWindowTabID
         );
 
@@ -91,10 +96,11 @@ export function signAuth(
           data: endChunk
         });
 
-        console.log(
-          "Done sending txs chunks for",
+        log(
+          LOG_GROUP.CHUNKS,
+          "Done sending txs chunks for collection",
           collectionID,
-          "to",
+          "to popup",
           popupWindowTabID
         );
       } catch (err) {
@@ -117,6 +123,8 @@ export function signAuthKeystone(
   appData: ModuleAppData,
   dataToSign: AuthKeystoneData
 ) {
+  log(LOG_GROUP.AUTH, "signAuthKeystone()");
+
   return new Promise<AuthResult<{ id: string; signature: string } | undefined>>(
     async (resolve, reject) => {
       // generate chunks
@@ -142,16 +150,15 @@ export function signAuthKeystone(
       const popupWindowTabID = await getAuthPopupWindowTabID();
 
       try {
-        console.log(
-          `Sending ${dataChunks.length || 0} txs chunks for`,
+        log(
+          LOG_GROUP.CHUNKS,
+          `Sending ${dataChunks.length || 0} txs chunks for collection`,
           collectionID,
-          "to",
+          "to popup",
           popupWindowTabID
         );
 
         for (const chunk of dataChunks) {
-          console.log("CHUNK", collectionID);
-
           await isomorphicSendMessage({
             messageId: "auth_chunk",
             tabId: popupWindowTabID,
@@ -159,10 +166,11 @@ export function signAuthKeystone(
           });
         }
 
-        console.log(
-          `Sending "end" chunk for`,
+        log(
+          LOG_GROUP.CHUNKS,
+          `Sending "end" chunk for collection`,
           collectionID,
-          "to",
+          "to popup",
           popupWindowTabID
         );
 
@@ -178,10 +186,11 @@ export function signAuthKeystone(
           data: endChunk
         });
 
-        console.log(
-          "Done sending txs chunks for",
+        log(
+          LOG_GROUP.CHUNKS,
+          "Done sending txs chunks for collection",
           collectionID,
-          "to",
+          "to popup",
           popupWindowTabID
         );
       } catch (err) {

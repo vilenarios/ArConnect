@@ -16,6 +16,7 @@ import {
   openOrSelectWelcomePage
 } from "~wallets";
 import { ERR_MSG_NO_WALLETS_ADDED } from "~utils/auth/auth.constants";
+import { log, LOG_GROUP } from "~utils/log/log.utils";
 
 const popupMutex = new Mutex();
 
@@ -27,7 +28,7 @@ let popupClosedCallbacks: PopupCallback[] = [];
 let POPUP_TAB_ID = -1;
 
 function setPopupTabID(popupTabID: number) {
-  console.log("setPopupTabID =", popupTabID);
+  log(LOG_GROUP.AUTH, "setPopupTabID =", popupTabID);
 
   POPUP_TAB_ID = popupTabID;
 
@@ -93,7 +94,7 @@ export async function requestUserAuthorization(
   authRequestData: AuthRequestData,
   moduleAppData: ModuleAppData
 ) {
-  console.log(`- 1. Request user ${authRequestData.type} authorization`);
+  log(LOG_GROUP.AUTH, `requestUserAuthorization("${authRequestData.type}")`);
 
   // create the popup
   const { authID, popupWindowTabID } = await createAuthPopup(
@@ -144,10 +145,8 @@ export async function createAuthPopup(
     });
 
     setPopupTabID(window.tabs[0].id);
-
-    console.log("- 2. Create popup", POPUP_TAB_ID);
   } else {
-    console.log("- 2. Reuse popup", POPUP_TAB_ID);
+    log(LOG_GROUP.AUTH, "reusePopupTabID =", POPUP_TAB_ID);
   }
 
   unlock();
@@ -157,6 +156,11 @@ export async function createAuthPopup(
   if (authRequestData) {
     // Generate an unique id for the authentication to be checked later:
     authID = nanoid();
+
+    log(
+      LOG_GROUP.AUTH,
+      `isomorphicSendMessage(authID = "${authID}", tabId = ${POPUP_TAB_ID})`
+    );
 
     await isomorphicSendMessage({
       messageId: "auth_request",
@@ -182,13 +186,16 @@ export async function createAuthPopup(
  * Await for a browser message from the popup
  */
 export function getPopupResponse(authID: string, popupWindowTabID: number) {
+  log(
+    LOG_GROUP.AUTH,
+    `getPopupResponse(authID = "${authID}", popupWindowTabID = ${popupWindowTabID})`
+  );
+
   return new Promise<AuthResult>(async (resolve, reject) => {
     startKeepAlive(authID);
 
-    console.log("- 6. Waiting for popup response...");
-
     onMessage("auth_result", ({ sender, data }) => {
-      console.log("- 6. Popup response:", data);
+      log(LOG_GROUP.AUTH, `auth_result for authID = "${authID}"`);
 
       stopKeepAlive(authID);
 
@@ -227,7 +234,10 @@ export async function replyToAuthRequest(
   errorMessage?: string,
   data?: any
 ) {
-  console.log("replyToAuthRequest", type, authID);
+  log(
+    LOG_GROUP.AUTH,
+    `replyToAuthRequest(type = "${type}", authID="${authID}")`
+  );
 
   const response: AuthResult = {
     type,
@@ -260,7 +270,7 @@ export async function startKeepAlive(authID: string) {
     const activePopups = activeAuthRequests.size;
 
     if (activePopups > 0 && keepAliveInterval === null) {
-      console.log("Started keep-alive messages...");
+      log(LOG_GROUP.AUTH, `startKeepAlive(${authID}) =`, activeAuthRequests);
 
       keepAliveInterval = setInterval(
         () => browser.alarms.create("keep-alive", { when: Date.now() + 1 }),
@@ -284,7 +294,7 @@ export async function stopKeepAlive(authID: string) {
     const activePopups = activeAuthRequests.size;
 
     if (activePopups <= 0 && keepAliveInterval !== null) {
-      console.log("Stopped keep-alive messages...");
+      log(LOG_GROUP.AUTH, `stopKeepAlive(${authID}) =`, activeAuthRequests);
 
       browser.alarms.clear("keep-alive");
       clearInterval(keepAliveInterval);
@@ -305,7 +315,7 @@ export async function resetKeepAlive() {
     activeAuthRequests.clear();
 
     if (keepAliveInterval !== null) {
-      console.log("Reset keep-alive messages...");
+      log(LOG_GROUP.AUTH, `resetKeepAlive() =`, activeAuthRequests);
 
       browser.alarms.clear("keep-alive");
       clearInterval(keepAliveInterval);

@@ -20,10 +20,12 @@ import { ArweaveSigner } from "arbundles";
 import { handleSyncLabelsAlarm } from "~api/background/handlers/alarms/sync-labels/sync-labels-alarm.handler";
 import {
   DEFAULT_MODULE_APP_DATA,
+  ERR_MSG_NO_ACTIVE_WALLET,
   ERR_MSG_NO_WALLETS_ADDED
 } from "~utils/auth/auth.constants";
 import type { ModuleAppData } from "~api/background/background-modules";
 import { isNotCancelError } from "~utils/assertions";
+import { log, LOG_GROUP } from "~utils/log/log.utils";
 
 /**
  * Locally stored wallet
@@ -230,7 +232,7 @@ export async function setActiveWallet(address?: string) {
 export type DecryptedWallet = StoredWallet<JWKInterface>;
 
 export async function openOrSelectWelcomePage(force = false) {
-  console.log("OPEN WELCOME PAGE");
+  log(LOG_GROUP.AUTH, `openOrSelectWelcomePage(${force})`);
 
   const url = browser.runtime.getURL("tabs/welcome.html");
   const welcomePageTabs = await browser.tabs.query({ url });
@@ -263,48 +265,44 @@ export async function openOrSelectWelcomePage(force = false) {
 export async function getActiveKeyfile(
   appData: ModuleAppData = DEFAULT_MODULE_APP_DATA
 ): Promise<DecryptedWallet> {
-  const activeWallet = await getActiveWallet();
+  try {
+    const activeWallet = await getActiveWallet();
 
-  if (!activeWallet) {
-    throw new Error("No active wallet");
-  }
-
-  // return if hardware wallet
-  if (activeWallet.type === "hardware") {
-    return activeWallet;
-  }
-
-  // Get the `decryptionKey` if ArConnect is already unlocked, or unlock ArConnect if needed. This means the auth popup
-  // will be displayed, prompting the user to enter their password:
-  const decryptionKey = await getDecryptionKeyOrRequestUnlock(appData).catch(
-    async (e) => {
-      console.log("THIS IS THE ERROR =", e);
-
-      isNotCancelError(e);
-
-      // TODO: Maybe this catch needs to wrap everything...
-
-      // If we ended up here due to an error other than the user closing the auth modal, such as there are no wallets
-      // added, open the welcome page:
-      openOrSelectWelcomePage();
-
-      throw new Error(ERR_MSG_NO_WALLETS_ADDED);
+    if (!activeWallet) {
+      throw new Error(ERR_MSG_NO_ACTIVE_WALLET);
     }
-  );
 
-  // decrypt keyfile
-  const decryptedKeyfile = await decryptWallet(
-    activeWallet.keyfile,
-    decryptionKey
-  );
+    // return if hardware wallet
+    if (activeWallet.type === "hardware") {
+      return activeWallet;
+    }
 
-  // construct decrypted wallet object
-  const decryptedWallet: DecryptedWallet = {
-    ...activeWallet,
-    keyfile: decryptedKeyfile
-  };
+    // Get the `decryptionKey` if ArConnect is already unlocked, or unlock ArConnect if needed. This means the auth popup
+    // will be displayed, prompting the user to enter their password:
+    const decryptionKey = await getDecryptionKeyOrRequestUnlock(appData);
 
-  return decryptedWallet;
+    // decrypt keyfile
+    const decryptedKeyfile = await decryptWallet(
+      activeWallet.keyfile,
+      decryptionKey
+    );
+
+    // construct decrypted wallet object
+    const decryptedWallet: DecryptedWallet = {
+      ...activeWallet,
+      keyfile: decryptedKeyfile
+    };
+
+    return decryptedWallet;
+  } catch (err) {
+    isNotCancelError(err);
+
+    // If we ended up here due to an error other than the user closing the auth modal, such as there are no wallets
+    // added, open the welcome page:
+    openOrSelectWelcomePage();
+
+    throw new Error(ERR_MSG_NO_WALLETS_ADDED);
+  }
 }
 
 /**

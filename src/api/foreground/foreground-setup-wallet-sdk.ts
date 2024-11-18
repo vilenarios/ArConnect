@@ -4,10 +4,11 @@ import type { InjectedEvents } from "~utils/events";
 import { nanoid } from "nanoid";
 import { foregroundModules } from "~api/foreground/foreground-modules";
 import mitt from "mitt";
+import { log, LOG_GROUP } from "~utils/log/log.utils";
 // import { getFullVersionLabel } from "~utils/runtime";
 
 export function setupWalletSDK(targetWindow: Window = window) {
-  console.log("setupWalletSDK()");
+  log(LOG_GROUP.SETUP, "setupWalletSDK()");
 
   /** Init events */
   const events = mitt<InjectedEvents>();
@@ -39,7 +40,9 @@ export function setupWalletSDK(targetWindow: Window = window) {
           }
         };
 
-        console.log("postMessage from =", window.location.origin);
+        // TODO: Replace `postMessage` with `isomorphicSendMessage`, which should be updated to handle
+        // chunking automatically based on data size, rather than relying on `sendChunk` to be called from
+        // the foreground scripts manually.
 
         // Send message to background script (ArConnect Extension) or to the iframe window (ArConnect Embedded):
         targetWindow.postMessage(data, window.location.origin);
@@ -128,9 +131,8 @@ export function setupWalletSDK(targetWindow: Window = window) {
         event: Event;
       }>
     ) => {
-      // console.log("EVENT", e);
-
       if (e.data.type !== "arconnect_event") return;
+
       events.emit(e.data.event.name, e.data.event.value);
     }
   );

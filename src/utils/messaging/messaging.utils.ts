@@ -4,6 +4,7 @@ import {
   type IBridgeMessage,
   type ProtocolMap
 } from "@arconnect/webext-bridge";
+import { log, LOG_GROUP } from "~utils/log/log.utils";
 
 export type MessageID = keyof ProtocolMap;
 
@@ -74,11 +75,14 @@ export async function isomorphicSendMessage<K extends MessageID>({
       reject(reason);
     }
 
-    console.log(`- 3. ${currentMessage}. Sending ${messageId}...`);
+    log(
+      LOG_GROUP.MSG,
+      `[${currentMessage}] Sending ${messageId} to ${destination}`
+    );
 
     sendMessage()
       .then((result) => {
-        console.log(`- 3. ${currentMessage}. Ok ${messageId}.`);
+        log(LOG_GROUP.MSG, `[${currentMessage}] ${messageId} sent`);
 
         resolveAndClearTimeouts(result);
       })
@@ -90,14 +94,17 @@ export async function isomorphicSendMessage<K extends MessageID>({
             errorMessage
           )
         ) {
-          console.log(`- 3. ${currentMessage}. Error ${messageId}:`, err);
+          log(LOG_GROUP.MSG, `[${currentMessage}] ${messageId} error =`, err);
 
           rejectAndClearTimeouts(err);
 
           return;
         }
 
-        console.log(`- 4. ${currentMessage}. Waiting for ready...`);
+        log(
+          LOG_GROUP.MSG,
+          `[${currentMessage}] Waiting for ${messageId}${READY_MESSAGE_SUFFIX}`
+        );
 
         // TODO: Review this is only for ready messages?
         timeoutTimeoutID = setTimeout(() => {
@@ -119,16 +126,23 @@ export async function isomorphicSendMessage<K extends MessageID>({
             return;
           }
 
-          console.log(`- 5. ${currentMessage}. Sending message again...`);
+          log(
+            LOG_GROUP.MSG,
+            `[${currentMessage}] Sending ${messageId} to ${destination} again`
+          );
 
           await sendMessage()
             .then((result) => {
-              console.log(`- 5. ${currentMessage}. Message again Ok`);
+              log(LOG_GROUP.MSG, `[${currentMessage}] ${messageId} resent`);
 
               resolveAndClearTimeouts(result);
             })
             .catch((err) => {
-              console.log(`- 5. ${currentMessage}. Message again error:`, err);
+              log(
+                LOG_GROUP.MSG,
+                `[${currentMessage}] ${messageId} error again =`,
+                err
+              );
 
               rejectAndClearTimeouts(err);
             });

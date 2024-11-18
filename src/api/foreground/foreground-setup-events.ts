@@ -15,8 +15,6 @@ export function setupEventListeners(iframe?: HTMLIFrameElement) {
   onMessage("event", ({ data, sender }) => {
     if (sender.context !== "background") return;
 
-    console.log("onMessage event");
-
     // send to mitt instance
     postMessage({
       type: "arconnect_event",
@@ -41,8 +39,6 @@ export function setupEventListeners(iframe?: HTMLIFrameElement) {
   // (not possible in the background)
   onMessage("copy_address", async ({ sender, data: addr }) => {
     if (sender.context !== "background") return;
-
-    console.log("copy_address");
 
     const input = document.createElement("input");
 

@@ -2,8 +2,9 @@ import { sendMessage } from "@arconnect/webext-bridge";
 import type { PlasmoCSConfig } from "plasmo";
 import type { ApiCall } from "shim";
 import injectedScript from "url:./injected/setup-wallet-sdk.injected-script.ts";
+import { log, LOG_GROUP } from "~utils/log/log.utils";
 
-console.log("api.content-script.ts");
+log(LOG_GROUP.SETUP, "api.content-script.ts");
 
 export const config: PlasmoCSConfig = {
   matches: ["file://*/*", "http://*/*", "https://*/*"],
@@ -46,7 +47,7 @@ window.addEventListener(
       throw new Error("The call does not have a callID");
     }
 
-    console.log(`[${data.callID}] ${data.type}`);
+    log(LOG_GROUP.API, `${data.type} (${data.callID})...`);
 
     // send call to the background
     const res = await sendMessage(
@@ -55,7 +56,7 @@ window.addEventListener(
       "background"
     );
 
-    console.log(`[${data.callID}] ${data.type} =`, res);
+    log(LOG_GROUP.API, `${data.type} (${data.callID}) =`, res);
 
     // send the response to the injected script
     window.postMessage(res, window.location.origin);

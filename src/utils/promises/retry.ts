@@ -92,7 +92,7 @@ export async function withRetry<T>(
       lastError = error;
       if (attempt < maxRetries) {
         const waitTime = Math.pow(2, attempt - 1) * retryDelay;
-        console.log(`Attempt ${attempt} failed, retrying in ${waitTime}ms...`);
+        // console.log(`Attempt ${attempt} failed, retrying in ${waitTime}ms...`);
         await sleep(waitTime);
       } else {
         console.error(
