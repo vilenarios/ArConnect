@@ -92,7 +92,8 @@ export async function isomorphicSendMessage<K extends MessageID>({
         if (
           !/No handler registered in '.+' to accept messages with id '.+'/.test(
             errorMessage
-          )
+          ) ||
+          messageId.endsWith(READY_MESSAGE_SUFFIX)
         ) {
           log(LOG_GROUP.MSG, `[${currentMessage}] ${messageId} error =`, err);
 
@@ -101,12 +102,13 @@ export async function isomorphicSendMessage<K extends MessageID>({
           return;
         }
 
+        // The retry after ready logic below will NOT run if `messageId` already ends in `READY_MESSAGE_SUFFIX`:
+
         log(
           LOG_GROUP.MSG,
           `[${currentMessage}] Waiting for ${messageId}${READY_MESSAGE_SUFFIX}`
         );
 
-        // TODO: Review this is only for ready messages?
         timeoutTimeoutID = setTimeout(() => {
           reject(
             new Error(
