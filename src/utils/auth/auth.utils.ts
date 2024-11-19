@@ -136,6 +136,8 @@ export async function createAuthPopup(
     !popupWindowTab ||
     !popupWindowTab.url.startsWith(browser.runtime.getURL("tabs/auth.html"))
   ) {
+    // TODO: To center this, the injected tab should send the center or dimensions of the screen:
+
     const window = await browser.windows.create({
       url: `${browser.runtime.getURL("tabs/auth.html")}#/`,
       focused: true,
@@ -147,6 +149,8 @@ export async function createAuthPopup(
     setPopupTabID(window.tabs[0].id);
   } else {
     log(LOG_GROUP.AUTH, "reusePopupTabID =", POPUP_TAB_ID);
+
+    await browser.windows.update(popupWindowTab.windowId, { focused: true });
   }
 
   unlock();
