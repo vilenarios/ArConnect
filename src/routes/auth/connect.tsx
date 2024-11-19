@@ -75,6 +75,10 @@ export default function Connect() {
     PermissionType[]
   >([]);
 
+  const [requestedPermCopy, setRequestedPermCopy] = useState<PermissionType[]>(
+    []
+  );
+
   // allowance for permissions
   const [allowanceEnabled, setAllowanceEnabled] = useState(true);
 
@@ -99,15 +103,12 @@ export default function Connect() {
       setRequestedPermissions(
         requested.filter((p) => Object.keys(permissionData).includes(p))
       );
-      setRequetedPermCopy(
+
+      setRequestedPermCopy(
         requested.filter((p) => Object.keys(permissionData).includes(p))
       );
     })();
   }, [url, authRequestPermissions]);
-
-  const [requestedPermCopy, setRequetedPermCopy] = useState<PermissionType[]>(
-    []
-  );
 
   // permissions to add
   const [permissions, setPermissions] = useState<PermissionType[]>([]);
@@ -187,6 +188,7 @@ export default function Connect() {
       // has already been added
 
       const allowance = await app.getAllowance();
+
       await app.updateSettings({
         permissions,
         // alwaysAsk,
@@ -227,7 +229,9 @@ export default function Connect() {
         <HeadAuth
           title={!edit ? browser.i18n.getMessage("sign_in") : "Permissions"}
           back={edit ? () => setEdit(false) : undefined}
+          appInfo={appInfo}
         />
+
         <App
           appName={appInfo.name || url}
           appUrl={url}
