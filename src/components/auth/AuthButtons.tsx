@@ -27,8 +27,10 @@ export function AuthButtons({
   const showPrimaryButton = !!primaryButtonProps && primaryButtonLabel;
   const showSecondaryButton = !!secondaryButtonProps && secondaryButtonLabel;
 
-  // TODO: Add default  label so that we only need to pass the onClick (for cancel)
-  // TODO: Use the red Reset button used in batchSignDataItem.tsx
+  // TODO: Add default  label so that we only need to pass the onClick (for cancel).
+
+  // TODO: Consider using the red Reset button used in batchSignDataItem.tsx
+
   // TODO: Maybe using the authRequest type we can get default labels already without passing them unless they are conditional. Also, we could use the auth hook
   // here so that there's no need to pass the request and so that we get access to the cancelRequest handler for the cancel button.
 

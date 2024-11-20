@@ -16,7 +16,7 @@ import HardwareWalletIcon, {
 } from "~components/hardware/HardwareWalletIcon";
 import { useHardwareApi } from "~wallets/hooks";
 import { useHistory } from "~utils/hash_router";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import keystoneLogo from "url:/assets/hardware/keystone.png";
 import WalletSwitcher from "./WalletSwitcher";
 import styled from "styled-components";
@@ -33,6 +33,7 @@ export interface HeadV2Props {
   padding?: string;
   back?: (...args) => any;
   appInfo?: AppInfo;
+  onAppInfoClick?: () => void;
 }
 
 export default function HeadV2({
@@ -41,7 +42,8 @@ export default function HeadV2({
   back,
   padding,
   showBack = true,
-  appInfo
+  appInfo,
+  onAppInfoClick
 }: HeadV2Props) {
   // scroll position
   const [scrollDirection, setScrollDirection] = useState<"up" | "down">("up");
@@ -104,6 +106,8 @@ export default function HeadV2({
   const appName = appInfo?.name;
   const appIconPlaceholderText = appName?.slice(0, 2).toUpperCase();
 
+  const SquircleWrapper = onAppInfoClick ? ButtonSquircle : React.Fragment;
+
   return (
     <HeadWrapper
       displayTheme={theme}
@@ -127,10 +131,13 @@ export default function HeadV2({
 
       {appName ? (
         <TooltipV2 content={appName} position="bottomEnd">
-          <SquircleImg
-            img={appInfo?.logo}
-            placeholderText={appIconPlaceholderText}
-          />
+          <SquircleWrapper>
+            <SquircleImg
+              img={appInfo?.logo}
+              placeholderText={appIconPlaceholderText}
+              onClick={onAppInfoClick}
+            />
+          </SquircleWrapper>
         </TooltipV2>
       ) : null}
 
@@ -274,6 +281,10 @@ const ButtonAvatar = styled(Avatar)`
   ${NoAvatarIcon} {
     font-size: 1.4rem;
   }
+`;
+
+const ButtonSquircle = styled.button`
+  cursor: pointer;
 `;
 
 const SquircleImg = styled(Squircle)`

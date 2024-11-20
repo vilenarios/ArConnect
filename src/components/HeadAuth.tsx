@@ -6,6 +6,7 @@ import Application from "~applications/application";
 import HeadV2 from "~components/popup/HeadV2";
 import { useAuthRequests } from "~utils/auth/auth.hooks";
 import type { AuthRequestStatus } from "~utils/auth/auth.types";
+import browser from "webextension-polyfill";
 
 export interface HeadAuthProps {
   title?: string;
@@ -28,7 +29,9 @@ export const HeadAuth: React.FC<HeadAuthProps> = ({
 
   const [appInfo, setAppInfo] = useState<AppInfo>(appInfoProp);
 
-  const url = authRequests[currentAuthRequestIndex]?.url || "";
+  const authRequest = authRequests[currentAuthRequestIndex];
+
+  const { tabID = null, url = "" } = authRequest;
 
   useEffect(() => {
     async function loadAppInfo() {
@@ -53,6 +56,14 @@ export const HeadAuth: React.FC<HeadAuthProps> = ({
     loadAppInfo();
   }, [url, appInfoProp]);
 
+  const handleAppInfoClicked = tabID
+    ? () => {
+        if (tabID === null) return;
+
+        browser.tabs.update(tabID, { active: true });
+      }
+    : undefined;
+
   // TODO: Add horizontal scroll to `DivTransactionsList` / `ButtonTransactionButton`.
 
   return (
@@ -63,6 +74,7 @@ export const HeadAuth: React.FC<HeadAuthProps> = ({
         showBack={!!back}
         back={back}
         appInfo={appInfo}
+        onAppInfoClick={handleAppInfoClicked}
       />
 
       {process.env.NODE_ENV === "development" && authRequests.length > 0 ? (

@@ -1,5 +1,4 @@
 import {
-  ButtonV2,
   Card,
   InputV2,
   LabelV2,
@@ -29,8 +28,7 @@ import App from "~components/auth/App";
 import styled from "styled-components";
 import { EventType, trackEvent } from "~utils/analytics";
 import Application from "~applications/application";
-import { defaultGateway, type Gateway } from "~gateways/gateway";
-import HeadV2 from "~components/popup/HeadV2";
+import { defaultGateway } from "~gateways/gateway";
 import { CheckIcon, CloseIcon } from "@iconicicons/react";
 import {
   InfoCircle,
