@@ -189,7 +189,6 @@ export default function BatchSignDataItem() {
           <AuthButtons
             authRequest={authRequest}
             primaryButtonProps={{
-              label: browser.i18n.getMessage("continue"),
               onClick: () => setTransaction(null)
             }}
           />
