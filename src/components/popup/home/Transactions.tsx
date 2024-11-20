@@ -10,12 +10,13 @@ import {
   AO_RECEIVER_QUERY,
   AO_SENT_QUERY,
   AR_RECEIVER_QUERY,
-  AR_SENT_QUERY
+  AR_SENT_QUERY,
+  PRINT_ARWEAVE_QUERY
 } from "~notifications/utils";
 import { useHistory } from "~utils/hash_router";
 import { getArPrice } from "~lib/coingecko";
 import useSetting from "~settings/hook";
-import { suggestedGateways } from "~gateways/gateway";
+import { printTxWorkingGateways, txHistoryGateways } from "~gateways/gateway";
 import { Spacer } from "@arconnect/components";
 import { Heading, ViewAll, TokenCount } from "../Title";
 import {
@@ -28,6 +29,7 @@ import {
   type ExtendedTransaction
 } from "~lib/transactions";
 import BigNumber from "bignumber.js";
+import { retryWithDelay } from "~utils/retry";
 
 export default function Transactions() {
   const [transactions, fetchTransactions] = useState<ExtendedTransaction[]>([]);
@@ -53,15 +55,37 @@ export default function Transactions() {
             AR_RECEIVER_QUERY,
             AR_SENT_QUERY,
             AO_SENT_QUERY,
-            AO_RECEIVER_QUERY
+            AO_RECEIVER_QUERY,
+            PRINT_ARWEAVE_QUERY
           ];
 
-          const [rawReceived, rawSent, rawAoSent, rawAoReceived] =
-            await Promise.allSettled(
-              queries.map((query) =>
-                gql(query, { address: activeAddress }, suggestedGateways[1])
-              )
-            );
+          const [
+            rawReceived,
+            rawSent,
+            rawAoSent,
+            rawAoReceived,
+            rawPrintArchive
+          ] = await Promise.allSettled(
+            queries.map((query, index) =>
+              retryWithDelay(async (attempt) => {
+                const data = await gql(
+                  query,
+                  { address: activeAddress },
+                  index !== 4
+                    ? txHistoryGateways[attempt % txHistoryGateways.length]
+                    : printTxWorkingGateways[
+                        attempt % printTxWorkingGateways.length
+                      ]
+                );
+                if (data?.data === null && (data as any)?.errors?.length > 0) {
+                  throw new Error(
+                    (data as any)?.errors?.[0]?.message || "GraphQL Error"
+                  );
+                }
+                return data;
+              }, 2)
+            )
+          );
 
           let sent = await processTransactions(rawSent, "sent");
           sent = sent.filter((tx) => BigNumber(tx.node.quantity.ar).gt(0));
@@ -75,12 +99,17 @@ export default function Transactions() {
             "aoReceived",
             true
           );
+          const printArchive = await processTransactions(
+            rawPrintArchive,
+            "printArchive"
+          );
 
           let combinedTransactions: ExtendedTransaction[] = [
             ...sent,
             ...received,
             ...aoReceived,
-            ...aoSent
+            ...aoSent,
+            ...printArchive
           ];
 
           combinedTransactions.sort(sortFn);
@@ -109,6 +138,16 @@ export default function Transactions() {
               };
             }
           });
+
+          combinedTransactions = combinedTransactions.reduce(
+            (acc, transaction) => {
+              if (!acc.some((t) => t.node.id === transaction.node.id)) {
+                acc.push(transaction);
+              }
+              return acc;
+            },
+            [] as ExtendedTransaction[]
+          );
 
           fetchTransactions(combinedTransactions);
         }
@@ -154,6 +193,7 @@ export default function Transactions() {
                         : "Pending"}
                     </Secondary>
                   </Section>
+
                   <Section alignRight>
                     <Main>{getFormattedAmount(transaction)}</Main>
                     <Secondary>
