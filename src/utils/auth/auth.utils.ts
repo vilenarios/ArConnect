@@ -1,13 +1,16 @@
 import { onMessage, sendMessage } from "@arconnect/webext-bridge";
-import type { AuthResult } from "shim";
 import { nanoid } from "nanoid";
 import browser from "webextension-polyfill";
 import { Mutex } from "~utils/mutex";
 import { isomorphicSendMessage } from "~utils/messaging/messaging.utils";
-import type {
-  AuthRequestData,
-  AuthType,
-  ConnectAuthRequest
+import {
+  isAuthErrorResult,
+  type AuthErrorResult,
+  type AuthRequestData,
+  type AuthResult,
+  type AuthSuccessResult,
+  type AuthType,
+  type ConnectAuthRequest
 } from "~utils/auth/auth.types";
 import type { ModuleAppData } from "~api/background/background-modules";
 import {
@@ -17,6 +20,7 @@ import {
 } from "~wallets";
 import { ERR_MSG_NO_WALLETS_ADDED } from "~utils/auth/auth.constants";
 import { log, LOG_GROUP } from "~utils/log/log.utils";
+import { isError } from "~utils/error/error.utils";
 
 const popupMutex = new Mutex();
 
@@ -90,7 +94,7 @@ export function getAuthPopupWindowTabID() {
  *
  * @param data Data to send to the auth window
  */
-export async function requestUserAuthorization(
+export async function requestUserAuthorization<T = any>(
   authRequestData: AuthRequestData,
   moduleAppData: ModuleAppData
 ) {
@@ -103,7 +107,7 @@ export async function requestUserAuthorization(
   );
 
   // wait for the results from the popup
-  return await getPopupResponse(authID, popupWindowTabID);
+  return await getPopupResponse<T>(authID, popupWindowTabID);
 }
 
 /**
@@ -189,18 +193,16 @@ export async function createAuthPopup(
 /**
  * Await for a browser message from the popup
  */
-export function getPopupResponse(authID: string, popupWindowTabID: number) {
+export function getPopupResponse<T>(authID: string, popupWindowTabID: number) {
   log(
     LOG_GROUP.AUTH,
     `getPopupResponse(authID = "${authID}", popupWindowTabID = ${popupWindowTabID})`
   );
 
-  return new Promise<AuthResult>(async (resolve, reject) => {
+  return new Promise<AuthSuccessResult<T>>(async (resolve, reject) => {
     startKeepAlive(authID);
 
     onMessage("auth_result", ({ sender, data }) => {
-      log(LOG_GROUP.AUTH, `auth_result for authID = "${authID}"`);
-
       stopKeepAlive(authID);
 
       // validate sender by it's tabId
@@ -215,9 +217,16 @@ export function getPopupResponse(authID: string, popupWindowTabID: number) {
       }
 
       // check the result
-      if (data.error) {
-        reject(data.data);
+      if (isAuthErrorResult(data)) {
+        log(
+          LOG_GROUP.AUTH,
+          `auth_result for authID = "${authID}" = Error (${data.error})`
+        );
+
+        reject(data.error);
       } else {
+        log(LOG_GROUP.AUTH, `auth_result for authID = "${authID}" = Success`);
+
         resolve(data);
       }
     });
@@ -232,23 +241,27 @@ export function getPopupResponse(authID: string, popupWindowTabID: number) {
  * @param errorMessage Optional error message. If defined, the auth will fail with this message
  * @param data Auth data
  */
-export async function replyToAuthRequest(
+export async function replyToAuthRequest<T>(
   type: AuthType,
   authID: string,
-  errorMessage?: string,
-  data?: any
+  data?: T | Error
 ) {
   log(
     LOG_GROUP.AUTH,
     `replyToAuthRequest(type = "${type}", authID="${authID}")`
   );
 
-  const response: AuthResult = {
-    type,
-    authID,
-    error: !!errorMessage,
-    data: data || errorMessage
-  };
+  const response: AuthResult<T> = isError(data)
+    ? ({
+        type,
+        authID,
+        error: data.message
+      } satisfies AuthErrorResult)
+    : ({
+        type,
+        authID,
+        data
+      } satisfies AuthSuccessResult<T>);
 
   // send the response message
   await sendMessage("auth_result", response, "background");

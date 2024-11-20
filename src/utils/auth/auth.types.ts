@@ -25,6 +25,33 @@ interface CommonAuthRequestProps {
   status: AuthRequestStatus;
 }
 
+// RESULTS:
+
+export interface AuthSuccessResult<T = any> {
+  type: string;
+  authID: string;
+  data?: T;
+}
+
+export interface AuthErrorResult {
+  type: string;
+  authID: string;
+  error: string;
+}
+
+export type AuthResult<T> = AuthSuccessResult<T> | AuthErrorResult;
+
+export function isAuthErrorResult(data: any): data is AuthErrorResult {
+  return (
+    !!data.type &&
+    !!data.authID &&
+    !!data.error &&
+    typeof data.type === "string" &&
+    typeof data.authID === "string" &&
+    typeof data.error === "string"
+  );
+}
+
 // AuthRequestData:
 
 // CONNECT:

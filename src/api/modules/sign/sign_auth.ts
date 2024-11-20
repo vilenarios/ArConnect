@@ -1,7 +1,5 @@
-import { sendMessage } from "@arconnect/webext-bridge";
 import { bytesToChunks, deconstructTransaction } from "./transaction_builder";
 import type Transaction from "arweave/web/lib/transaction";
-import type { AuthResult } from "shim";
 import {
   getAuthPopupWindowTabID,
   requestUserAuthorization
@@ -11,6 +9,12 @@ import type { ModuleAppData } from "~api/background/background-modules";
 import { isomorphicSendMessage } from "~utils/messaging/messaging.utils";
 import type { Chunk } from "~api/modules/sign/chunks";
 import { log, LOG_GROUP } from "~utils/log/log.utils";
+import type { AuthSuccessResult } from "~utils/auth/auth.types";
+
+interface SignatureResult {
+  id: string;
+  signature: string;
+}
 
 /**
  * Request a manual signature for the transaction.
@@ -28,7 +32,7 @@ export function signAuth(
 ) {
   log(LOG_GROUP.AUTH, "signAuth()", transaction);
 
-  return new Promise<AuthResult<{ id: string; signature: string } | undefined>>(
+  return new Promise<AuthSuccessResult<SignatureResult | undefined>>(
     async (resolve, reject) => {
       // generate chunks
       const {
@@ -39,7 +43,7 @@ export function signAuth(
       } = deconstructTransaction(transaction);
 
       // start auth
-      requestUserAuthorization(
+      requestUserAuthorization<SignatureResult | undefined>(
         {
           type: "sign",
           address,
@@ -125,14 +129,14 @@ export function signAuthKeystone(
 ) {
   log(LOG_GROUP.AUTH, "signAuthKeystone()");
 
-  return new Promise<AuthResult<{ id: string; signature: string } | undefined>>(
+  return new Promise<AuthSuccessResult<SignatureResult | undefined>>(
     async (resolve, reject) => {
       // generate chunks
       const collectionID = nanoid();
       const dataChunks = bytesToChunks(dataToSign.data, collectionID, 0);
 
       // start auth
-      requestUserAuthorization(
+      requestUserAuthorization<SignatureResult | undefined>(
         {
           type: "signKeystone",
           keystoneSignType: dataToSign.type,

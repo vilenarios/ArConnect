@@ -44,7 +44,7 @@ export function useCurrentAuthRequest<T extends AuthType>(
     if (status !== "pending")
       throw new Error(`AuthRequest ${type}(${authID}) already ${status}`);
 
-    return completeAuthRequest(authID, true, data);
+    return completeAuthRequest(authID, data);
   }
 
   function rejectRequest(errorMessage?: string) {
@@ -53,8 +53,7 @@ export function useCurrentAuthRequest<T extends AuthType>(
 
     return completeAuthRequest(
       authID,
-      false,
-      errorMessage || ERR_MSG_USER_CANCELLED_AUTH
+      new Error(errorMessage || ERR_MSG_USER_CANCELLED_AUTH)
     );
   }
 

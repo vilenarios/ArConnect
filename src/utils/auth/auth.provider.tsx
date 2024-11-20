@@ -34,6 +34,7 @@ import { isomorphicOnMessage } from "~utils/messaging/messaging.utils";
 import type { IBridgeMessage } from "@arconnect/webext-bridge";
 import type { InitialScreenType } from "~wallets";
 import { log, LOG_GROUP } from "~utils/log/log.utils";
+import { isError } from "~utils/error/error.utils";
 
 interface AuthRequestContextState {
   authRequests: AuthRequest[];
@@ -43,11 +44,7 @@ interface AuthRequestContextState {
 
 interface AuthRequestContextData extends AuthRequestContextState {
   setCurrentAuthRequestIndex: (currentAuthRequestIndex: number) => void;
-  completeAuthRequest: (
-    authID: string,
-    accepted: boolean,
-    data: any
-  ) => Promise<void>;
+  completeAuthRequest: (authID: string, data: any) => Promise<void>;
 }
 
 export const AuthRequestsContext = createContext<AuthRequestContextData>({
@@ -88,7 +85,7 @@ export function AuthRequestsProvider({
   );
 
   const completeAuthRequest = useCallback(
-    async (authID: string, accepted: boolean, data: any) => {
+    async (authID: string, data: any) => {
       const completedAuthRequest = authRequests.find(
         (authRequest) => authRequest.authID === authID
       );
@@ -110,15 +107,14 @@ export function AuthRequestsProvider({
 
       // TODO: Consider automatically rejecting (expiring) AuthRequest if there are more than 100.
 
-      const status: AuthRequestStatus = accepted ? "accepted" : "rejected";
+      const status: AuthRequestStatus = isError(data) ? "rejected" : "accepted";
 
       const authRequestRepliesPromises: Promise<AuthRequestStatus>[] =
         completedAuthRequests.map((completedAuthRequest) => {
           return replyToAuthRequest(
             completedAuthRequest.type,
             completedAuthRequest.authID,
-            accepted ? data : undefined,
-            accepted ? undefined : data
+            data
           )
             .then(() => {
               return status;
@@ -455,7 +451,7 @@ export function AuthRequestsProvider({
         replyToAuthRequest(
           authRequest.type,
           authRequest.authID,
-          ERR_MSG_USER_CANCELLED_AUTH
+          new Error(ERR_MSG_USER_CANCELLED_AUTH)
         );
       });
     }

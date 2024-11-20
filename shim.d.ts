@@ -3,7 +3,10 @@ import type { DisplayTheme } from "@arconnect/components";
 import type { Chunk } from "~api/modules/sign/chunks";
 import type { InjectedEvents } from "~utils/events";
 import "styled-components";
-import type { AuthRequestMessageData } from "~utils/auth/auth.types";
+import type {
+  AuthRequestMessageData,
+  AuthResult
+} from "~utils/auth/auth.types";
 
 declare module "@arconnect/webext-bridge" {
   export interface ProtocolMap {
@@ -27,7 +30,7 @@ declare module "@arconnect/webext-bridge" {
     /**
      * `auth.hook.ts` uses `auth_result` messages (calling `replyToAuthRequest()`) to reply to the `AuthRequest`s.
      */
-    auth_result: AuthResult;
+    auth_result: AuthResult<any>;
 
     /**
      * `signAuth()` in `sign_auth.ts` uses `auth_chunk` to send chunked transactions or binary data from the background
@@ -72,13 +75,6 @@ interface ApiCall<DataType = any> extends JsonValue {
 
 interface ApiResponse<DataType = any> extends ApiCall<DataType> {
   error?: boolean;
-}
-
-interface AuthResult<DataType = any> {
-  type: string;
-  authID: string;
-  error?: boolean;
-  data?: DataType;
 }
 
 interface Event {
