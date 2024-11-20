@@ -115,6 +115,7 @@ export default function HeadV2({
       scrolled={scrolled}
       padding={padding}
       center={appName === undefined}
+      hasBackButton={showBack}
     >
       {showBack ? (
         <BackButton
@@ -183,6 +184,7 @@ const HeadWrapper = styled(Section)<{
   displayTheme: DisplayTheme;
   padding: string;
   center: boolean;
+  hasBackButton: boolean;
 }>`
   position: sticky;
   top: 0;
@@ -192,7 +194,10 @@ const HeadWrapper = styled(Section)<{
   display: flex;
   flex-direction: row;
   width: full;
+  transition: padding 0.07s ease-in-out, border-color 0.23s ease-in-out;
   padding: ${(props) => (props.padding ? props.padding : "15px")};
+  padding-left: ${(props) =>
+    props.hasBackButton ? "32px" : props.padding || "15px"};
   justify-content: ${(props) => (props.center ? "center" : "space-between")};
   align-items: center;
   background-color: rgba(${(props) => props.theme.background}, 0.75);
@@ -204,24 +209,36 @@ const HeadWrapper = styled(Section)<{
         (props.displayTheme === "light" ? "235, 235, 241" : "31, 30, 47") +
         ")"
       : "transparent"};
-  transition: border-color 0.23s ease-in-out;
   user-select: none;
 `;
 
 const BackButton = styled.button`
   position: absolute;
-  top: 0;
-  bottom: 0;
+  width: 32px;
+  height: 32px;
+  top: 50%;
   left: 0;
+  transform: translate(0, -50%);
   display: flex;
-  width: max-content;
   align-items: center;
   justify-content: center;
-  padding: 0 15px;
-  height: 100%;
   cursor: pointer;
   background: transparent;
   border: 0;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset -15px 0;
+  }
+
+  & svg {
+    transition: transform 0.07s ease-in-out;
+  }
+
+  &:hover svg {
+    transform: scale(1.08);
+  }
 
   &:active svg {
     transform: scale(0.92);
@@ -284,7 +301,26 @@ const ButtonAvatar = styled(Avatar)`
 `;
 
 const ButtonSquircle = styled.button`
+  position: relative;
   cursor: pointer;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset -15px;
+  }
+
+  & svg {
+    transition: transform 0.07s ease-in-out;
+  }
+
+  &:hover svg {
+    transform: scale(1.08);
+  }
+
+  &:active svg {
+    transform: scale(0.92);
+  }
 `;
 
 const SquircleImg = styled(Squircle)`

@@ -128,6 +128,7 @@ export default function BatchSignDataItem() {
           title={browser.i18n.getMessage("batch_sign_items")}
           back={transaction ? () => setTransaction(null) : undefined}
         />
+
         <Description>
           <Text noMargin>
             {browser.i18n.getMessage("batch_sign_data_description", url)}
@@ -143,14 +144,7 @@ export default function BatchSignDataItem() {
         )}
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "8px",
-          padding: "16px"
-        }}
-      >
+      <Section>
         {!transaction ? (
           <>
             {password && (
@@ -193,7 +187,7 @@ export default function BatchSignDataItem() {
             }}
           />
         )}
-      </div>
+      </Section>
     </Wrapper>
   );
 }
