@@ -374,7 +374,7 @@ export default function SignDataItem() {
       <Section>
         {password && (
           <>
-            <PasswordWrapper style={{ paddingTop: 0 }}>
+            <PasswordWrapper>
               <InputV2
                 placeholder="Enter your password"
                 small
@@ -399,7 +399,6 @@ export default function SignDataItem() {
             onClick: sign
           }}
           secondaryButtonProps={{
-            label: browser.i18n.getMessage("cancel"),
             onClick: () => rejectRequest()
           }}
         />
@@ -416,7 +415,6 @@ const Description = styled(Section)`
 
 const PasswordWrapper = styled.div`
   display: flex;
-  padding-top: 16px;
   flex-direction: column;
 
   p {

@@ -5,10 +5,7 @@ import {
   Text,
   type DisplayTheme
 } from "@arconnect/components";
-import { ExtensionStorage } from "~utils/storage";
-import { useEffect, useRef, useState } from "react";
 import browser from "webextension-polyfill";
-import aoLogo from "url:/assets/ecosystem/ao-token-logo.png";
 import styled from "styled-components";
 import { CheckIcon, CloseIcon } from "@iconicicons/react";
 import { ResetButton } from "~components/dashboard/Reset";

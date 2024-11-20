@@ -165,7 +165,6 @@ export default function SignKeystone() {
                 }
           }
           secondaryButtonProps={{
-            label: browser.i18n.getMessage("cancel"),
             onClick: () => rejectRequest()
           }}
         />

@@ -352,7 +352,6 @@ export default function Sign() {
                 }
           }
           secondaryButtonProps={{
-            label: browser.i18n.getMessage("cancel"),
             onClick: () => rejectRequest()
           }}
         />

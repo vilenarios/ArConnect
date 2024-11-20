@@ -7,7 +7,7 @@ import { prettyDate } from "~utils/pretty_date";
 import browser from "webextension-polyfill";
 
 interface AuthButtonProps extends ButtonV2Props {
-  label: string;
+  label?: string;
   onClick: (e: MouseEvent<HTMLButtonElement>) => void;
 }
 
@@ -17,22 +17,22 @@ export interface AuthButtonsProps {
   secondaryButtonProps?: AuthButtonProps;
 }
 
+// TODO: Consider creating a similar component without the `authRequest` to be reused everywhere where the "continue"
+// or "cancel" labels below are found:
+
 export function AuthButtons({
   authRequest,
   primaryButtonProps,
   secondaryButtonProps
 }: AuthButtonsProps) {
-  const { label: primaryButtonLabel } = primaryButtonProps || {};
-  const { label: secondaryButtonLabel } = secondaryButtonProps || {};
-  const showPrimaryButton = !!primaryButtonProps && primaryButtonLabel;
-  const showSecondaryButton = !!secondaryButtonProps && secondaryButtonLabel;
+  const showPrimaryButton = !!primaryButtonProps?.onClick;
+  const showSecondaryButton = !!secondaryButtonProps?.onClick;
+  const primaryButtonLabel =
+    primaryButtonProps?.label || browser.i18n.getMessage("continue");
+  const secondaryButtonLabel =
+    secondaryButtonProps?.label || browser.i18n.getMessage("cancel");
 
-  // TODO: Add default  label so that we only need to pass the onClick (for cancel).
-
-  // TODO: Consider using the red Reset button used in batchSignDataItem.tsx
-
-  // TODO: Maybe using the authRequest type we can get default labels already without passing them unless they are conditional. Also, we could use the auth hook
-  // here so that there's no need to pass the request and so that we get access to the cancelRequest handler for the cancel button.
+  // TODO: Consider using the red `<ResetButton>` for cancel.
 
   const requestedAt = authRequest?.requestedAt;
   const requestedAtElementRef = useRef<HTMLSpanElement>();
@@ -46,6 +46,8 @@ export function AuthButtons({
 
     // TODO: After one minute, change the interval wait time to 5 seconds or so. Consider adding this to @swyg/corre and adding a function/hook useFormattedTime
   }, 250);
+
+  // TODO: Display the active wallet inside `<PStatusLabel>` too:
 
   return (
     <>

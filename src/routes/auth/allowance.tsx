@@ -177,7 +177,6 @@ export default function Allowance() {
             onClick: reset
           }}
           secondaryButtonProps={{
-            label: browser.i18n.getMessage("cancel"),
             onClick: () => rejectRequest()
           }}
         />
