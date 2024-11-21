@@ -1,18 +1,22 @@
-import { ThemeProvider, type DefaultTheme } from "styled-components";
 import { useEffect, type PropsWithChildren } from "react";
 import { useHardwareApi } from "~wallets/hooks";
 import { useTheme } from "~utils/theme";
-import { Provider } from "@arconnect/components";
 import { useTheme as useStyledComponentsTheme } from "styled-components";
 import { MotionGlobalConfig } from "framer-motion";
+import {
+  Provider as ArConnectProvider,
+  ARCONNECT_LIGHT_THEME,
+  ARCONNECT_DARK_THEME
+} from "@arconnect/components";
 
 const ARCONNECT_THEME_BACKGROUND_COLOR = "ARCONNECT_THEME_BACKGROUND_COLOR";
+const ARCONNECT_THEME_TEXT_COLOR = "ARCONNECT_THEME_TEXT_COLOR";
 
 /**
  * Modify the theme if the active wallet is a hardware wallet. We transform the
  * default accent color to match the hardware wallet's accent.
  */
-function hardwareThemeModifier(theme: DefaultTheme): DefaultTheme {
+function hardwareThemeModifier(theme: ArConnectTheme): ArConnectTheme {
   return {
     ...theme,
     theme: "154, 184, 255",
@@ -21,13 +25,13 @@ function hardwareThemeModifier(theme: DefaultTheme): DefaultTheme {
   };
 }
 
-function noThemeModifier(theme: DefaultTheme): DefaultTheme {
+function noThemeModifier(theme: ArConnectTheme): ArConnectTheme {
   return theme;
 }
 
 export function ArConnectThemeProvider({ children }: PropsWithChildren<{}>) {
   const hardwareApi = useHardwareApi();
-  const theme = useTheme();
+  const displayTheme = useTheme();
   const themeModifier = hardwareApi ? hardwareThemeModifier : noThemeModifier;
 
   useEffect(() => {
@@ -43,20 +47,23 @@ export function ArConnectThemeProvider({ children }: PropsWithChildren<{}>) {
     }
   }, []);
 
-  return (
-    <Provider theme={theme}>
-      <ThemeProvider theme={themeModifier}>
-        <ThemeBackgroundObserver />
+  const defaultTheme =
+    displayTheme === "dark" ? ARCONNECT_DARK_THEME : ARCONNECT_LIGHT_THEME;
+  const theme = themeModifier(defaultTheme);
 
-        {children}
-      </ThemeProvider>
-    </Provider>
+  return (
+    <ArConnectProvider theme={theme}>
+      <ThemeBackgroundObserver />
+
+      {children}
+    </ArConnectProvider>
   );
 }
 
 export function ThemeBackgroundObserver() {
   const styledComponentsTheme = useStyledComponentsTheme();
   const backgroundColor = styledComponentsTheme.background;
+  const textColor = styledComponentsTheme.primaryText;
 
   useEffect(() => {
     let formattedBackgroundColor = "";
@@ -76,6 +83,22 @@ export function ThemeBackgroundObserver() {
       );
     }
   }, [backgroundColor]);
+
+  useEffect(() => {
+    let formattedTextColor = "";
+
+    if (textColor.length === 3 || textColor.length === 6) {
+      formattedTextColor = `#${textColor}`;
+    } else if (/\d{1,3}, ?\d{1,3}, ?\d{1,3}/.test(textColor)) {
+      formattedTextColor = `rgb(${textColor})`;
+    } else if (/\d{1,3}, ?\d{1,3}, ?\d{1,3}, ?.+/.test(textColor)) {
+      formattedTextColor = `rgba(${textColor})`;
+    }
+
+    if (formattedTextColor) {
+      localStorage.setItem(ARCONNECT_THEME_TEXT_COLOR, formattedTextColor);
+    }
+  }, [textColor]);
 
   return null;
 }
