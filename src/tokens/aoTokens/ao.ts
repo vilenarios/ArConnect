@@ -37,13 +37,6 @@ export const defaultAoTokens: TokenInfo[] = [
     processId: "OT9qTE2467gcozb2g8R6D6N3nQS94ENcaAIJfUzHCww"
   },
   {
-    Name: "Bark",
-    Ticker: "BRKTST",
-    Denomination: 3,
-    Logo: "AdFxCN1eEPboxNpCNL23WZRNhIhiamOeS-TUwx_Nr3Q",
-    processId: "8p7ApPZxC_37M06QHVejCQrKsHbcJEerd3jWNkDUWPQ"
-  },
-  {
     Name: "Astro USD (Test)",
     Ticker: "USDA-TST",
     Denomination: 12,
