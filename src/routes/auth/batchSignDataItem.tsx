@@ -170,7 +170,7 @@ export default function BatchSignDataItem() {
             <AuthButtons
               authRequest={authRequest}
               primaryButtonProps={{
-                label: browser.i18n.getMessage("signature_authorize"),
+                label: browser.i18n.getMessage("sign_authorize_all"),
                 disabled: (password && !passwordInput.state) || loading,
                 onClick: sign
               }}

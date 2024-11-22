@@ -1334,11 +1334,11 @@
     "description": "View last tx prompt content"
   },
   "sign_item": {
-    "message": "Sign Item",
+    "message": "Sign item",
     "description": "Sign message popup title"
   },
   "batch_sign_items": {
-    "message": "Batch Sign Items",
+    "message": "Sign items",
     "description": "Batch sign message popup title"
   },
   "titles_signature": {
@@ -1390,6 +1390,10 @@
   "sign_authorize": {
     "message": "Authorize",
     "description": "Authorize button label"
+  },
+  "sign_authorize_all": {
+    "message": "Authorize all",
+    "description": "Authorize all button label"
   },
   "sign_enter_password": {
     "message": "Enter password to sign transaction",

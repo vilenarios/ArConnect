@@ -1379,6 +1379,10 @@
       "message": "授权",
       "description": "Authorize button label"
   },
+  "sign_authorize_all": {
+    "message": "Authorize all",
+    "description": "Authorize all button label"
+  },
   "sign_enter_password": {
       "message": "输入密码以签署交易",
       "description": "Request to enter password to sign transaction"
