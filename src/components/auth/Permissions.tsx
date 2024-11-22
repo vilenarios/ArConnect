@@ -4,14 +4,18 @@ import styled from "styled-components";
 import { permissionData, type PermissionType } from "~applications/permissions";
 import Checkbox from "~components/Checkbox";
 import { useEffect, useState } from "react";
+import { AuthButtons } from "~components/auth/AuthButtons";
+import type { ConnectAuthRequest } from "~utils/auth/auth.types";
 
 type PermissionsProps = {
+  connectAuthRequest: ConnectAuthRequest;
   requestedPermissions: PermissionType[];
   update: (updatedPermissions: PermissionType[]) => void;
   closeEdit: (setEdit: boolean) => void;
 };
 
 export default function Permissions({
+  connectAuthRequest,
   requestedPermissions,
   update,
   closeEdit
@@ -29,7 +33,7 @@ export default function Permissions({
   return (
     <Wrapper>
       <div>
-        <Section style={{ paddingTop: 0 }}>
+        <Section>
           <Title noMargin>{browser.i18n.getMessage("permissions")}</Title>
           <PermissionsWrapper>
             {Object.keys(permissionData).map(
@@ -73,20 +77,22 @@ export default function Permissions({
           </PermissionsWrapper>
         </Section>
       </div>
-      <div style={{ padding: "0 16px" }}>
-        <ButtonV2
-          fullWidth
-          onClick={() => {
-            const updatedPermissions = Array.from(permissions.entries())
-              .filter(([, value]) => value)
-              .map(([key]) => key);
-            update(updatedPermissions);
-            closeEdit(false);
+
+      <Section>
+        <AuthButtons
+          authRequest={connectAuthRequest}
+          primaryButtonProps={{
+            label: browser.i18n.getMessage("save"),
+            onClick: () => {
+              const updatedPermissions = Array.from(permissions.entries())
+                .filter(([, value]) => value)
+                .map(([key]) => key);
+              update(updatedPermissions);
+              closeEdit(false);
+            }
           }}
-        >
-          {browser.i18n.getMessage("save")}
-        </ButtonV2>
-      </div>
+        />
+      </Section>
     </Wrapper>
   );
 }

@@ -283,6 +283,7 @@ export default function Connect() {
                 </Section>
               </UnlockWrapper>
             )}
+
             {page === "permissions" && (
               <>
                 {!edit ? (
@@ -373,19 +374,19 @@ export default function Connect() {
                     </Section>
                   </PermissionsContent>
                 ) : (
-                  <>
-                    <Permissions
-                      requestedPermissions={requestedPermissions}
-                      update={setRequestedPermissions}
-                      closeEdit={setEdit}
-                    />
-                  </>
+                  <Permissions
+                    connectAuthRequest={authRequest}
+                    requestedPermissions={requestedPermissions}
+                    update={setRequestedPermissions}
+                    closeEdit={setEdit}
+                  />
                 )}
               </>
             )}
           </AnimatePresence>
         </ContentWrapper>
       </div>
+
       {!edit && (
         <Section>
           <AuthButtons
