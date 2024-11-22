@@ -18,7 +18,11 @@ import {
   getWallets,
   openOrSelectWelcomePage
 } from "~wallets";
-import { ERR_MSG_NO_WALLETS_ADDED } from "~utils/auth/auth.constants";
+import {
+  AUTH_POPUP_UNLOCK_REQUEST_TTL_MS,
+  ERR_MSG_NO_WALLETS_ADDED,
+  ERR_MSG_UNLOCK_TIMEOUT
+} from "~utils/auth/auth.constants";
 import { log, LOG_GROUP } from "~utils/log/log.utils";
 import { isError } from "~utils/error/error.utils";
 
@@ -190,6 +194,47 @@ export async function createAuthPopup(
   };
 }
 
+type AuthResultCallback<T> = (data: T) => void;
+
+const authResultCallbacks = new Map<string, AuthResultCallback<any>>();
+
+function addAuthResultListener<T>(
+  authID: string,
+  popupWindowTabID: number,
+  fn: AuthResultCallback<T>
+) {
+  authResultCallbacks.set(authID, fn);
+
+  if (authResultCallbacks.size === 1) {
+    onMessage("auth_result", ({ sender, data }) => {
+      // validate sender by it's tabId
+      if (sender.tabId !== popupWindowTabID) {
+        console.warn(
+          `auth_result for authID = ${authID} received from tabId = ${sender.tabId}, but ${popupWindowTabID} expected`
+        );
+
+        return;
+      }
+
+      const authResultCallback = authResultCallbacks.get(data.authID);
+
+      if (!authResultCallback) {
+        console.warn(
+          `authID = ${data.authID} doesn't have an "auth_result" listener`
+        );
+
+        return;
+      }
+
+      authResultCallback(data);
+    });
+  }
+}
+
+function removeAuthResultListener(authID: string) {
+  authResultCallbacks.delete(authID);
+}
+
 /**
  * Await for a browser message from the popup
  */
@@ -202,34 +247,39 @@ export function getPopupResponse<T>(authID: string, popupWindowTabID: number) {
   return new Promise<AuthSuccessResult<T>>(async (resolve, reject) => {
     startKeepAlive(authID);
 
-    onMessage("auth_result", ({ sender, data }) => {
-      stopKeepAlive(authID);
+    // This is redundant, as `auth.provider.ts` will close itself after AUTH_POPUP_UNLOCK_REQUEST_TTL_MS of inactivity
+    // (not receiving, completing or selecting AuthRequests), but just in case the response ("auth_result") never
+    // arrives, we have this here to make sure the dApp gets a response, eventually:
+    const timeoutID = setTimeout(() => {
+      reject(ERR_MSG_UNLOCK_TIMEOUT);
+    }, AUTH_POPUP_UNLOCK_REQUEST_TTL_MS);
 
-      // validate sender by it's tabId
-      if (sender.tabId !== popupWindowTabID) {
-        return;
+    addAuthResultListener<AuthSuccessResult<T>>(
+      authID,
+      popupWindowTabID,
+      (data) => {
+        stopKeepAlive(authID);
+        clearTimeout(timeoutID);
+        removeAuthResultListener(authID);
+
+        if (!data) {
+          log(LOG_GROUP.AUTH, `auth_result for authID = "${authID}" = Empty)`);
+
+          reject(`Missing data from authID = "${authID}"'s "auth_result"`);
+        } else if (isAuthErrorResult(data)) {
+          log(
+            LOG_GROUP.AUTH,
+            `auth_result for authID = "${authID}" = Error (${data.error})`
+          );
+
+          reject(data.error);
+        } else {
+          log(LOG_GROUP.AUTH, `auth_result for authID = "${authID}" = Success`);
+
+          resolve(data);
+        }
       }
-
-      // ensure the auth ID and the auth type
-      // matches the requested ones
-      if (data.authID !== authID) {
-        return;
-      }
-
-      // check the result
-      if (isAuthErrorResult(data)) {
-        log(
-          LOG_GROUP.AUTH,
-          `auth_result for authID = "${authID}" = Error (${data.error})`
-        );
-
-        reject(data.error);
-      } else {
-        log(LOG_GROUP.AUTH, `auth_result for authID = "${authID}" = Success`);
-
-        resolve(data);
-      }
-    });
+    );
   });
 }
 
