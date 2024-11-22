@@ -141,9 +141,15 @@ export async function createAuthPopup(
     .catch(() => null);
 
   if (
-    !popupWindowTab ||
+    popupWindowTab &&
     !popupWindowTab.url.startsWith(browser.runtime.getURL("tabs/auth.html"))
   ) {
+    console.warn(
+      `Auth popup URL (${popupWindowTab.url}) doesn't match "tabs/auth.html"`
+    );
+  }
+
+  if (!popupWindowTab) {
     // TODO: To center this, the injected tab should send the center or dimensions of the screen:
 
     const window = await browser.windows.create({
@@ -160,8 +166,6 @@ export async function createAuthPopup(
 
     await browser.windows.update(popupWindowTab.windowId, { focused: true });
   }
-
-  unlock();
 
   let authID: string | undefined;
 
@@ -187,6 +191,8 @@ export async function createAuthPopup(
       }
     });
   }
+
+  unlock();
 
   return {
     authID,
