@@ -29,23 +29,24 @@ export default function Signature() {
     <Wrapper>
       <div>
         <HeadAuth title={browser.i18n.getMessage("titles_signature")} />
-        <Spacer y={0.75} />
+
         <Section>
           <Text noMargin>
             {browser.i18n.getMessage("signature_description", url)}
           </Text>
+
+          <div style={{ marginTop: "16px" }}>
+            <Message message={message} />
+          </div>
         </Section>
       </div>
-      <Section>
-        <Message message={message} />
-      </Section>
-      <Spacer y={0.25} />
+
       <Section>
         <AuthButtons
           authRequest={authRequest}
           primaryButtonProps={{
             label: browser.i18n.getMessage("signature_authorize"),
-            onClick: acceptRequest
+            onClick: () => acceptRequest()
           }}
           secondaryButtonProps={{
             onClick: () => rejectRequest()
