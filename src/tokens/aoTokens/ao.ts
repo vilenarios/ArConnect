@@ -30,18 +30,11 @@ export const defaultAoTokens: TokenInfo[] = [
     processId: "m3PaWzK4PTG9lAaqYQPaPdOcXdO8hYqi5Fe9NWqXd0w"
   },
   {
-    Name: "TRUNK",
-    Ticker: "TRUNK",
-    Denomination: 3,
-    Logo: "4eTBOaxZSSyGbpKlHyilxNKhXbocuZdiMBYIORjS4f0",
-    processId: "OT9qTE2467gcozb2g8R6D6N3nQS94ENcaAIJfUzHCww"
-  },
-  {
-    Name: "Astro USD (Test)",
-    Ticker: "USDA-TST",
+    Name: "Q Arweave",
+    Ticker: "qAR",
     Denomination: 12,
-    Logo: "",
-    processId: "GcFxqTQnKHcr304qnOcq00ZqbaYGDn4Wbb0DHAM-wvU"
+    Logo: "26yDr08SuwvNQ4VnhAfV4IjJcOOlQ4tAQLc1ggrCPu0",
+    processId: "NG-0lVX882MG5nhARrSzyprEK6ejonHpdUmaaMPsHE8"
   }
 ];
 
