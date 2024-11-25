@@ -26,8 +26,11 @@ import {
   handleTabClosed,
   handleTabUpdate
 } from "~api/background/handlers/browser/tabs/tabs.handler";
+import { log, LOG_GROUP } from "~utils/log/log.utils";
 
 export function setupBackgroundService() {
+  log(LOG_GROUP.SETUP, "background-setup.ts > setupBackgroundService()");
+
   // MESSAGES:
   // Watch for API call and chunk messages:
   onMessage("api_call", handleApiCallMessage);
