@@ -49,7 +49,7 @@
     ]
   },
   "dependencies": {
-    "@arconnect/components": "^0.3.11",
+    "@arconnect/components": "^1.0.0",
     "@arconnect/keystone-sdk": "^0.0.5",
     "@arconnect/warp-dre": "^0.0.1",
     "@arconnect/webext-bridge": "^5.0.6",
