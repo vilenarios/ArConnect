@@ -1,6 +1,6 @@
 import { freeDecryptedWallet } from "~wallets/encryption";
-import type { Allowance, AllowanceBigNumber } from "~applications/allowance";
-import type { ModuleAppData } from "~api/background";
+import type { AllowanceBigNumber } from "~applications/allowance";
+import type { ModuleAppData } from "~api/background/background-modules";
 import { defaultGateway } from "~gateways/gateway";
 import type { JWKInterface } from "warp-contracts";
 import { allowanceAuth } from "../sign/allowance";
@@ -29,7 +29,7 @@ export async function ensureAllowanceDispatch(
       const address = await arweave.wallets.jwkToAddress(keyfile);
 
       await signAuth(
-        appData.appURL,
+        appData,
         // @ts-expect-error
         dataEntry.toJSON(),
         address
@@ -37,7 +37,7 @@ export async function ensureAllowanceDispatch(
     }
 
     if (allowance.enabled) {
-      await allowanceAuth(allowance, appData.appURL, price, alwaysAsk);
+      await allowanceAuth(appData, allowance, price, alwaysAsk);
     }
   } catch (e) {
     freeDecryptedWallet(keyfile);

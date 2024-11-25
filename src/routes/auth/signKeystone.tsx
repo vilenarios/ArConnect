@@ -1,4 +1,3 @@
-import { replyToAuthRequest, useAuthParams, useAuthUtils } from "~utils/auth";
 import {
   dataItemToUR,
   decodeSignature,
@@ -20,75 +19,25 @@ import AnimatedQRPlayer from "~components/hardware/AnimatedQRPlayer";
 import Wrapper from "~components/auth/Wrapper";
 import Progress from "~components/Progress";
 import browser from "webextension-polyfill";
-import Head from "~components/popup/Head";
 import Message from "~components/auth/Message";
-import type { AuthKeystoneType } from "~api/modules/sign/sign_auth";
-import { onMessage, sendMessage } from "@arconnect/webext-bridge";
-import type { Chunk } from "~api/modules/sign/chunks";
-import { bytesFromChunks } from "~api/modules/sign/transaction_builder";
+import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
+import { HeadAuth } from "~components/HeadAuth";
+import { AuthButtons } from "~components/auth/AuthButtons";
+
 export default function SignKeystone() {
-  // sign params
-  const params = useAuthParams<{
-    collectionId: string;
-    keystoneSignType: string;
-  }>();
-  // reconstructed transaction
-  const [dataToSign, setDataToSign] = useState<Buffer>();
-  const [dataType, setDataType] = useState("Message");
+  const { authRequest, acceptRequest, rejectRequest } =
+    useCurrentAuthRequest("signKeystone");
+
+  const { keystoneSignType, data: dataToSign } = authRequest;
 
   useEffect(() => {
     (async () => {
-      // request chunks
-      if (params) {
-        setDataType(params?.keystoneSignType);
-        sendMessage("auth_listening", null, "background");
-
-        const chunks: Chunk[] = [];
-
-        // listen for chunks
-        onMessage("auth_chunk", ({ sender, data }) => {
-          // check data type
-          if (
-            data.collectionID !== params.collectionID ||
-            sender.context !== "background" ||
-            data.type === "start"
-          ) {
-            return;
-          }
-          // end chunk stream
-          if (data.type === "end") {
-            const bytes = bytesFromChunks(chunks);
-            const signData = Buffer.from(bytes);
-            setDataToSign(signData);
-          } else if (data.type === "bytes") {
-            // add chunk
-            chunks.push(data);
-          }
-        });
-      }
-    })();
-  }, [params]);
-
-  useEffect(() => {
-    (async () => {
-      if (dataType === "DataItem" && !!dataToSign) {
+      if (keystoneSignType === "DataItem" && !!dataToSign) {
         await loadTransactionUR();
         setPage("qr");
       }
     })();
-  }, [dataType, dataToSign]);
-
-  // get auth utils
-  const { closeWindow, cancel } = useAuthUtils("signKeystone", params?.authID);
-
-  // authorize
-  async function authorize(data?: any) {
-    // reply to request
-    await replyToAuthRequest("signKeystone", params.authID, undefined, data);
-
-    // close the window
-    closeWindow();
-  }
+  }, [keystoneSignType, dataToSign]);
 
   /**
    * Hardware wallet logic
@@ -106,7 +55,7 @@ export default function SignKeystone() {
   async function loadTransactionUR() {
     if (wallet.type !== "hardware" || !dataToSign) return;
     // load the ur data
-    if (dataType === "DataItem") {
+    if (keystoneSignType === "DataItem") {
       const ur = await dataItemToUR(dataToSign, wallet.xfp);
       setTransactionUR(ur);
     } else {
@@ -136,7 +85,7 @@ export default function SignKeystone() {
       const data = await decodeSignature(res);
 
       // reply
-      await authorize(data);
+      await acceptRequest(data);
     } catch (e) {
       // log error
       console.error(
@@ -144,14 +93,7 @@ export default function SignKeystone() {
       );
 
       // reply to request
-      await replyToAuthRequest(
-        "signKeystone",
-        params.authID,
-        "Failed to decode signature from keystone"
-      );
-
-      // close the window
-      closeWindow();
+      await rejectRequest("Failed to decode signature from keystone");
     }
 
     setLoading(false);
@@ -160,19 +102,14 @@ export default function SignKeystone() {
   // toast
   const { setToast } = useToasts();
 
-  if (!params) return <></>;
+  // TODO: Could large `data` values cause issues with this component or `<Message>` below?
 
   return (
     <Wrapper>
       <div>
-        <Head
-          title={browser.i18n.getMessage("titles_sign")}
-          showOptions={false}
-          back={cancel}
-          allowOpen={false}
-        />
+        <HeadAuth title={browser.i18n.getMessage("titles_sign")} />
         <Spacer y={0.75} />
-        {(!page && dataToSign && dataType === "Message" && (
+        {(!page && dataToSign && keystoneSignType === "Message" && (
           <Section>
             <Message message={[...dataToSign]} />
           </Section>
@@ -206,31 +143,31 @@ export default function SignKeystone() {
         )}
       </div>
       <Section>
-        {page !== "scanner" && (
-          <>
-            <ButtonV2
-              fullWidth
-              disabled={!dataToSign || loading}
-              loading={!dataToSign || loading}
-              onClick={async () => {
-                if (!dataToSign) return;
-                if (wallet.type === "hardware") {
-                  // load tx ur
-                  if (!page) await loadTransactionUR();
+        <AuthButtons
+          authRequest={authRequest}
+          primaryButtonProps={
+            page === "scanner"
+              ? undefined
+              : {
+                  label: browser.i18n.getMessage("sign_authorize"),
+                  disabled: !dataToSign || loading,
+                  loading: !dataToSign || loading,
+                  onClick: async () => {
+                    if (!dataToSign) return;
+                    if (wallet.type === "hardware") {
+                      // load tx ur
+                      if (!page) await loadTransactionUR();
 
-                  // update page
-                  setPage((val) => (!val ? "qr" : "scanner"));
-                } else await authorize();
-              }}
-            >
-              {browser.i18n.getMessage("sign_authorize")}
-            </ButtonV2>
-            <Spacer y={0.75} />
-          </>
-        )}
-        <ButtonV2 fullWidth secondary onClick={cancel}>
-          {browser.i18n.getMessage("cancel")}
-        </ButtonV2>
+                      // update page
+                      setPage((val) => (!val ? "qr" : "scanner"));
+                    } else await acceptRequest();
+                  }
+                }
+          }
+          secondaryButtonProps={{
+            onClick: () => rejectRequest()
+          }}
+        />
       </Section>
     </Wrapper>
   );

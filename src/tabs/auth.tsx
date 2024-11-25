@@ -1,7 +1,5 @@
-import Route from "~components/popup/Route";
-import { useHashLocation } from "~utils/hash_router";
-import { syncLabels, useRemoveCover } from "~wallets";
-import { useEffect } from "react";
+import Route, { Page } from "~components/popup/Route";
+import { useSetUp, type InitialScreenType } from "~wallets";
 import { Router } from "wouter";
 
 import { ArConnectThemeProvider } from "~components/hardware/HardwareWalletTheme";
@@ -17,30 +15,70 @@ import Subscription from "~routes/auth/subscription";
 import SignKeystone from "~routes/auth/signKeystone";
 import BatchSignDataItem from "~routes/auth/batchSignDataItem";
 import { AnimatePresence } from "framer-motion";
+import { AuthRequestsProvider } from "~utils/auth/auth.provider";
+import {
+  useAuthRequestsLocation,
+  useCurrentAuthRequest
+} from "~utils/auth/auth.hooks";
+import browser from "webextension-polyfill";
+import { LoadingPage } from "~components/LoadingPage";
 
-export default function Auth() {
-  useRemoveCover();
+interface AuthAppProps {
+  initialScreenType: InitialScreenType;
+}
 
-  useEffect(() => {
-    syncLabels();
-  }, []);
+export function AuthApp({ initialScreenType }: AuthAppProps) {
+  const { authRequest, lastCompletedAuthRequest } =
+    useCurrentAuthRequest("any");
+
+  let content: React.ReactElement = null;
+
+  if (initialScreenType === "locked") {
+    content = (
+      <Page>
+        <Unlock />
+      </Page>
+    );
+  } else if (!authRequest) {
+    content = (
+      <LoadingPage
+        label={browser.i18n.getMessage(
+          !lastCompletedAuthRequest ||
+            lastCompletedAuthRequest.status === "accepted"
+            ? `${lastCompletedAuthRequest?.type || "default"}RequestLoading`
+            : `abortingRequestLoading`
+        )}
+      />
+    );
+  } else if (initialScreenType === "default") {
+    content = (
+      <Router hook={useAuthRequestsLocation}>
+        <Route path="/connect" component={Connect} />
+        <Route path="/allowance" component={Allowance} />
+        <Route path="/token" component={Token} />
+        <Route path="/sign" component={Sign} />
+        <Route path="/signKeystone" component={SignKeystone} />
+        <Route path="/signature" component={Signature} />
+        <Route path="/subscription" component={Subscription} />
+        <Route path="/signDataItem" component={SignDataItem} />
+        <Route path="/batchSignDataItem" component={BatchSignDataItem} />
+      </Router>
+    );
+  }
+
+  return <>{content}</>;
+}
+
+export default function AuthAppRoot() {
+  const initialScreenType = useSetUp();
 
   return (
     <ArConnectThemeProvider>
-      <AnimatePresence initial={false}>
-        <Router hook={useHashLocation}>
-          <Route path="/connect" component={Connect} />
-          <Route path="/allowance" component={Allowance} />
-          <Route path="/unlock" component={Unlock} />
-          <Route path="/token" component={Token} />
-          <Route path="/sign" component={Sign} />
-          <Route path="/signKeystone" component={SignKeystone} />
-          <Route path="/signature" component={Signature} />
-          <Route path="/subscription" component={Subscription} />
-          <Route path="/signDataItem" component={SignDataItem} />
-          <Route path="/batchSignDataItem" component={BatchSignDataItem} />
-        </Router>
-      </AnimatePresence>
+      <AuthRequestsProvider initialScreenType={initialScreenType}>
+        <AnimatePresence initial={false}>
+          <AuthApp initialScreenType={initialScreenType} />
+        </AnimatePresence>
+      </AuthRequestsProvider>
     </ArConnectThemeProvider>
   );
 }

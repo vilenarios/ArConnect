@@ -3,12 +3,19 @@ import { v4 as uuid } from "uuid";
 import styled from "styled-components";
 import axios from "axios";
 
+export interface SquircleProps {
+  img?: string;
+  placeholderText?: string;
+  outline?: string;
+}
+
 export default function Squircle({
   children,
   img,
+  placeholderText,
   outline,
   ...props
-}: HTMLProps<HTMLDivElement> & Props) {
+}: HTMLProps<HTMLDivElement> & SquircleProps) {
   const [imageData, setImageData] = useState<string>();
 
   const svgPathId = useMemo(() => uuid(), [img]);
@@ -67,21 +74,31 @@ export default function Squircle({
             </pattern>
           </defs>
         )}
+
         <path
           d={outline ? outlinePath : originalPath}
           fill={imageData ? `url(#${svgPathId})` : "currentColor"}
           strokeWidth={outline ? 2 : undefined}
           stroke={outline}
         />
+
+        {imageData ? null : (
+          <text
+            x="50%"
+            y="50%"
+            alignmentBaseline="central"
+            textAnchor="middle"
+            fill="white"
+            fontSize="2em"
+          >
+            {placeholderText}
+          </text>
+        )}
       </SquircleSvg>
+
       {children}
     </Wrapper>
   );
-}
-
-interface Props {
-  img?: string;
-  outline?: string;
 }
 
 const Wrapper = styled.div`

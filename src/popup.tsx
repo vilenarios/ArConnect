@@ -1,8 +1,7 @@
 import Route, { Page } from "~components/popup/Route";
 import { useHashLocation } from "~utils/hash_router";
-import { syncLabels, useSetUp } from "~wallets";
-import React, { useEffect, useState } from "react";
-import { Router } from "wouter";
+import { useSetUp } from "~wallets";
+import { Router, Switch } from "wouter";
 
 import HistoryProvider from "~components/popup/HistoryProvider";
 
@@ -51,15 +50,9 @@ import { AnimatePresence } from "framer-motion";
 export default function Popup() {
   const initialScreenType = useSetUp();
 
-  useEffect(() => {
-    syncLabels();
-  }, []);
-
   let content: React.ReactElement = null;
 
-  if (initialScreenType === "cover") {
-    content = <Page />;
-  } else if (initialScreenType === "locked") {
+  if (initialScreenType === "locked") {
     content = (
       <Page>
         <Unlock />
@@ -72,7 +65,7 @@ export default function Popup() {
         <p>Generating Wallet...</p>
       </Page>
     );
-  } else {
+  } else if (initialScreenType === "default") {
     content = (
       <Router hook={useHashLocation}>
         <HistoryProvider>
@@ -120,17 +113,21 @@ export default function Popup() {
             {(params: { url: string }) => <AppPermissions url={params?.url} />}
           </Route>
           <Route path="/quick-settings/tokens" component={QuickTokens} />
-          <Route path="/quick-settings/tokens/:id">
-            {(params: { id: string }) => <TokenSettings id={params?.id} />}
-          </Route>
-          <Route path="/quick-settings/tokens/new" component={NewToken} />
+          <Switch>
+            <Route path="/quick-settings/tokens/new" component={NewToken} />
+            <Route path="/quick-settings/tokens/:id">
+              {(params: { id: string }) => <TokenSettings id={params?.id} />}
+            </Route>
+          </Switch>
           <Route path="/quick-settings/contacts" component={Contacts} />
-          <Route path="/quick-settings/contacts/:address">
-            {(params: { address: string }) => (
-              <ContactSettings address={params?.address} />
-            )}
-          </Route>
-          <Route path="/quick-settings/contacts/new" component={NewContact} />
+          <Switch>
+            <Route path="/quick-settings/contacts/new" component={NewContact} />
+            <Route path="/quick-settings/contacts/:address">
+              {(params: { address: string }) => (
+                <ContactSettings address={params?.address} />
+              )}
+            </Route>
+          </Switch>
           <Route
             path="/quick-settings/notifications"
             component={NotificationSettings}

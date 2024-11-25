@@ -1,9 +1,9 @@
 import { isAddress, isTokenType, isValidURL } from "~utils/assertions";
-import type { ModuleFunction } from "~api/background";
-import authenticate from "../connect/auth";
+import type { BackgroundModuleFunction } from "~api/background/background-modules";
+import { requestUserAuthorization } from "../../../utils/auth/auth.utils";
 import { getTokens } from "~tokens";
 
-const background: ModuleFunction<void> = async (
+const background: BackgroundModuleFunction<void> = async (
   appData,
   id: unknown,
   type?: unknown,
@@ -23,13 +23,15 @@ const background: ModuleFunction<void> = async (
   }
 
   // request "add token" popup
-  await authenticate({
-    type: "token",
-    url: appData.appURL,
-    tokenID: id,
-    tokenType: type,
-    dre: dre_node
-  });
+  await requestUserAuthorization(
+    {
+      type: "token",
+      tokenID: id,
+      tokenType: type,
+      dre: dre_node
+    },
+    appData
+  );
 };
 
 export default background;

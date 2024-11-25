@@ -1,10 +1,10 @@
-import type { ModuleFunction } from "~api/background";
+import type { BackgroundModuleFunction } from "~api/background/background-modules";
 import { removeApp } from "~applications";
 import { updateIcon } from "~utils/icon";
 
-const background: ModuleFunction<void> = async (appData) => {
+const background: BackgroundModuleFunction<void> = async (appData) => {
   // remove app
-  await removeApp(appData.appURL);
+  await removeApp(appData.url);
 
   // remove connected icon
   await updateIcon(false);

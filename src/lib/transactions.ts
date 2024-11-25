@@ -1,7 +1,6 @@
 import type GQLResultInterface from "ar-gql/dist/faces";
 import type { GQLEdgeInterface } from "ar-gql/dist/faces";
-import type { RawTransaction } from "~notifications/api";
-import type { TokenInfo } from "~tokens/aoTokens/ao";
+import { type TokenInfo } from "~tokens/aoTokens/ao";
 import { formatAddress } from "~utils/format";
 import { ExtensionStorage } from "~utils/storage";
 import { getTokenInfo } from "~tokens/aoTokens/router";
@@ -9,9 +8,20 @@ import type { Token } from "~tokens/token";
 import BigNumber from "bignumber.js";
 import browser from "webextension-polyfill";
 import { balanceToFractioned, formatFiatBalance } from "~tokens/currency";
+import { timeoutPromise } from "~utils/promises/timeout";
+import { AF_ERROR_QUERY } from "~notifications/utils";
+import { gql } from "~gateways/api";
+import { txHistoryGateways } from "~gateways/gateway";
+import { retryWithDelay } from "~utils/promises/retry";
+import type {
+  RawTransaction,
+  Transaction
+} from "~api/background/handlers/alarms/notifications/notifications-alarm.utils";
 
 let tokens: TokenInfo[] = null;
 export let tokenInfoMap = new Map<string, TokenInfo | Token>();
+
+const AGENT_TOKEN_ADDRESS = "8rbAftv7RaPxFjFk5FGUVAVCSjGQB4JHDcb9P9wCVhQ";
 
 export type ExtendedTransaction = RawTransaction & {
   cursor: string;
@@ -87,11 +97,41 @@ const processTransaction = (transaction: GQLEdgeInterface, type: string) => ({
   date: ""
 });
 
+export async function checkTransactionError(
+  transaction: GQLEdgeInterface | Transaction
+): Promise<boolean> {
+  if (transaction.node.recipient !== AGENT_TOKEN_ADDRESS) {
+    return false;
+  }
+
+  return retryWithDelay(async (attempt) => {
+    const data = await gql(
+      AF_ERROR_QUERY,
+      { messageId: transaction.node.id },
+      txHistoryGateways[attempt % txHistoryGateways.length]
+    );
+
+    if (data?.data === null && (data as any)?.errors?.length > 0) {
+      throw new Error((data as any)?.errors?.[0]?.message || "GraphQL Error");
+    }
+
+    return data.data.transactions.edges.length > 0;
+  }, 2).catch(() => false);
+}
+
 const processAoTransaction = async (
   transaction: GQLEdgeInterface,
   type: string
 ) => {
-  const tokenData = await fetchTokenByProcessId(transaction.node.recipient);
+  const hasError = await checkTransactionError(transaction);
+  if (hasError) {
+    return null;
+  }
+
+  const tokenData = await timeoutPromise(
+    fetchTokenByProcessId(transaction.node.recipient),
+    10000
+  ).catch(() => null);
   const quantityTag = transaction.node.tags.find(
     (tag) => tag.name === "Quantity"
   );
@@ -121,7 +161,7 @@ export const processTransactions = async (
     if (isAo) {
       return Promise.all(
         edges.map((transaction) => processAoTransaction(transaction, type))
-      );
+      ).then((transactions) => transactions.filter(Boolean));
     } else {
       return edges.map((transaction) => processTransaction(transaction, type));
     }
@@ -143,6 +183,8 @@ export const getFormattedAmount = (transaction: ExtendedTransaction) => {
         }).toFixed()} ${transaction.aoInfo.tickerName}`;
       }
       return "";
+    case "printArchive":
+      return `${parseFloat(transaction.node.fee.ar).toFixed(3)} AR`;
     default:
       return "";
   }
@@ -154,8 +196,19 @@ export const getFormattedFiatAmount = (
   currency: string
 ) => {
   try {
-    if (transaction.node.quantity) {
+    if (
+      transaction.node.quantity &&
+      transaction.transactionType !== "printArchive"
+    ) {
       const fiatBalance = BigNumber(transaction.node.quantity.ar).multipliedBy(
+        arPrice
+      );
+      return formatFiatBalance(fiatBalance, currency);
+    } else if (
+      transaction.node.fee &&
+      transaction.transactionType === "printArchive"
+    ) {
+      const fiatBalance = BigNumber(transaction.node.fee.ar).multipliedBy(
         arPrice
       );
       return formatFiatBalance(fiatBalance, currency);
@@ -178,6 +231,8 @@ export const getTransactionDescription = (transaction: ExtendedTransaction) => {
       return `${browser.i18n.getMessage("received")} ${
         transaction.aoInfo.tickerName
       }`;
+    case "printArchive":
+      return browser.i18n.getMessage("print_archived");
     default:
       return "";
   }

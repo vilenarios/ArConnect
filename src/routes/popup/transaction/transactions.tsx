@@ -11,12 +11,13 @@ import {
   AO_RECEIVER_QUERY_WITH_CURSOR,
   AO_SENT_QUERY_WITH_CURSOR,
   AR_RECEIVER_QUERY_WITH_CURSOR,
-  AR_SENT_QUERY_WITH_CURSOR
+  AR_SENT_QUERY_WITH_CURSOR,
+  PRINT_ARWEAVE_QUERY_WITH_CURSOR
 } from "~notifications/utils";
 import { useHistory } from "~utils/hash_router";
 import { getArPrice } from "~lib/coingecko";
 import useSetting from "~settings/hook";
-import { suggestedGateways } from "~gateways/gateway";
+import { printTxWorkingGateways, txHistoryGateways } from "~gateways/gateway";
 import { ButtonV2, Loading } from "@arconnect/components";
 import type GQLResultInterface from "ar-gql/dist/faces";
 import {
@@ -30,9 +31,10 @@ import {
   getTransactionDescription
 } from "~lib/transactions";
 import BigNumber from "bignumber.js";
+import { retryWithDelay } from "~utils/promises/retry";
 
-const defaultCursors = ["", "", "", ""];
-const defaultHasNextPages = [true, true, true, true];
+const defaultCursors = ["", "", "", "", ""];
+const defaultHasNextPages = [true, true, true, true, true];
 
 export default function Transactions() {
   const [cursors, setCursors] = useState(defaultCursors);
@@ -63,18 +65,34 @@ export default function Transactions() {
         AR_RECEIVER_QUERY_WITH_CURSOR,
         AR_SENT_QUERY_WITH_CURSOR,
         AO_SENT_QUERY_WITH_CURSOR,
-        AO_RECEIVER_QUERY_WITH_CURSOR
+        AO_RECEIVER_QUERY_WITH_CURSOR,
+        PRINT_ARWEAVE_QUERY_WITH_CURSOR
       ];
 
-      const [rawReceived, rawSent, rawAoSent, rawAoReceived] =
+      const [rawReceived, rawSent, rawAoSent, rawAoReceived, rawPrintArchive] =
         await Promise.allSettled(
           queries.map((query, idx) => {
             return hasNextPages[idx]
-              ? gql(
-                  query,
-                  { address: activeAddress, after: cursors[idx] },
-                  suggestedGateways[1]
-                )
+              ? retryWithDelay(async (attempt) => {
+                  const data = await gql(
+                    query,
+                    { address: activeAddress, after: cursors[idx] },
+                    idx !== 4
+                      ? txHistoryGateways[attempt % txHistoryGateways.length]
+                      : printTxWorkingGateways[
+                          attempt % printTxWorkingGateways.length
+                        ]
+                  );
+                  if (
+                    data?.data === null &&
+                    (data as any)?.errors?.length > 0
+                  ) {
+                    throw new Error(
+                      (data as any)?.errors?.[0]?.message || "GraphQL Error"
+                    );
+                  }
+                  return data;
+                }, 2)
               : ({
                   data: {
                     transactions: {
@@ -94,9 +112,13 @@ export default function Transactions() {
         "aoReceived",
         true
       );
+      const printArchive = await processTransactions(
+        rawPrintArchive,
+        "printArchive"
+      );
 
       setCursors((prev) =>
-        [received, sent, aoSent, aoReceived].map(
+        [received, sent, aoSent, aoReceived, printArchive].map(
           (data, idx) => data[data.length - 1]?.cursor ?? prev[idx]
         )
       );
@@ -105,7 +127,7 @@ export default function Transactions() {
       received = received.filter((tx) => BigNumber(tx.node.quantity.ar).gt(0));
 
       setHasNextPages(
-        [rawReceived, rawSent, rawAoSent, rawAoReceived].map(
+        [rawReceived, rawSent, rawAoSent, rawAoReceived, rawPrintArchive].map(
           (result) =>
             (result.status === "fulfilled" &&
               result.value?.data?.transactions?.pageInfo?.hasNextPage) ??
@@ -117,7 +139,8 @@ export default function Transactions() {
         ...sent,
         ...received,
         ...aoReceived,
-        ...aoSent
+        ...aoSent,
+        ...printArchive
       ];
 
       combinedTransactions = combinedTransactions.map((transaction) => {
