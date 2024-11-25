@@ -1,6 +1,5 @@
 import Route, { Page } from "~components/popup/Route";
 import { useHashLocation } from "~utils/hash_router";
-import { useSetUp } from "~wallets";
 import { Router, Switch } from "wouter";
 
 import HistoryProvider from "~components/popup/HistoryProvider";
@@ -46,10 +45,16 @@ import NotificationSettings from "~routes/popup/settings/notifications";
 import GenerateQR from "~routes/popup/settings/wallets/[address]/qr";
 import { ArConnectThemeProvider } from "~components/hardware/HardwareWalletTheme";
 import { AnimatePresence } from "framer-motion";
+import { useBrowserExtensionWalletSetUp } from "~wallets/setup/browser-extension/browser-extension-wallet-setup.hook";
+import type { InitialScreenType } from "~wallets/setup/wallet-setup.types";
 
-export default function Popup() {
-  const initialScreenType = useSetUp();
+interface ArConnectBrowserExtensionAppProps {
+  initialScreenType: InitialScreenType;
+}
 
+export function ArConnectBrowserExtensionApp({
+  initialScreenType
+}: ArConnectBrowserExtensionAppProps) {
   let content: React.ReactElement = null;
 
   if (initialScreenType === "locked") {
@@ -190,9 +195,19 @@ export default function Popup() {
     );
   }
 
+  return <>{content}</>;
+}
+
+export function ArConnectBrowserExtensionAppRoot() {
+  const initialScreenType = useBrowserExtensionWalletSetUp();
+
   return (
     <ArConnectThemeProvider>
-      <AnimatePresence initial={false}>{content}</AnimatePresence>
+      <AnimatePresence initial={false}>
+        <ArConnectBrowserExtensionApp initialScreenType={initialScreenType} />
+      </AnimatePresence>
     </ArConnectThemeProvider>
   );
 }
+
+export default ArConnectBrowserExtensionAppRoot;

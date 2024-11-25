@@ -32,9 +32,9 @@ import {
 } from "~api/modules/sign/transaction_builder";
 import { isomorphicOnMessage } from "~utils/messaging/messaging.utils";
 import type { IBridgeMessage } from "@arconnect/webext-bridge";
-import type { InitialScreenType } from "~wallets";
 import { log, LOG_GROUP } from "~utils/log/log.utils";
 import { isError } from "~utils/error/error.utils";
+import type { InitialScreenType } from "~wallets/setup/wallet-setup.types";
 
 interface AuthRequestContextState {
   authRequests: AuthRequest[];

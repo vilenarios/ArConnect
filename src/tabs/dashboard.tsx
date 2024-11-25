@@ -1,12 +1,12 @@
 import { useHashLocation } from "~utils/hash_router";
-import { useSetUp } from "~wallets";
 import { Router, Route } from "wouter";
 
 import Settings from "~routes/dashboard";
 import { ArConnectThemeProvider } from "~components/hardware/HardwareWalletTheme";
+import { useBrowserExtensionWalletSetUp } from "~wallets/setup/browser-extension/browser-extension-wallet-setup.hook";
 
 export default function Dashboard() {
-  useSetUp();
+  useBrowserExtensionWalletSetUp();
 
   return (
     <ArConnectThemeProvider>

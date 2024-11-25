@@ -1,5 +1,5 @@
-import Popup from "~popup";
+import { ArConnectBrowserExtensionAppRoot } from "~popup";
 
 export default function () {
-  return <Popup />;
+  return <ArConnectBrowserExtensionAppRoot />;
 }

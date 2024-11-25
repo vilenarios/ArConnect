@@ -9,7 +9,7 @@ import Setup from "~routes/welcome/setup";
 import makeCachedMatcher from "wouter/matcher";
 import GettingStarted from "~routes/welcome/gettingStarted";
 import { ArConnectThemeProvider } from "~components/hardware/HardwareWalletTheme";
-import { useRemoveCover } from "~wallets";
+import { useRemoveCover } from "~wallets/setup/non/non-wallet-setup.hook";
 
 export default function Welcome() {
   useRemoveCover();

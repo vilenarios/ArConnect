@@ -1,5 +1,4 @@
 import Route, { Page } from "~components/popup/Route";
-import { useSetUp, type InitialScreenType } from "~wallets";
 import { Router } from "wouter";
 
 import { ArConnectThemeProvider } from "~components/hardware/HardwareWalletTheme";
@@ -22,6 +21,8 @@ import {
 } from "~utils/auth/auth.hooks";
 import browser from "webextension-polyfill";
 import { LoadingPage } from "~components/LoadingPage";
+import type { InitialScreenType } from "~wallets/setup/wallet-setup.types";
+import { useBrowserExtensionWalletSetUp } from "~wallets/setup/browser-extension/browser-extension-wallet-setup.hook";
 
 interface AuthAppProps {
   initialScreenType: InitialScreenType;
@@ -32,6 +33,8 @@ export function AuthApp({ initialScreenType }: AuthAppProps) {
     useCurrentAuthRequest("any");
 
   let content: React.ReactElement = null;
+
+  // TODO: if initialScreenType === "generating" there was an error and this window muust be closed...
 
   if (initialScreenType === "locked") {
     content = (
@@ -69,8 +72,8 @@ export function AuthApp({ initialScreenType }: AuthAppProps) {
   return <>{content}</>;
 }
 
-export default function AuthAppRoot() {
-  const initialScreenType = useSetUp();
+export function AuthAppRoot() {
+  const initialScreenType = useBrowserExtensionWalletSetUp();
 
   return (
     <ArConnectThemeProvider>
@@ -82,3 +85,5 @@ export default function AuthAppRoot() {
     </ArConnectThemeProvider>
   );
 }
+
+export default AuthAppRoot;

@@ -12,12 +12,10 @@ import {
 } from "./encryption";
 import {
   checkPassword,
-  getDecryptionKey,
   getDecryptionKeyOrRequestUnlock,
   setDecryptionKey
 } from "./auth";
 import { ArweaveSigner } from "arbundles";
-import { handleSyncLabelsAlarm } from "~api/background/handlers/alarms/sync-labels/sync-labels-alarm.handler";
 import {
   DEFAULT_MODULE_APP_DATA,
   ERR_MSG_NO_ACTIVE_WALLET,
@@ -57,113 +55,6 @@ export async function getWallets() {
   let wallets: StoredWallet[] = await ExtensionStorage.get("wallets");
 
   return wallets || [];
-}
-
-export type InitialScreenType = "cover" | "locked" | "generating" | "default";
-
-/**
- * Hook that opens a new tab if ArConnect has not been set up yet
- */
-export function useSetUp() {
-  console.log(
-    "useSetUp() + PLASMO_PUBLIC_APP_TYPE =",
-    process.env.PLASMO_PUBLIC_APP_TYPE
-  );
-
-  const [initialScreenType, setInitialScreenType] =
-    useState<InitialScreenType>("cover");
-
-  // TODO: Get all usages of `getDecryptionKey` as we won't be using this in the embedded wallet...
-
-  // TODO: There's no "disconnect" in the embedded wallet.
-
-  useEffect(() => {
-    async function checkWalletState() {
-      const [activeAddress, wallets, decryptionKey] = await Promise.all([
-        getActiveAddress(),
-        getWallets(),
-        getDecryptionKey()
-      ]);
-
-      const hasWallets = activeAddress && wallets.length > 0;
-
-      let nextInitialScreenType: InitialScreenType = "cover";
-
-      switch (process.env.PLASMO_PUBLIC_APP_TYPE) {
-        // `undefined` has been added here just in case, so that the default behavior if nothing is specific is
-        // building the browser extension, just like it was before adding support for the embedded wallet:
-        case undefined:
-        case "extension": {
-          if (!hasWallets) {
-            // This should only happen when opening the regular popup, but not for the auth popup, as the
-            // `createAuthPopup` will open the welcome page directly, instead of the popup, if needed:
-
-            openOrSelectWelcomePage(true);
-
-            window.top.close();
-          } else if (!decryptionKey) {
-            nextInitialScreenType = "locked";
-          } else {
-            nextInitialScreenType = "default";
-          }
-
-          break;
-        }
-
-        case "embedded": {
-          nextInitialScreenType = !hasWallets ? "generating" : "default";
-
-          break;
-        }
-
-        default: {
-          throw new Error(
-            `Unknown APP_TYPE = ${process.env.PLASMO_PUBLIC_APP_TYPE}`
-          );
-        }
-      }
-
-      setInitialScreenType(nextInitialScreenType);
-
-      const coverElement = document.getElementById("cover");
-
-      if (coverElement) {
-        if (nextInitialScreenType === "cover") {
-          coverElement.removeAttribute("aria-hidden");
-        } else {
-          coverElement.setAttribute("aria-hidden", "true");
-        }
-      }
-    }
-
-    ExtensionStorage.watch({
-      decryption_key: checkWalletState
-    });
-
-    checkWalletState();
-
-    handleSyncLabelsAlarm();
-
-    return () => {
-      ExtensionStorage.unwatch({
-        decryption_key: checkWalletState
-      });
-    };
-  }, []);
-
-  return initialScreenType;
-}
-
-export function useRemoveCover() {
-  console.log("useRemoveCover()");
-
-  useEffect(() => {
-    const coverElement = document.getElementById("cover");
-
-    if (coverElement) {
-      coverElement.setAttribute("aria-hidden", "true");
-    }
-  }, []);
 }
 
 /**

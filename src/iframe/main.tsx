@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import Popup from "../popup";
 import { setupBackgroundService } from "~api/background/background-setup";
+import ArConnectEmbeddedAppRoot from "~iframe/iframe";
 
 import "../../assets/popup.css";
 
@@ -9,7 +9,7 @@ import "../../assets/popup.css";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <Popup />
+    <ArConnectEmbeddedAppRoot />
   </StrictMode>
 );
 

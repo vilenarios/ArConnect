@@ -8,7 +8,6 @@ export default defineConfig({
   plugins: [react()],
   define: {
     "process.env": {
-      PLASMO_PUBLIC_APP_TYPE: "embedded",
       ...(process?.env || {})
     }
   },
