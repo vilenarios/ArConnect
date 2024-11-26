@@ -50,7 +50,7 @@ import redstone from "redstone-api";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import Collectible from "~components/popup/Collectible";
 import { findGateway } from "~gateways/wayfinder";
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 import { DREContract, DRENode } from "@arconnect/warp-dre";
 import { isUToken } from "~utils/send";
 import HeadV2 from "~components/popup/HeadV2";
@@ -68,6 +68,7 @@ import { useAoTokens } from "~tokens/aoTokens/ao";
 import BigNumber from "bignumber.js";
 import { AO_NATIVE_TOKEN } from "~utils/ao_import";
 import { AnnouncementPopup } from "./announcement";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
 // default size for the qty text
 const defaulQtytSize = 3.7;
@@ -97,7 +98,13 @@ export interface TransactionData {
   isAo?: boolean;
 }
 
-export default function Send({ id }: Props) {
+export interface SendViewParams {
+  id?: string;
+}
+
+export type SendViewProps = CommonRouteProps<SendViewParams>;
+
+export function SendView({ params: { id } }: SendViewProps) {
   // Segment
   useEffect(() => {
     trackPage(PageType.SEND);
@@ -753,10 +760,6 @@ const SendForm = styled.div`
   gap: 15px;
   justify-content: space-between;
 `;
-
-interface Props {
-  id?: string;
-}
 
 type QtyMode = "fiat" | "token";
 

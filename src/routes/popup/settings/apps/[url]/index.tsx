@@ -25,8 +25,15 @@ import { defaultGateway, suggestedGateways, testnets } from "~gateways/gateway";
 import HeadV2 from "~components/popup/HeadV2";
 import { useLocation } from "wouter";
 import { ToggleSwitch } from "~routes/popup/subscriptions/subscriptionDetails";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-export default function AppSettings({ url }: Props) {
+export interface AppSettingsViewParams {
+  url: string;
+}
+
+export type AppSettingsViewProps = CommonRouteProps<AppSettingsViewParams>;
+
+export function AppSettingsView({ params: { url } }: AppSettingsViewProps) {
   // app settings
   const app = new Application(decodeURIComponent(url));
   const [settings, updateSettings] = app.hook();
@@ -370,10 +377,6 @@ export default function AppSettings({ url }: Props) {
       </Wrapper>
     </>
   );
-}
-
-interface Props {
-  url: string;
 }
 
 const Wrapper = styled.div`

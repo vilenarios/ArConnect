@@ -6,7 +6,7 @@ import {
   mergeAndSortNotifications
 } from "~utils/notifications";
 import aoLogo from "url:/assets/ecosystem/ao-logo.svg";
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 import { Loading } from "@arconnect/components";
 import { formatAddress } from "~utils/format";
 import HeadV2 from "~components/popup/HeadV2";
@@ -24,7 +24,7 @@ import {
 } from "~subscriptions/subscription";
 import { checkTransactionError } from "~lib/transactions";
 
-export default function Notifications() {
+export function NotificationsView() {
   const [notifications, setNotifications] = useState<Transaction[]>([]);
   const [formattedTxMsgs, setFormattedTxMsgs] = useState<string[]>([]);
   const [subscriptions, setSubscriptions] = useState<SubscriptionData[]>([]);

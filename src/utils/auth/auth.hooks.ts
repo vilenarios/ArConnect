@@ -64,15 +64,3 @@ export function useCurrentAuthRequest<T extends AuthType>(
     rejectRequest
   };
 }
-
-export const useAuthRequestsLocation: BaseLocationHook = () => {
-  const { authRequest: currentAuthRequest } = useCurrentAuthRequest("any");
-  const currentAuthRequestType = `/${currentAuthRequest.type}`;
-  const currentAuthRequestID = currentAuthRequest.authID || "";
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [currentAuthRequestID]);
-
-  return [currentAuthRequestType, (path: string) => ""];
-};

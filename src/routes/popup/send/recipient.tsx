@@ -18,13 +18,24 @@ import type Transaction from "arweave/web/lib/transaction";
 import { useEffect, useMemo, useState } from "react";
 import { useStorage } from "@plasmohq/storage/hook";
 import { findGateway } from "~gateways/wayfinder";
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 import browser from "webextension-polyfill";
 import Head from "~components/popup/Head";
 import styled from "styled-components";
 import Arweave from "arweave";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-export default function Recipient({ tokenID, qty, message }: Props) {
+export interface RecipientViewParams {
+  tokenID: string;
+  qty: string;
+  message?: string;
+}
+
+export type RecipientViewProps = CommonRouteProps<RecipientViewParams>;
+
+export function RecipientView({
+  params: { tokenID, qty, message }
+}: RecipientViewProps) {
   // transaction target input
   const targetInput = useInput();
 
@@ -221,9 +232,3 @@ const Address = styled(Text).attrs({
     transform: scale(0.97);
   }
 `;
-
-interface Props {
-  tokenID: string;
-  qty: string;
-  message?: string;
-}

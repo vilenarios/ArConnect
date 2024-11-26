@@ -40,8 +40,9 @@ import Permissions from "../../components/auth/Permissions";
 import { Flex } from "~routes/popup/settings/apps/[url]";
 import { HeadAuth } from "~components/HeadAuth";
 import { AuthButtons } from "~components/auth/AuthButtons";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-export default function Connect() {
+export function ConnectAuthRequestView() {
   // active address
   const [activeAddress] = useStorage<string>({
     key: "active_address",

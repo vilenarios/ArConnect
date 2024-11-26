@@ -27,7 +27,7 @@ import Arweave from "arweave";
 import { svgie } from "~utils/svgies";
 import { Action } from "./WalletHeader";
 import copy from "copy-to-clipboard";
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 
 export default function WalletSwitcher({
   open,

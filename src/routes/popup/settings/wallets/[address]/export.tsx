@@ -16,8 +16,17 @@ import browser from "webextension-polyfill";
 import styled from "styled-components";
 import HeadV2 from "~components/popup/HeadV2";
 import { useLocation } from "wouter";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-export default function ExportWallet({ address }: Props) {
+export interface ExportWalletViewParams {
+  address: string;
+}
+
+export type ExportWalletViewProps = CommonRouteProps<ExportWalletViewParams>;
+
+export function ExportWalletView({
+  params: { address }
+}: ExportWalletViewProps) {
   const [, setLocation] = useLocation();
 
   // wallets
@@ -111,7 +120,3 @@ const Wrapper = styled.div`
   flex-direction: column;
   padding: 0 1rem;
 `;
-
-interface Props {
-  address: string;
-}

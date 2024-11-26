@@ -5,7 +5,7 @@ import HistoryProvider from "~components/popup/HistoryProvider";
 import { NavigationBar } from "~components/popup/Navigation";
 import { Page } from "~components/popup/Route";
 import { AuthRequestsProvider } from "~utils/auth/auth.provider";
-import { useHashLocation } from "~utils/hash_router";
+import { useHashLocation } from "~wallets/router/hash/hash-router.hook";
 import { useBrowserExtensionWalletSetUp } from "~wallets/setup/browser-extension/browser-extension-wallet-setup.hook";
 import type { InitialScreenType } from "~wallets/setup/wallet-setup.types";
 

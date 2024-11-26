@@ -21,7 +21,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { findGateway } from "~gateways/wayfinder";
 import Arweave from "arweave";
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 import { fallbackGateway, type Gateway } from "~gateways/gateway";
 import AnimatedQRScanner from "~components/hardware/AnimatedQRScanner";
 import AnimatedQRPlayer from "~components/hardware/AnimatedQRPlayer";
@@ -65,19 +65,26 @@ import { SubscriptionStatus } from "~subscriptions/subscription";
 import { checkPassword } from "~wallets/auth";
 import BigNumber from "bignumber.js";
 import { SignType } from "@keystonehq/bc-ur-registry-arweave";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-interface Props {
+function formatNumber(amount: string, decimalPlaces: number = 2): string {
+  return BigNumber(amount).toFixed(decimalPlaces);
+}
+
+export interface ConfirmViewParams {
   tokenID: string;
   qty?: number;
   recipient?: string;
   subscription?: boolean;
 }
 
-function formatNumber(amount: string, decimalPlaces: number = 2): string {
-  return BigNumber(amount).toFixed(decimalPlaces);
-}
+export type ConfirmViewProps = CommonRouteProps<ConfirmViewParams>;
 
-export default function Confirm({ tokenID, qty, subscription }: Props) {
+export function ConfirmView({
+  params: { tokenID, qty: qtyParam, subscription }
+}: ConfirmViewProps) {
+  const qty = Number(qtyParam || "0");
+
   // TODO: Need to get Token information
   const [token, setToken] = useState<Token | undefined>();
   const [amount, setAmount] = useState<string>("");

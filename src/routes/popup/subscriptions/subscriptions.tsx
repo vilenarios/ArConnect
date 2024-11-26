@@ -10,7 +10,7 @@ import Squircle from "~components/Squircle";
 import browser from "webextension-polyfill";
 import { getSubscriptionData, updateSubscription } from "~subscriptions";
 import dayjs from "dayjs";
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 import {
   SettingIconWrapper,
   SettingImage
@@ -19,7 +19,7 @@ import { useTheme } from "~utils/theme";
 import type { DisplayTheme } from "@arconnect/components";
 import { PageType, trackPage } from "~utils/analytics";
 
-export default function Subscriptions() {
+export function SubscriptionsView() {
   const [subData, setSubData] = useState<SubscriptionData[] | null>(null);
   const theme = useTheme();
 

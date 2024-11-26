@@ -4,7 +4,7 @@ import AddToken from "~components/dashboard/subsettings/AddToken";
 import styled from "styled-components";
 import { useLocation } from "wouter";
 
-export default function NewToken() {
+export function NewTokenSettingsView() {
   const [, setLocation] = useLocation();
 
   return (

@@ -25,8 +25,15 @@ import copy from "copy-to-clipboard";
 import { formatAddress } from "~utils/format";
 import HeadV2 from "~components/popup/HeadV2";
 import { useLocation } from "wouter";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-export default function Wallet({ address }: Props) {
+export interface WalletViewParams {
+  address: string;
+}
+
+export type WalletViewProps = CommonRouteProps<WalletViewParams>;
+
+export function WalletView({ params: { address } }: WalletViewProps) {
   // wallets
   const [wallets, setWallets] = useStorage<StoredWallet[]>(
     {

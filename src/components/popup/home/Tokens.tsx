@@ -1,6 +1,6 @@
 import { Heading, TokenCount, ViewAll } from "../Title";
 import { Spacer, Text } from "@arconnect/components";
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 import { useTokens } from "~tokens";
 import { useMemo } from "react";
 import browser from "webextension-polyfill";

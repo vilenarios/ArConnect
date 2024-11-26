@@ -14,7 +14,7 @@ import WalletListItem from "~components/dashboard/list/WalletListItem";
 import SearchInput from "~components/dashboard/SearchInput";
 import HeadV2 from "~components/popup/HeadV2";
 
-export default function Wallets() {
+export function WalletsView() {
   // wallets
   const [wallets, setWallets] = useStorage<StoredWallet[]>(
     {

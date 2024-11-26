@@ -10,7 +10,7 @@ import { InformationIcon } from "@iconicicons/react";
 import Checkbox from "~components/Checkbox";
 import { useLocation } from "wouter";
 
-export default function NotificationSettings() {
+export function NotificationSettingsView() {
   const [, setLocation] = useLocation();
 
   const [notificationSettings, setNotificationSettings] = useStorage(

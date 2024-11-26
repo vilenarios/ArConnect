@@ -1,4 +1,4 @@
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 import { Button, ButtonV2 } from "@arconnect/components";
 import browser from "webextension-polyfill";
 import styled from "styled-components";

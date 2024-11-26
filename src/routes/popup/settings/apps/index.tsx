@@ -13,7 +13,7 @@ import HeadV2 from "~components/popup/HeadV2";
 import useActiveTab from "~applications/useActiveTab";
 import { getAppURL } from "~utils/format";
 
-export default function Applications() {
+export function ApplicationsView() {
   // connected apps
   const [connectedApps] = useStorage<string[]>(
     {

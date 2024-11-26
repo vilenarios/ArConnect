@@ -25,7 +25,7 @@ import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { HeadAuth } from "~components/HeadAuth";
 import { AuthButtons } from "~components/auth/AuthButtons";
 
-export default function Allowance() {
+export function AllowanceAuthRequestView() {
   const arweave = new Arweave(defaultGateway);
 
   const { authRequest, acceptRequest, rejectRequest } =

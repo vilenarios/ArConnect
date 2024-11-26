@@ -21,7 +21,7 @@ import arLogoDark from "url:/assets/ar/logo_dark.png";
 import { getUserAvatar } from "~lib/avatar";
 import SearchInput from "~components/dashboard/SearchInput";
 
-export default function Tokens() {
+export function TokensSettingsView() {
   // tokens
   const [tokens] = useStorage<Token[]>(
     {

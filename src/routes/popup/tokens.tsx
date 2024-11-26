@@ -1,4 +1,4 @@
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 import { ButtonV2, Section, useToasts, Loading } from "@arconnect/components";
 import { EditIcon } from "@iconicicons/react";
 import {
@@ -20,7 +20,7 @@ import { ExtensionStorage } from "~utils/storage";
 import { syncAoTokens } from "~tokens/aoTokens/sync";
 import { useStorage } from "@plasmohq/storage/hook";
 
-export default function Tokens() {
+export function TokensView() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasNextPage, setHasNextPage] = useState<boolean | undefined>(
     undefined

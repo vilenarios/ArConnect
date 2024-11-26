@@ -10,17 +10,15 @@ import copy from "copy-to-clipboard";
 import { useEffect, type MouseEventHandler, useState, useMemo } from "react";
 import { PageType, trackPage } from "~utils/analytics";
 import HeadV2 from "~components/popup/HeadV2";
-import { Degraded, WarningWrapper } from "./send";
-import { WarningIcon } from "~components/popup/Token";
-import { useActiveWallet } from "~wallets/hooks";
 import { useLocation } from "wouter";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-interface ReceiveProps {
+interface ReceiveViewProps extends CommonRouteProps {
   walletName?: string;
   walletAddress?: string;
 }
 
-export default function Receive({ walletName, walletAddress }: ReceiveProps) {
+export function ReceiveView({ walletName, walletAddress }: ReceiveViewProps) {
   // active address
   const [activeAddress] = useStorage<string>({
     key: "active_address",

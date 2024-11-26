@@ -9,9 +9,9 @@ import BuyButton from "~components/popup/home/BuyButton";
 import { PageType, trackPage } from "~utils/analytics";
 import { useStorage } from "@plasmohq/storage/hook";
 import type { Quote } from "~lib/onramper";
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 
-export default function PendingPurchase() {
+export function PendingPurchase() {
   const theme = useTheme();
   const [push] = useHistory();
 

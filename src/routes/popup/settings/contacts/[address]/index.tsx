@@ -3,12 +3,18 @@ import browser from "webextension-polyfill";
 import { default as ContactSettingsComponent } from "~components/dashboard/subsettings/ContactSettings";
 import styled from "styled-components";
 import { useLocation } from "wouter";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-interface ContactSettingsProps {
+export interface ContactSettingsViewParams {
   address: string;
 }
 
-export default function ContactSettings({ address }: ContactSettingsProps) {
+export type ContactSettingsViewProps =
+  CommonRouteProps<ContactSettingsViewParams>;
+
+export function ContactSettingsView({
+  params: { address }
+}: ContactSettingsViewProps) {
   const [, setLocation] = useLocation();
 
   return (

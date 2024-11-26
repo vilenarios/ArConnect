@@ -50,7 +50,7 @@ import {
   Users01
 } from "@untitled-ui/icons-react";
 import { svgie } from "~utils/svgies";
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 import WalletMenu from "./WalletMenu";
 
 export default function WalletHeader() {

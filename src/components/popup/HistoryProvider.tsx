@@ -5,7 +5,9 @@ import {
   type HistoryAction,
   HistoryContext,
   type PushAction
-} from "~utils/hash_router";
+} from "~wallets/router/hash/hash-router.hook";
+
+// TODO: Do we really need this instead of simply calling history.back()?
 
 export default function HistoryProvider({ children }: PropsWithChildren<{}>) {
   // current history action

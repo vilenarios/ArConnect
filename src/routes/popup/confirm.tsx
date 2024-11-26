@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 import browser from "webextension-polyfill";
 import styled from "styled-components";
 import { ExtensionStorage } from "~utils/storage";
@@ -10,8 +10,18 @@ import HeadV2 from "~components/popup/HeadV2";
 import { Line } from "./purchase";
 import { useStorage } from "@plasmohq/storage/hook";
 import { formatAddress } from "~utils/format";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-export default function ConfirmPurchase({ id }: { id: string }) {
+export interface ConfirmPurchaseViewParams {
+  quoteId: string;
+}
+
+export type ConfirmPurchaseViewProps =
+  CommonRouteProps<ConfirmPurchaseViewParams>;
+
+export function ConfirmPurchaseView({
+  params: { quoteId: id }
+}: ConfirmPurchaseViewProps) {
   const [push] = useHistory();
 
   const [activeAddress] = useStorage<string>({

@@ -9,7 +9,7 @@ import {
 import browser from "webextension-polyfill";
 import styled from "styled-components";
 import { useLocation } from "wouter";
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 import { useTheme } from "~utils/theme";
 
 const buttons = [

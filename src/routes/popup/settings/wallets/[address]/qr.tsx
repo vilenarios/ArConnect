@@ -35,8 +35,15 @@ import {
 } from "~routes/popup/receive";
 import { dataToFrames } from "qrloop";
 import { checkPassword } from "~wallets/auth";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-export default function GenerateQR({ address }: { address: string }) {
+export interface GenerateQRViewParams {
+  address: string;
+}
+
+export type GenerateQRViewProps = CommonRouteProps<GenerateQRViewParams>;
+
+export function GenerateQRView({ params: { address } }: GenerateQRViewProps) {
   const [wallet, setWallet] = useState<DecryptedWallet>(null);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);

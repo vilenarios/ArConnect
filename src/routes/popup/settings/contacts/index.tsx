@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { default as ContactsComponent } from "~components/dashboard/Contacts";
 import { useLocation } from "wouter";
 
-export default function Contacts() {
+export function ContactsView() {
   const [, setLocation] = useLocation();
 
   return (

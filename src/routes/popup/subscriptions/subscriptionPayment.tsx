@@ -20,12 +20,22 @@ import { ArrowRightIcon } from "@iconicicons/react";
 import { useStorage } from "@plasmohq/storage/hook";
 import { ExtensionStorage } from "~utils/storage";
 import { ButtonV2, useToasts } from "@arconnect/components";
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 import { getPrice } from "~lib/coingecko";
 import useSetting from "~settings/hook";
 import BigNumber from "bignumber.js";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-export default function SubscriptionPayment({ id }: { id: string }) {
+export interface SubscriptionPaymentViewParams {
+  id?: string;
+}
+
+export type SubscriptionPaymentViewProps =
+  CommonRouteProps<SubscriptionPaymentViewParams>;
+
+export function SubscriptionPaymentView({
+  params: { id }
+}: SubscriptionPaymentViewProps) {
   const [subData, setSubData] = useState<SubscriptionData | null>(null);
   const [price, setPrice] = useState<string>("--");
   const [currency] = useSetting<string>("currency");

@@ -19,8 +19,15 @@ import { formatAddress } from "~utils/format";
 import { CopyButton } from "~components/dashboard/subsettings/WalletSettings";
 import HeadV2 from "~components/popup/HeadV2";
 import { useLocation } from "wouter";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-export default function TokenSettings({ id }: Props) {
+export interface TokenSettingsParams {
+  id: string;
+}
+
+export type TokenSettingsProps = CommonRouteProps<TokenSettingsParams>;
+
+export function TokenSettingsView({ params: { id } }: TokenSettingsProps) {
   // tokens
   const [tokens, setTokens] = useStorage<Token[]>(
     {
@@ -165,10 +172,6 @@ const TokenAddress = styled(Text).attrs({
   align-items: center;
   gap: 0.37rem;
 `;
-
-interface Props {
-  id: string;
-}
 
 const Property = styled.div`
   display: flex;

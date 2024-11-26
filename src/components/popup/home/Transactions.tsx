@@ -13,7 +13,7 @@ import {
   AR_SENT_QUERY,
   PRINT_ARWEAVE_QUERY
 } from "~notifications/utils";
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 import { getArPrice } from "~lib/coingecko";
 import useSetting from "~settings/hook";
 import { printTxWorkingGateways, txHistoryGateways } from "~gateways/gateway";

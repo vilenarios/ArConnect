@@ -16,8 +16,15 @@ import Title from "~components/popup/Title";
 import styled from "styled-components";
 import { useGateway } from "~gateways/wayfinder";
 import HeadV2 from "~components/popup/HeadV2";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-export default function Collectible({ id }: Props) {
+export interface CollectibleViewParams {
+  id: string;
+}
+
+export type CollectibleViewProps = CommonRouteProps<CollectibleViewParams>;
+
+export function CollectibleView({ params: { id } }: CollectibleViewProps) {
   // load state
   const [state, setState] = useState<TokenState>();
   const [loading, setLoading] = useState(false);
@@ -145,10 +152,6 @@ export default function Collectible({ id }: Props) {
       <AnimatePresence>{loading && <TokenLoading />}</AnimatePresence>
     </>
   );
-}
-
-interface Props {
-  id: string;
 }
 
 const Price = styled(Text)`

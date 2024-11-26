@@ -13,8 +13,16 @@ import { ListItem, ListItemIcon } from "@arconnect/components";
 import type { Icon } from "~settings/setting";
 import type { HTMLProps, ReactNode } from "react";
 import styled from "styled-components";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-export default function QuickSettings({ params }: Props) {
+export interface QuickSettingsViewParams {
+  setting?: string;
+  subsetting?: string;
+}
+
+export type QuickSettingsViewProps = CommonRouteProps<QuickSettingsViewParams>;
+
+export function QuickSettingsView({ params }: QuickSettingsViewProps) {
   // router location
   const [, setLocation] = useLocation();
 
@@ -77,13 +85,6 @@ function SettingListItem({
       <ListItemIcon as={icon} />
     </ListItem>
   );
-}
-
-interface Props {
-  params: {
-    setting?: string;
-    subsetting?: string;
-  };
 }
 
 interface Setting extends SettingItemData {

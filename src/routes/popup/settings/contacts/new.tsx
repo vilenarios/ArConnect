@@ -4,7 +4,7 @@ import AddContact from "~components/dashboard/subsettings/AddContact";
 import styled from "styled-components";
 import { useLocation } from "wouter";
 
-export default function NewContact() {
+export function NewContactView() {
   const [, setLocation] = useLocation();
 
   return (

@@ -32,17 +32,23 @@ import {
 } from "~components/dashboard/list/BaseElement";
 import { formatAddress } from "~utils/format";
 import { useTheme } from "~utils/theme";
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 import { getPrice } from "~lib/coingecko";
 import useSetting from "~settings/hook";
 import { PageType, trackPage } from "~utils/analytics";
 import BigNumber from "bignumber.js";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-interface Props {
+export interface SubscriptionDetailsViewParams {
   id?: string;
 }
 
-export default function SubscriptionDetails({ id }: Props) {
+export type SubscriptionDetailsViewProps =
+  CommonRouteProps<SubscriptionDetailsViewParams>;
+
+export function SubscriptionDetailsView({
+  params: { id }
+}: SubscriptionDetailsViewProps) {
   const theme = useTheme();
   const [subData, setSubData] = useState<SubscriptionData | null>(null);
   const [checked, setChecked] = useState(false);

@@ -1,4 +1,4 @@
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 import { Section } from "@arconnect/components";
 import { useTokens } from "~tokens";
 import { useMemo } from "react";
@@ -7,7 +7,7 @@ import browser from "webextension-polyfill";
 import styled from "styled-components";
 import HeadV2 from "~components/popup/HeadV2";
 
-export default function Collectibles() {
+export function CollectiblesView() {
   // all tokens
   const tokens = useTokens();
 

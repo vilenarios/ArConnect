@@ -15,7 +15,7 @@ import {
   type MutableRefObject
 } from "react";
 import { useGateway } from "~gateways/wayfinder";
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -49,6 +49,7 @@ import BigNumber from "bignumber.js";
 import { fetchTokenByProcessId } from "~lib/transactions";
 import { useStorage } from "@plasmohq/storage/hook";
 import type { StoredWallet } from "~wallets";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
 // pull contacts and check if to address is in contacts
 
@@ -58,7 +59,18 @@ interface ao {
   tokenId?: string | null;
 }
 
-export default function Transaction({ id: rawId, gw, message }: Props) {
+export interface TransactionViewParams {
+  id: string;
+  // encodeURIComponent transformed gateway url
+  gw?: string;
+  message?: boolean;
+}
+
+export type TransactionViewProps = CommonRouteProps<TransactionViewParams>;
+
+export function TransactionView({
+  params: { id: rawId, gw, message }
+}: TransactionViewProps) {
   // fixup id
   const id = useMemo(() => rawId.split("?")[0], [rawId]);
 
@@ -837,10 +849,3 @@ const opacityAnimation: Variants = {
   hidden: { opacity: 0 },
   shown: { opacity: 1 }
 };
-
-interface Props {
-  id: string;
-  // encodeURIComponent transformed gateway url
-  gw?: string;
-  message?: boolean;
-}

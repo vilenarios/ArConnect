@@ -14,7 +14,7 @@ import {
   AR_SENT_QUERY_WITH_CURSOR,
   PRINT_ARWEAVE_QUERY_WITH_CURSOR
 } from "~notifications/utils";
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 import { getArPrice } from "~lib/coingecko";
 import useSetting from "~settings/hook";
 import { printTxWorkingGateways, txHistoryGateways } from "~gateways/gateway";
@@ -36,7 +36,7 @@ import { retryWithDelay } from "~utils/promises/retry";
 const defaultCursors = ["", "", "", "", ""];
 const defaultHasNextPages = [true, true, true, true, true];
 
-export default function Transactions() {
+export function TransactionsView() {
   const [cursors, setCursors] = useState(defaultCursors);
   const [hasNextPages, setHasNextPages] = useState(defaultHasNextPages);
   const [transactions, setTransactions] = useState<GroupedTransactions>({});

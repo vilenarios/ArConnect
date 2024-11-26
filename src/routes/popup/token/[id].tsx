@@ -13,7 +13,7 @@ import { getDreForToken, useTokens } from "~tokens";
 import { useStorage } from "@plasmohq/storage/hook";
 import { ExtensionStorage } from "~utils/storage";
 import { getCommunityUrl } from "~utils/format";
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 import { useTheme } from "~utils/theme";
 import {
   ArrowDownLeftIcon,
@@ -45,8 +45,15 @@ import useSetting from "~settings/hook";
 import styled from "styled-components";
 import { useGateway } from "~gateways/wayfinder";
 import HeadV2 from "~components/popup/HeadV2";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-export default function Asset({ id }: Props) {
+export interface AssetViewParams {
+  id: string;
+}
+
+export type AssetViewProps = CommonRouteProps<AssetViewParams>;
+
+export function AssetView({ params: { id } }: AssetViewProps) {
   // load state
   const [state, setState] = useState<TokenState>();
   const [validity, setValidity] = useState<{ [id: string]: boolean }>();
@@ -437,10 +444,6 @@ export default function Asset({ id }: Props) {
       <AnimatePresence>{loading && <TokenLoading />}</AnimatePresence>
     </>
   );
-}
-
-interface Props {
-  id: string;
 }
 
 const opacityAnimation: Variants = {

@@ -17,10 +17,6 @@ export const useHashLocation: BaseLocationHook = () => {
     return () => window.removeEventListener("hashchange", handler);
   }, []);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [loc]);
-
   return [loc, navigate];
 };
 

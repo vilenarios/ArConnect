@@ -12,7 +12,7 @@ import type { JWKInterface } from "arweave/web/lib/wallet";
 import type { Tag } from "arweave/web/lib/transaction";
 import { useScanner } from "@arconnect/keystone-sdk";
 import { useActiveWallet } from "~wallets/hooks";
-import { useHistory } from "~utils/hash_router";
+import { useHistory } from "~wallets/router/hash/hash-router.hook";
 import { useEffect, useState } from "react";
 import { getActiveKeyfile, getActiveWallet } from "~wallets";
 import type { UR } from "@ngraveio/bc-ur";
@@ -47,10 +47,15 @@ import {
 } from "~utils/send";
 import { EventType, trackEvent } from "~utils/analytics";
 import BigNumber from "bignumber.js";
-interface Props {
+import type { CommonRouteProps } from "~wallets/router/router.types";
+
+export interface SendAuthViewParams {
   tokenID?: string;
 }
-export default function SendAuth({ tokenID }: Props) {
+
+export type SendAuthViewProps = CommonRouteProps<SendAuthViewParams>;
+
+export function SendAuthView({ params: { tokenID } }: SendAuthViewProps) {
   // loading
   const [loading, setLoading] = useState(false);
 

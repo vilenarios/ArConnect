@@ -1,5 +1,5 @@
 import { type Path, pathToRegexp } from "path-to-regexp";
-import { useHashLocation } from "~utils/hash_router";
+import { useHashLocation } from "~wallets/router/hash/hash-router.hook";
 import { Router, Route } from "wouter";
 
 import Home from "~routes/welcome";
