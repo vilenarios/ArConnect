@@ -5,8 +5,6 @@ import ArConnectEmbeddedAppRoot from "~iframe/iframe";
 
 import "../../assets/popup.css";
 
-// TODO: Duplicate "Popup" as "Iframe" and move all routers to config to be able to combine Popup + Auth.
-
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ArConnectEmbeddedAppRoot />

@@ -1,5 +1,5 @@
-import React, { useEffect, type PropsWithChildren } from "react";
-import { Switch, Route as Woute } from "wouter";
+import React, { useEffect, useMemo, type PropsWithChildren } from "react";
+import { Switch, useLocation, Route as Woute } from "wouter";
 import { Page } from "~components/page/page.component";
 import type {
   CommonRouteProps,
@@ -30,33 +30,37 @@ export function Routes({
     }, [routes]);
   }
 
-  // TODO: Async-loaded components?
+  const [location] = useLocation();
 
-  // TODO: Is the history actually used?
+  const memoizedRoutes = useMemo(() => {
+    return (
+      <Switch>
+        {routes.map((route) => {
+          const Component = route.component;
 
-  return (
-    <Switch>
-      {routes.map((route) => {
-        const Component = route.component;
+          // TODO: Async-loaded components?
 
-        const PageWithComponent: React.ComponentType<CommonRouteProps> = (
-          props
-        ) => {
+          const PageWithComponent: React.ComponentType<CommonRouteProps> = (
+            props
+          ) => {
+            return (
+              <PageComponent>
+                <Component {...props} />
+              </PageComponent>
+            );
+          };
+
           return (
-            <PageComponent>
-              <Component {...props} />
-            </PageComponent>
+            <Woute
+              key={route.key}
+              path={route.path}
+              component={PageWithComponent}
+            />
           );
-        };
+        })}
+      </Switch>
+    );
+  }, [routes, location]);
 
-        return (
-          <Woute
-            key={route.key}
-            path={route.path}
-            component={PageWithComponent}
-          />
-        );
-      })}
-    </Switch>
-  );
+  return memoizedRoutes;
 }

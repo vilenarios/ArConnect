@@ -37,153 +37,195 @@ import { TransactionView } from "~routes/popup/transaction/[id]";
 import { TransactionsView } from "~routes/popup/transaction/transactions";
 import type { RouteConfig } from "~wallets/router/router.types";
 
-export const POPUP_ROUTES: RouteConfig[] = [
+// TODO: Update with functions to pass params and replace in all usages:
+
+export const PopupPaths = {
+  Home: "/",
+  Purchase: "/purchase",
+  ConfirmPurchase: "/confirm-purchase/:quoteId?",
+  PendingPurchase: "/purchase-pending",
+  Receive: "/receive",
+  Send: "/send/transfer/:id?",
+  SendAuth: "/send/auth/:tokenID?",
+  Explore: "/explore",
+  Subscriptions: "/subscriptions",
+  SubscriptionDetails: "/subscriptions/:id",
+  SubscriptionManagement: "/subscriptions/:id/manage",
+  SubscriptionPayment: "/subscriptions/:id/payment",
+  Transactions: "/transactions",
+  Notifications: "/notifications",
+  MessageNotification: "/notification/:id",
+  Tokens: "/tokens",
+  Asset: "/token/:id",
+  Collectibles: "/collectibles",
+  Collectible: "/collectible/:id",
+  Transaction: "/transaction/:id/:gateway?",
+  Confirm: "/send/confirm/:token/:qty/:recipient/:message?",
+  Recipient: "/send/recipient/:token/:qty/:message?",
+  QuickSettings: "/quick-settings",
+  Wallets: "/quick-settings/wallets",
+  Wallet: "/quick-settings/wallets/:address",
+  ExportWallet: "/quick-settings/wallets/:address/export",
+  GenerateQR: "/quick-settings/wallets/:address/qr",
+  Applications: "/quick-settings/apps",
+  AppSettings: "/quick-settings/apps/:url",
+  AppPermissions: "/quick-settings/apps/:url/permissions",
+  TokensSettings: "/quick-settings/tokens",
+  NewTokenSettings: "/quick-settings/tokens/new",
+  TokenSettings: "/quick-settings/tokens/:id",
+  Contacts: "/quick-settings/contacts",
+  NewContact: "/quick-settings/contacts/new",
+  ContactSettings: "/quick-settings/contacts/:address",
+  NotificationSettings: "/quick-settings/notifications"
+} as const;
+
+export const POPUP_ROUTES = [
   {
-    path: "/",
+    path: PopupPaths.Home,
     component: HomeView
   },
   {
-    path: "/purchase",
+    path: PopupPaths.Purchase,
     component: PurchaseView
   },
   {
-    path: "/confirm-purchase/:quoteId?",
+    path: PopupPaths.ConfirmPurchase,
     component: ConfirmPurchaseView
   },
   {
-    path: "/purchase-pending",
+    path: PopupPaths.PendingPurchase,
     component: PendingPurchase
   },
   {
-    path: "/receive",
+    path: PopupPaths.Receive,
     component: ReceiveView
   },
   {
-    path: "/send/transfer/:id?",
+    path: PopupPaths.Send,
     component: SendView
   },
   {
-    path: "/send/auth/:tokenID?",
+    path: PopupPaths.SendAuth,
     component: SendAuthView
   },
   {
-    path: "/explore",
+    path: PopupPaths.Explore,
     component: ExploreView
   },
   {
-    path: "/subscriptions",
+    path: PopupPaths.Subscriptions,
     component: SubscriptionsView
   },
   {
-    path: "/subscriptions/:id",
+    path: PopupPaths.SubscriptionDetails,
     component: SubscriptionDetailsView
   },
   {
-    path: "/subscriptions/:id/manage",
+    path: PopupPaths.SubscriptionManagement,
     component: SubscriptionManagementView
   },
   {
-    path: "/subscriptions/:id/payment",
+    path: PopupPaths.SubscriptionPayment,
     component: SubscriptionPaymentView
   },
   {
-    path: "/transactions",
+    path: PopupPaths.Transactions,
     component: TransactionsView
   },
   {
-    path: "/notifications",
+    path: PopupPaths.Notifications,
     component: NotificationsView
   },
   {
-    path: "/notification/:id",
+    path: PopupPaths.MessageNotification,
     component: MessageNotificationView
   },
   {
-    path: "/tokens",
+    path: PopupPaths.Tokens,
     component: TokensView
   },
   {
-    path: "/token/:id",
+    path: PopupPaths.Asset,
     component: AssetView
   },
   {
-    path: "/collectibles",
+    path: PopupPaths.Collectibles,
     component: CollectiblesView
   },
   {
-    path: "/collectible/:id",
+    path: PopupPaths.Collectible,
     component: CollectibleView
   },
   {
-    path: "/transaction/:id/:gateway?",
+    path: PopupPaths.Transaction,
     component: TransactionView
   },
   {
-    path: "/send/confirm/:token/:qty/:recipient/:message?",
+    path: PopupPaths.Confirm,
     component: ConfirmView
   },
   {
-    path: "/send/recipient/:token/:qty/:message?",
+    path: PopupPaths.Recipient,
     component: RecipientView
   },
   {
-    path: "/quick-settings",
+    path: PopupPaths.QuickSettings,
     component: QuickSettingsView
   },
   {
-    path: "/quick-settings/wallets",
+    path: PopupPaths.Wallets,
     component: WalletsView
   },
   {
-    path: "/quick-settings/wallets/:address",
+    path: PopupPaths.Wallet,
     component: WalletView
   },
   {
-    path: "/quick-settings/wallets/:address/export",
+    path: PopupPaths.ExportWallet,
     component: ExportWalletView
   },
   {
-    path: "/quick-settings/wallets/:address/qr",
+    path: PopupPaths.GenerateQR,
     component: GenerateQRView
   },
   {
-    path: "/quick-settings/apps",
+    path: PopupPaths.Applications,
     component: ApplicationsView
   },
   {
-    path: "/quick-settings/apps/:url",
+    path: PopupPaths.AppSettings,
     component: AppSettingsView
   },
   {
-    path: "/quick-settings/apps/:url/permissions",
+    path: PopupPaths.AppPermissions,
     component: AppPermissionsView
   },
   {
-    path: "/quick-settings/tokens",
+    path: PopupPaths.TokensSettings,
     component: TokensSettingsView
   },
   {
-    path: "/quick-settings/tokens/new",
+    path: PopupPaths.NewTokenSettings,
     component: NewTokenSettingsView
   },
   {
-    path: "/quick-settings/tokens/:id",
+    path: PopupPaths.TokenSettings,
     component: TokenSettingsView
   },
   {
-    path: "/quick-settings/contacts",
+    path: PopupPaths.Contacts,
     component: ContactsView
   },
   {
-    path: "/quick-settings/contacts/new",
+    path: PopupPaths.NewContact,
     component: NewContactView
   },
   {
-    path: "/quick-settings/contacts/:address",
+    path: PopupPaths.ContactSettings,
     component: ContactSettingsView
   },
   {
-    path: "/quick-settings/notifications",
+    path: PopupPaths.NotificationSettings,
     component: NotificationSettingsView
   }
-];
+] as const satisfies RouteConfig[];

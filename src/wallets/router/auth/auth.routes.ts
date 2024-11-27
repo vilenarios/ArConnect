@@ -9,45 +9,53 @@ import { SubscriptionAuthRequestView } from "~routes/auth/subscription";
 import { TokenAuthRequestView } from "~routes/auth/token";
 import type { RouteConfig } from "~wallets/router/router.types";
 
-// TODO: Rename all of them and add the "page" wrapper to them...
+export const AuthPaths = {
+  Connect: "/connect/:authID",
+  Allowance: "/allowance/:authID",
+  Token: "/token/:authID",
+  Sign: "/sign/:authID",
+  SignKeystone: "/signKeystone/:authID",
+  Signature: "/signature/:authID",
+  Subscription: "/subscription/:authID",
+  SignDataItem: "/signDataItem/:authID",
+  BatchSignDataItem: "/batchSignDataItem/:authID"
+} as const;
 
-// TODO: Add enum here but update in another PR...
-
-export const AUTH_ROUTES: RouteConfig[] = [
+export const AUTH_ROUTES = [
   {
-    path: "/connect",
+    path: AuthPaths.Connect,
     component: ConnectAuthRequestView
   },
   {
-    path: "/allowance",
+    path: AuthPaths.Allowance,
     component: AllowanceAuthRequestView
   },
   {
-    path: "/token",
+    path: AuthPaths.Token,
     component: TokenAuthRequestView
   },
   {
-    path: "/sign",
+    path: AuthPaths.Sign,
     component: SignAuthRequestView
   },
   {
-    path: "/signKeystone",
+    path: AuthPaths.SignKeystone,
     component: SignKeystoneAuthRequestView
   },
   {
-    path: "/signature",
+    path: AuthPaths.Signature,
     component: SignatureAuthRequestView
   },
   {
-    path: "/subscription",
+    path: AuthPaths.Subscription,
     component: SubscriptionAuthRequestView
   },
   {
-    path: "/signDataItem",
+    path: AuthPaths.SignDataItem,
     component: SignDataItemAuthRequestView
   },
   {
-    path: "/batchSignDataItem",
+    path: AuthPaths.BatchSignDataItem,
     component: BatchSignDataItemAuthRequestView
   }
-];
+] as const satisfies RouteConfig[];

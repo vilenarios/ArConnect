@@ -48,15 +48,15 @@ export function AuthAppRoot() {
 
   return (
     <ArConnectThemeProvider>
-      <Wouter hook={useAuthRequestsLocation}>
-        <BodyScroller />
+      <AuthRequestsProvider initialScreenType={initialScreenType}>
+        <Wouter hook={useAuthRequestsLocation}>
+          <BodyScroller />
 
-        <AuthRequestsProvider initialScreenType={initialScreenType}>
           <AnimatePresence initial={false}>
             <AuthApp initialScreenType={initialScreenType} />
           </AnimatePresence>
-        </AuthRequestsProvider>
-      </Wouter>
+        </Wouter>
+      </AuthRequestsProvider>
     </ArConnectThemeProvider>
   );
 }

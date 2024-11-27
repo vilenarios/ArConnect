@@ -41,20 +41,20 @@ export default function ArConnectEmbeddedAppRoot() {
 
   return (
     <ArConnectThemeProvider>
-      <Wouter hook={useIFrameLocation}>
-        <BodyScroller />
-        <HistoryObserver />
+      <AuthProvider>
+        <AuthRequestsProvider initialScreenType={initialScreenType}>
+          <Wouter hook={useIFrameLocation}>
+            <BodyScroller />
+            <HistoryObserver />
 
-        <HistoryProvider>
-          <AuthRequestsProvider initialScreenType={initialScreenType}>
-            <AuthProvider>
+            <HistoryProvider>
               <AnimatePresence initial={false}>
                 <ArConnectEmbeddedApp initialScreenType={initialScreenType} />
               </AnimatePresence>
-            </AuthProvider>
-          </AuthRequestsProvider>
-        </HistoryProvider>
-      </Wouter>
+            </HistoryProvider>
+          </Wouter>
+        </AuthRequestsProvider>
+      </AuthProvider>
     </ArConnectThemeProvider>
   );
 }
