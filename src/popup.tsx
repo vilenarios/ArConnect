@@ -1,13 +1,15 @@
-import Unlock from "~routes/popup/unlock";
+import { UnlockPage } from "~routes/popup/unlock";
 import { NavigationBar } from "~components/popup/Navigation";
 import { ArConnectThemeProvider } from "~components/hardware/HardwareWalletTheme";
-import { AnimatePresence } from "framer-motion";
 import { useBrowserExtensionWalletSetUp } from "~wallets/setup/browser-extension/browser-extension-wallet-setup.hook";
 import type { InitialScreenType } from "~wallets/setup/wallet-setup.types";
-import { Page } from "~components/Page";
-import { Router } from "~wallets/router/router.component";
+import { Routes } from "~wallets/router/routes.component";
 import { POPUP_ROUTES } from "~wallets/router/popup/popup.routes";
 import HistoryProvider from "~components/popup/HistoryProvider";
+import { useHashLocation } from "~wallets/router/hash/hash-router.hook";
+import { Router as Wouter } from "wouter";
+import { BodyScroller, HistoryObserver } from "~wallets/router/router.utils";
+import { AnimatePresence } from "framer-motion";
 
 interface ArConnectBrowserExtensionAppProps {
   initialScreenType: InitialScreenType;
@@ -19,22 +21,11 @@ export function ArConnectBrowserExtensionApp({
   let content: React.ReactElement = null;
 
   if (initialScreenType === "locked") {
-    content = (
-      <Page>
-        <Unlock />
-      </Page>
-    );
-  } else if (initialScreenType === "generating") {
-    // This can only happen in the embedded wallet:
-    content = (
-      <Page>
-        <p>Generating Wallet...</p>
-      </Page>
-    );
+    content = <UnlockPage />;
   } else if (initialScreenType === "default") {
     content = (
       <>
-        <Router routes={POPUP_ROUTES} />
+        <Routes routes={POPUP_ROUTES} />
         <NavigationBar />
       </>
     );
@@ -43,18 +34,23 @@ export function ArConnectBrowserExtensionApp({
   return <>{content}</>;
 }
 
-// TODO: Move HistoryProvider below and add it manually instead. Add a HistoryProviderObserver...
-
 export function ArConnectBrowserExtensionAppRoot() {
   const initialScreenType = useBrowserExtensionWalletSetUp();
 
   return (
     <ArConnectThemeProvider>
-      <HistoryProvider>
-        <AnimatePresence initial={false}>
-          <ArConnectBrowserExtensionApp initialScreenType={initialScreenType} />
-        </AnimatePresence>
-      </HistoryProvider>
+      <Wouter hook={useHashLocation}>
+        <BodyScroller />
+        <HistoryObserver />
+
+        <HistoryProvider>
+          <AnimatePresence initial={false}>
+            <ArConnectBrowserExtensionApp
+              initialScreenType={initialScreenType}
+            />
+          </AnimatePresence>
+        </HistoryProvider>
+      </Wouter>
     </ArConnectThemeProvider>
   );
 }

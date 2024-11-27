@@ -1,1 +1,1 @@
-export type InitialScreenType = "cover" | "locked" | "generating" | "default";
+export type InitialScreenType = "default" | "cover" | "locked";

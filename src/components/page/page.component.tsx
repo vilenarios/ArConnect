@@ -2,7 +2,9 @@ import { type Variants, motion } from "framer-motion";
 import type { PropsWithChildren } from "react";
 import styled from "styled-components";
 
-export const Page = ({ children }: PropsWithChildren) => {
+export interface PageProps extends PropsWithChildren {}
+
+export function Page({ children }: PageProps) {
   const opacityAnimation: Variants = {
     initial: { opacity: 0 },
     enter: { opacity: 1 },
@@ -20,7 +22,7 @@ export const Page = ({ children }: PropsWithChildren) => {
       {children}
     </Main>
   );
-};
+}
 
 const Main = styled(motion.main)`
   position: relative;

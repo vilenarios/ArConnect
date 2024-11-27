@@ -1,12 +1,11 @@
 import { InputWithBtn, InputWrapper } from "~components/arlocal/InputWrapper";
 import { RefreshButton } from "~components/IconButton";
 import { useEffect, useMemo, useState } from "react";
-import { useTheme } from "~utils/theme";
 import { urlToGateway } from "~gateways/utils";
 import { useStorage } from "@plasmohq/storage/hook";
 import { ExtensionStorage } from "~utils/storage";
 import { RefreshIcon } from "@iconicicons/react";
-import { useNoWallets, useRemoveCover } from "~wallets";
+import { useNoWallets } from "~wallets";
 import {
   ButtonV2 as Button,
   InputV2 as Input,
@@ -31,6 +30,7 @@ import browser from "webextension-polyfill";
 import Arweave from "arweave";
 import axios from "axios";
 import { ArConnectThemeProvider } from "~components/hardware/HardwareWalletTheme";
+import { useRemoveCover } from "~wallets/setup/non/non-wallet-setup.hook";
 
 export default function ArLocal() {
   useRemoveCover();

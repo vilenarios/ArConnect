@@ -13,8 +13,6 @@ import type { InitialScreenType } from "~wallets/setup/wallet-setup.types";
  * Hook that opens a new tab if ArConnect has not been set up yet
  */
 export function useEmbeddedWalletSetUp() {
-  console.log(`useEmbeddedWalletSetUp()`);
-
   const [initialScreenType, setInitialScreenType] =
     useState<InitialScreenType>("cover");
 
@@ -34,33 +32,10 @@ export function useEmbeddedWalletSetUp() {
 
       let nextInitialScreenType: InitialScreenType = "cover";
 
-      switch (walletType) {
-        case "extension": {
-          if (!hasWallets) {
-            // This should only happen when opening the regular popup, but not for the auth popup, as the
-            // `createAuthPopup` will open the welcome page directly, instead of the popup, if needed:
-
-            openOrSelectWelcomePage(true);
-
-            window.top.close();
-          } else if (!decryptionKey) {
-            nextInitialScreenType = "locked";
-          } else {
-            nextInitialScreenType = "default";
-          }
-
-          break;
-        }
-
-        case "embedded": {
-          nextInitialScreenType = !hasWallets ? "generating" : "default";
-
-          break;
-        }
-
-        default: {
-          throw new Error(`Unknown APP_TYPE = ${walletType}`);
-        }
+      if (!hasWallets) {
+        // TODO: This should redirect/force the auth flow...
+      } else {
+        nextInitialScreenType = "default";
       }
 
       setInitialScreenType(nextInitialScreenType);

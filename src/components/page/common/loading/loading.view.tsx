@@ -1,21 +1,21 @@
 import { Loading } from "@arconnect/components";
 import styled from "styled-components";
-import { Page } from "~components/popup/Route";
+import { withPage } from "~components/page/page.utils";
 
-export interface LoadingPageProps {
+export interface LoadingViewProps {
   label?: string;
 }
 
-export const LoadingPage = ({ label }: LoadingPageProps) => {
+export const LoadingView = ({ label }: LoadingViewProps) => {
   return (
-    <Page>
-      <DivWrapper>
-        <Loading style={{ width: "32px", height: "32px" }} />
-        <PLabel>{label || "Loading..."}</PLabel>
-      </DivWrapper>
-    </Page>
+    <DivWrapper>
+      <Loading style={{ width: "32px", height: "32px" }} />
+      <PLabel>{label || "Loading..."}</PLabel>
+    </DivWrapper>
   );
 };
+
+export const LoadingPage = withPage(LoadingView);
 
 const DivWrapper = styled.div`
   display: flex;

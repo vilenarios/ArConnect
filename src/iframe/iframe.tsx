@@ -1,13 +1,17 @@
 import { AnimatePresence } from "framer-motion";
-import { Router } from "wouter";
+import type { PropsWithChildren } from "react";
 import { ArConnectThemeProvider } from "~components/hardware/HardwareWalletTheme";
 import HistoryProvider from "~components/popup/HistoryProvider";
 import { NavigationBar } from "~components/popup/Navigation";
-import { Page } from "~components/popup/Route";
+import { UnlockPage } from "~routes/popup/unlock";
 import { AuthRequestsProvider } from "~utils/auth/auth.provider";
-import { useHashLocation } from "~wallets/router/hash/hash-router.hook";
-import { useBrowserExtensionWalletSetUp } from "~wallets/setup/browser-extension/browser-extension-wallet-setup.hook";
+import { useIFrameLocation } from "~wallets/router/iframe/iframe-router.hook";
+import { IFRAME_ROUTES } from "~wallets/router/iframe/iframe.routes";
+import { Routes } from "~wallets/router/routes.component";
+import { BodyScroller, HistoryObserver } from "~wallets/router/router.utils";
+import { useEmbeddedWalletSetUp } from "~wallets/setup/embedded/embedded-wallet-setup.hook";
 import type { InitialScreenType } from "~wallets/setup/wallet-setup.types";
+import { Router as Wouter } from "wouter";
 
 interface ArConnectEmbeddedAppProps {
   initialScreenType: InitialScreenType;
@@ -19,25 +23,13 @@ export function ArConnectEmbeddedApp({
   let content: React.ReactElement = null;
 
   if (initialScreenType === "locked") {
-    content = (
-      <Page>
-        <Unlock />
-      </Page>
-    );
-  } else if (initialScreenType === "generating") {
-    // This can only happen in the embedded wallet:
-    content = (
-      <Page>
-        <p>Generating Wallet...</p>
-      </Page>
-    );
+    content = <UnlockPage />;
   } else if (initialScreenType === "default") {
     content = (
-      <Router hook={useHashLocation}>
-        <HistoryProvider>
-          <NavigationBar />
-        </HistoryProvider>
-      </Router>
+      <>
+        <Routes routes={IFRAME_ROUTES} />
+        <NavigationBar />
+      </>
     );
   }
 
@@ -45,17 +37,30 @@ export function ArConnectEmbeddedApp({
 }
 
 export default function ArConnectEmbeddedAppRoot() {
-  const initialScreenType = useBrowserExtensionWalletSetUp();
+  const initialScreenType = useEmbeddedWalletSetUp();
 
   return (
     <ArConnectThemeProvider>
-      <AuthRequestsProvider initialScreenType={initialScreenType}>
-        <AuthProvider>
-          <AnimatePresence initial={false}>
-            <ArConnectEmbeddedApp initialScreenType={initialScreenType} />
-          </AnimatePresence>
-        </AuthProvider>
-      </AuthRequestsProvider>
+      <Wouter hook={useIFrameLocation}>
+        <BodyScroller />
+        <HistoryObserver />
+
+        <HistoryProvider>
+          <AuthRequestsProvider initialScreenType={initialScreenType}>
+            <AuthProvider>
+              <AnimatePresence initial={false}>
+                <ArConnectEmbeddedApp initialScreenType={initialScreenType} />
+              </AnimatePresence>
+            </AuthProvider>
+          </AuthRequestsProvider>
+        </HistoryProvider>
+      </Wouter>
     </ArConnectThemeProvider>
   );
 }
+
+const AuthProvider = ({ children }: PropsWithChildren) => {
+  // TODO: To be implemented...
+
+  return <>{children}</>;
+};

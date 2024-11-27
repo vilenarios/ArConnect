@@ -1,16 +1,17 @@
 import { ArConnectThemeProvider } from "~components/hardware/HardwareWalletTheme";
-import Unlock from "~routes/auth/unlock";
-import { AnimatePresence } from "framer-motion";
+import { UnlockAuthRequestPage } from "~routes/auth/unlock";
 import { AuthRequestsProvider } from "~utils/auth/auth.provider";
 import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import browser from "webextension-polyfill";
-import { LoadingPage } from "~components/LoadingPage";
+import { LoadingPage } from "~components/page/common/loading/loading.view";
 import type { InitialScreenType } from "~wallets/setup/wallet-setup.types";
 import { useBrowserExtensionWalletSetUp } from "~wallets/setup/browser-extension/browser-extension-wallet-setup.hook";
-import { Router } from "~wallets/router/router.component";
+import { Routes } from "~wallets/router/routes.component";
 import { useAuthRequestsLocation } from "~wallets/router/auth/auth-router.hook";
 import { AUTH_ROUTES } from "~wallets/router/auth/auth.routes";
-import { Page } from "~components/Page";
+import { BodyScroller } from "~wallets/router/router.utils";
+import { AnimatePresence } from "framer-motion";
+import { Router as Wouter } from "wouter";
 
 interface AuthAppProps {
   initialScreenType: InitialScreenType;
@@ -22,15 +23,8 @@ export function AuthApp({ initialScreenType }: AuthAppProps) {
 
   let content: React.ReactElement = null;
 
-  // TODO: if initialScreenType === "generating" there was an error and this window must be closed...
-
   if (initialScreenType === "locked") {
-    // TODO: Create a HOC to wrap UnlockView as UnlockPage and rename the Auth one...
-    content = (
-      <Page>
-        <UnlockView />
-      </Page>
-    );
+    content = <UnlockAuthRequestPage />;
   } else if (!authRequest) {
     content = (
       <LoadingPage
@@ -43,7 +37,7 @@ export function AuthApp({ initialScreenType }: AuthAppProps) {
       />
     );
   } else if (initialScreenType === "default") {
-    content = <Router routes={AUTH_ROUTES} hook={useAuthRequestsLocation} />;
+    content = <Routes routes={AUTH_ROUTES} />;
   }
 
   return <>{content}</>;
@@ -54,11 +48,15 @@ export function AuthAppRoot() {
 
   return (
     <ArConnectThemeProvider>
-      <AuthRequestsProvider initialScreenType={initialScreenType}>
-        <AnimatePresence initial={false}>
-          <AuthApp initialScreenType={initialScreenType} />
-        </AnimatePresence>
-      </AuthRequestsProvider>
+      <Wouter hook={useAuthRequestsLocation}>
+        <BodyScroller />
+
+        <AuthRequestsProvider initialScreenType={initialScreenType}>
+          <AnimatePresence initial={false}>
+            <AuthApp initialScreenType={initialScreenType} />
+          </AnimatePresence>
+        </AuthRequestsProvider>
+      </Wouter>
     </ArConnectThemeProvider>
   );
 }
