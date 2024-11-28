@@ -16,10 +16,6 @@ export function useBrowserExtensionWalletSetUp() {
   const [initialScreenType, setInitialScreenType] =
     useState<InitialScreenType>("cover");
 
-  // TODO: Get all usages of `getDecryptionKey` as we won't be using this in the embedded wallet...
-
-  // TODO: There's no "disconnect" in the embedded wallet.
-
   useEffect(() => {
     async function checkWalletState() {
       const [activeAddress, wallets, decryptionKey] = await Promise.all([

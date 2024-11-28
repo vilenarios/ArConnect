@@ -420,12 +420,16 @@ export function AuthRequestsProvider({
       // Close the popup if an AuthRequest doesn't arrive in less than `AUTH_POPUP_REQUEST_WAIT_MS` (1s), unless the
       // wallet is locked (no timeout in that case):
       timeoutID = setTimeout(() => {
+        // TODO: This also needs to be changed in the embedded wallet. Maybe we need to store (but not show) unlock
+        // requests?
         window.top.close();
       }, AUTH_POPUP_REQUEST_WAIT_MS);
     } else if (initialScreenType !== "default") {
       // If the user doesn't unlock the wallet in 15 minutes, or somehow the popup gets stuck into any other state for
       // more than that, we close it:
       timeoutID = setTimeout(() => {
+        // TODO: This also needs to be changed in the embedded wallet. Maybe we need to store (but not show) unlock
+        // requests?
         window.top.close();
       }, AUTH_POPUP_UNLOCK_REQUEST_TTL_MS);
     } else if (isDone) {
@@ -435,9 +439,11 @@ export function AuthRequestsProvider({
 
       if (AUTH_POPUP_CLOSING_DELAY_MS > 0) {
         timeoutID = setTimeout(() => {
+          // TODO: In the embedded wallet, this should clear the AuthRequests instead:
           window.top.close();
         }, AUTH_POPUP_CLOSING_DELAY_MS);
       } else {
+        // TODO: In the embedded wallet, this should clear the AuthRequests instead:
         window.top.close();
       }
     }
@@ -456,6 +462,7 @@ export function AuthRequestsProvider({
       });
     }
 
+    // TODO: Not in the embedded wallet:
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {

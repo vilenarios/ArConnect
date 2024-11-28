@@ -1,11 +1,7 @@
 import { useState, useEffect } from "react";
 import { handleSyncLabelsAlarm } from "~api/background/handlers/alarms/sync-labels/sync-labels-alarm.handler";
 import { ExtensionStorage } from "~utils/storage";
-import {
-  getActiveAddress,
-  getWallets,
-  openOrSelectWelcomePage
-} from "~wallets";
+import { getActiveAddress, getWallets } from "~wallets";
 import { getDecryptionKey } from "~wallets/auth";
 import type { InitialScreenType } from "~wallets/setup/wallet-setup.types";
 
@@ -15,10 +11,6 @@ import type { InitialScreenType } from "~wallets/setup/wallet-setup.types";
 export function useEmbeddedWalletSetUp() {
   const [initialScreenType, setInitialScreenType] =
     useState<InitialScreenType>("cover");
-
-  // TODO: Get all usages of `getDecryptionKey` as we won't be using this in the embedded wallet...
-
-  // TODO: There's no "disconnect" in the embedded wallet.
 
   useEffect(() => {
     async function checkWalletState() {
@@ -32,8 +24,13 @@ export function useEmbeddedWalletSetUp() {
 
       let nextInitialScreenType: InitialScreenType = "cover";
 
-      if (!hasWallets) {
-        // TODO: This should redirect/force the auth flow...
+      if (!isAuthenticated) {
+        nextInitialScreenType = "/authenticate";
+      } else if (!hasWallets) {
+        nextInitialScreenType = "/generate";
+      } else if (!hasShards) {
+        // TODO: Add a passive warning about this and allow people to use the wallet in watch-only mode:
+        nextInitialScreenType = "/add-device";
       } else {
         nextInitialScreenType = "default";
       }

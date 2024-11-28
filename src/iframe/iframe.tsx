@@ -1,5 +1,5 @@
 import { AnimatePresence } from "framer-motion";
-import type { PropsWithChildren } from "react";
+import { type PropsWithChildren } from "react";
 import { ArConnectThemeProvider } from "~components/hardware/HardwareWalletTheme";
 import HistoryProvider from "~components/popup/HistoryProvider";
 import { NavigationBar } from "~components/popup/Navigation";
@@ -22,6 +22,8 @@ export function ArConnectEmbeddedApp({
 }: ArConnectEmbeddedAppProps) {
   let content: React.ReactElement = null;
 
+  console.log("initialScreenType =", initialScreenType);
+
   if (initialScreenType === "locked") {
     content = <UnlockPage />;
   } else if (initialScreenType === "default") {
@@ -36,7 +38,7 @@ export function ArConnectEmbeddedApp({
   return <>{content}</>;
 }
 
-export default function ArConnectEmbeddedAppRoot() {
+export function ArConnectEmbeddedAppRoot() {
   const initialScreenType = useEmbeddedWalletSetUp();
 
   return (

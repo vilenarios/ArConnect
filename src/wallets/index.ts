@@ -134,6 +134,12 @@ export async function setActiveWallet(address?: string) {
 export type DecryptedWallet = StoredWallet<JWKInterface>;
 
 export async function openOrSelectWelcomePage(force = false) {
+  if (process.env.PLASMO_PUBLIC_APP_TYPE !== "extension") {
+    log(LOG_GROUP.AUTH, `PREVENTED openOrSelectWelcomePage(${force})`);
+
+    return;
+  }
+
   log(LOG_GROUP.AUTH, `openOrSelectWelcomePage(${force})`);
 
   const url = browser.runtime.getURL("tabs/welcome.html");

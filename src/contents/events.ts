@@ -4,8 +4,6 @@ import { log, LOG_GROUP } from "~utils/log/log.utils";
 
 log(LOG_GROUP.SETUP, "events.content-script.ts");
 
-console.trace("HERE");
-
 export const config: PlasmoCSConfig = {
   matches: ["file://*/*", "http://*/*", "https://*/*"],
   run_at: "document_end",
