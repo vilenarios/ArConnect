@@ -1,6 +1,7 @@
 import enDic from "url:/assets/_locales/en/messages.json";
 import zhCnDic from "url:/assets/_locales/zh_CN/messages.json";
 import type { Alarms, Runtime } from "webextension-polyfill";
+import type { StorageChange } from "~utils/runtime";
 
 // TODO: Missing storage.onChanged.addListener
 
@@ -24,7 +25,7 @@ function invokeAlarms(name: string) {
     alarmCallback({
       name: alarmWithTimer.name,
       scheduledTime: alarmWithTimer.scheduledTime,
-      periodInMinutes: alarmWithTimer.periodInMinutes,
+      periodInMinutes: alarmWithTimer.periodInMinutes
     });
   });
 }
@@ -32,16 +33,14 @@ function invokeAlarms(name: string) {
 const alarms = {
   create: (name: string, alarmInfo: Alarms.CreateAlarmInfoType) => {
     const periodInMs = (alarmInfo.periodInMinutes ?? -1) * 60000;
-    const delayInMs = alarmInfo.when ? (
-      alarmInfo.when - Date.now()
-    ) : (
-      (alarmInfo.delayInMinutes ?? -1) * 60000
-    );
+    const delayInMs = alarmInfo.when
+      ? alarmInfo.when - Date.now()
+      : (alarmInfo.delayInMinutes ?? -1) * 60000;
 
     const alarmWithTimer: AlarmWithTimer = {
       name,
       scheduledTime: 0,
-      periodInMinutes: alarmInfo.periodInMinutes,
+      periodInMinutes: alarmInfo.periodInMinutes
     };
 
     alarmsByName[name] = alarmWithTimer;
@@ -88,7 +87,9 @@ const alarms = {
     if (alarmWithTimer.intervalID) clearTimeout(alarmWithTimer.intervalID);
   },
   getAll: () => {
-    return Promise.resolve(Object.values(alarmsByName) satisfies Alarms.Alarm[]);
+    return Promise.resolve(
+      Object.values(alarmsByName) satisfies Alarms.Alarm[]
+    );
   },
   get: (name: string) => {
     const alarmWithTimer = alarmsByName[name];
@@ -98,14 +99,14 @@ const alarms = {
     return {
       name: alarmWithTimer.name,
       scheduledTime: alarmWithTimer.scheduledTime,
-      periodInMinutes: alarmWithTimer.periodInMinutes,
+      periodInMinutes: alarmWithTimer.periodInMinutes
     };
   },
   onAlarm: {
     addListener: (alarmCallback: AlarmCallback) => {
       alarmCallbacks.push(alarmCallback);
-    },
-  },
+    }
+  }
 };
 
 const dictionaries = {
@@ -143,7 +144,7 @@ const i18n = {
 
 const runtime = {
   getURL: (path: string) => {
-    console.trace("getURL()");
+    console.trace(`getURL(${path})`);
 
     return new URL(path, document.location.origin).toString();
   },
@@ -156,9 +157,12 @@ const runtime = {
   },
   onInstalled: {
     addListener: (fn) => {
-      fn({ reason: "install", temporary: false } satisfies Runtime.OnInstalledDetailsType);
-    },
-  },
+      fn({
+        reason: "install",
+        temporary: false
+      } satisfies Runtime.OnInstalledDetailsType);
+    }
+  }
 
   // TODO: onConnect is probably not needed once I replace onMessage/sendMessage with isomorphicOnMessage and
   // isomorphicSendMessage (using the env variable).
@@ -213,9 +217,60 @@ const tabs = {
   }
 };
 
+const storage = {
+  local: {
+    get: (keys?: null | string | string[] | Record<string, any>) => {
+      if (keys === undefined || keys === null) {
+        return localStorage;
+      }
+
+      if (typeof keys === "string") {
+        return localStorage.getItem(keys);
+      }
+
+      if (Array.isArray(keys)) {
+        return keys.map(key => localStorage.getItem(key));
+      }
+
+      if (typeof keys === "object") {
+        return Object.entries(keys).map(([key, defaultValue]) => localStorage.getItem(key) ?? defaultValue);
+      }
+    },
+  },
+
+  onChanged: {
+    addListener: (callback: (
+      changes: Record<string, StorageChange<any>>,
+      areaName: string
+    ) => void) => {
+      // Note from the docs (meaning, this is probably not working / not needed in ArConnect Embedded):
+      //
+      // Note: This won't work on the same browsing context that is making the changes — it is really a way for other
+      // browsing contexts on the domain using the storage to sync any changes that are made. Browsing contexts on other
+      // domains can't access the same storage objects.
+      //
+      // TODO: Check if this is an issue for the extension.
+      // - If it is, find a solution.
+      // - If it is not, maybe the mock is not needed at all and this can be excluded from background-setup.ts.
+
+      window.addEventListener("storage", (event: StorageEvent) => {
+        const changes: Record<string, StorageChange<any>> = {
+          [event.key]: {
+            newValue: event.newValue,
+            oldValue: event.oldValue,
+          },
+        };
+
+        callback(changes, "local");
+      });
+    },
+  },
+}
+
 export default {
   alarms,
   i18n,
   runtime,
-  tabs
+  tabs,
+  storage,
 };
