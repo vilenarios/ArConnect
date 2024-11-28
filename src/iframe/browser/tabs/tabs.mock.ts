@@ -11,18 +11,18 @@ export const tabs = {
     // `tabs/dashboard.html#/apps/${activeApp.url}`
 
     if (url === "tabs/welcome.html") {
-      location.hash = "/welcome";
-    } else if (url.startsWith("tabs/dashboard.html#")) {
-      const hash = url.split("#").pop();
+      throw new Error("Welcome routes not added to ArConnect Embedded");
 
-      location.hash = `/quick-settings${hash}`;
+      // location.hash = "/welcome";
+    } else if (url.startsWith("tabs/dashboard.html#")) {
+      throw new Error("Dashboard not added to ArConnect Embedded");
+
+      // const hash = url.split("#").pop();
+      // location.hash = `/quick-settings${hash}`;
     } else if (url.startsWith("tabs/auth.html")) {
-      console.warn(
-        "Auth popup routes not added to the embedded wallet iframe router!"
-      );
+      console.warn("Trying to open `tabs/auth.html`");
 
       const paramsAndHash = url.replace("tabs/auth.html", "");
-
       location.hash = `/auth${paramsAndHash}`;
     } else if (url.startsWith("assets")) {
       throw new Error(`Cannot create tab for URL = ${url}`);
