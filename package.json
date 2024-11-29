@@ -91,7 +91,6 @@
     "styled-components": "^5.3.6",
     "typed-assert": "^1.0.9",
     "uuid": "^9.0.0",
-    "vite": "^5.4.9",
     "warp-contracts": "^1.2.13",
     "webextension-polyfill": "^0.10.0",
     "wouter": "^2.8.0-alpha.2"
