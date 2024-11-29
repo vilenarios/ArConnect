@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, type PropsWithChildren } from "react";
-import { Switch, useLocation, Route as Woute } from "wouter";
+import { Switch, Route as Woute } from "wouter";
 import { Page } from "~components/page/page.component";
 import type {
   CommonRouteProps,
   RouteConfig
 } from "~wallets/router/router.types";
+import { useLocation } from "~wallets/router/router.utils";
 
 export interface RoutesProps {
   routes: RouteConfig[];
@@ -15,6 +16,8 @@ export function Routes({
   routes,
   pageComponent: PageComponent = Page
 }: RoutesProps) {
+  const { location } = useLocation();
+
   // In development, check there are no duplicate routes (paths):
 
   if (process.env.NODE_ENV === "development") {
@@ -29,8 +32,6 @@ export function Routes({
       });
     }, [routes]);
   }
-
-  const [location] = useLocation();
 
   const memoizedRoutes = useMemo(() => {
     return (

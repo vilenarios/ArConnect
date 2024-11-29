@@ -1,22 +1,22 @@
-import { type Path, pathToRegexp } from "path-to-regexp";
-import { useHashLocation } from "~wallets/router/hash/hash-router.hook";
+import { useHashLocation } from "wouter/use-hash-location";
 import { Router, Route } from "wouter";
 
 import Home from "~routes/welcome";
 import Start from "~routes/welcome/start";
 import Setup from "~routes/welcome/setup";
-
-import makeCachedMatcher from "wouter/matcher";
 import GettingStarted from "~routes/welcome/gettingStarted";
+
 import { ArConnectThemeProvider } from "~components/hardware/HardwareWalletTheme";
 import { useRemoveCover } from "~wallets/setup/non/non-wallet-setup.hook";
 
 export default function Welcome() {
   useRemoveCover();
 
+  // TODO: Make sure the router still works without the custom matcher:
+
   return (
     <ArConnectThemeProvider>
-      <Router hook={useHashLocation} matcher={customMatcher}>
+      <Router hook={useHashLocation}>
         <Route path="/" component={Home} />
         <Route path="/start/:page" component={Start} />
         <Route path="/getting-started/:page">
@@ -35,6 +35,9 @@ export default function Welcome() {
   );
 }
 
+/*
+import makeCachedMatcher from "wouter/matcher";
+
 const convertPathToRegexp = (path: Path) => {
   let keys = [];
 
@@ -44,3 +47,4 @@ const convertPathToRegexp = (path: Path) => {
 };
 
 const customMatcher = makeCachedMatcher(convertPathToRegexp);
+*/

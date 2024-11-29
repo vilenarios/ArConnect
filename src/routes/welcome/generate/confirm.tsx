@@ -1,14 +1,20 @@
 import { ButtonV2, Spacer, Text, useToasts } from "@arconnect/components";
 import { ArrowRightIcon } from "@iconicicons/react";
-import { useLocation, useRoute } from "wouter";
+import { useRoute } from "wouter";
 import { useContext, useEffect, useState } from "react";
 import { WalletContext } from "../setup";
 import SeedInput from "~components/SeedInput";
 import Paragraph from "~components/Paragraph";
 import browser from "webextension-polyfill";
 import { PageType, trackPage } from "~utils/analytics";
+import { useLocation } from "~wallets/router/router.utils";
 
+// TODO: Convert to View
 export default function Confirm() {
+  const { navigate } = useLocation();
+  // TODO: Replace with useParams:
+  const [, params] = useRoute<{ setup: string; page: string }>("/:setup/:page");
+
   // wallet context
   const { wallet: generatedWallet } = useContext(WalletContext);
 
@@ -17,10 +23,6 @@ export default function Confirm() {
 
   // confirm seedphrase input state
   const [seedInputState, setSeedInputState] = useState<string>();
-
-  // route
-  const [, params] = useRoute<{ setup: string; page: string }>("/:setup/:page");
-  const [, setLocation] = useLocation();
 
   // validate entered seedphrase
   function validateSeedphrase() {
@@ -35,7 +37,7 @@ export default function Confirm() {
     }
 
     // continue
-    setLocation(`/${params.setup}/${Number(params.page) + 1}`);
+    navigate(`/${params.setup}/${Number(params.page) + 1}`);
   }
 
   // Segment

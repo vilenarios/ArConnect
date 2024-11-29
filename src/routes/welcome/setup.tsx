@@ -9,7 +9,7 @@ import {
 import { Card, Spacer, useToasts } from "@arconnect/components";
 import type { JWKInterface } from "arweave/web/lib/wallet";
 import { jwkFromMnemonic } from "~wallets/generator";
-import { useLocation, useRoute } from "wouter";
+import { useRoute } from "wouter";
 import { ArrowLeftIcon } from "@iconicicons/react";
 import browser from "webextension-polyfill";
 import * as bip39 from "bip39-web-crypto";
@@ -27,6 +27,7 @@ import Theme from "./load/theme";
 import { defaultGateway } from "~gateways/gateway";
 import Pagination, { Status } from "~components/Pagination";
 import { getWalletKeyLength } from "~wallets";
+import { useLocation } from "~wallets/router/router.utils";
 
 /** Wallet generate pages */
 const generatePages = [
@@ -53,9 +54,10 @@ const loadTitles = [
   "done"
 ];
 
+// TODO: Convert to View
 export default function Setup({ setupMode, page }: Props) {
-  // location
-  const [, setLocation] = useLocation();
+  const { navigate } = useLocation();
+  // TODO: Replace with useParams:
   const [, params] = useRoute<{ setup: string; page: string }>("/:setup/:page");
 
   // total page count
@@ -72,7 +74,7 @@ export default function Setup({ setupMode, page }: Props) {
   useEffect(() => {
     // wrong setup mode
     if (Number.isNaN(page) || page < 1 || page > pageCount) {
-      setLocation(`/${setupMode}/1`);
+      navigate(`/${setupMode}/1`);
     }
   }, [setupMode, page]);
 
@@ -82,7 +84,7 @@ export default function Setup({ setupMode, page }: Props) {
   // check if the user is on the wrong page without a password
   useEffect(() => {
     if (page !== 1 && password === "") {
-      setLocation(`/${setupMode}/1`);
+      navigate(`/${setupMode}/1`);
     }
   }, [page, password]);
 
@@ -95,8 +97,8 @@ export default function Setup({ setupMode, page }: Props) {
   // generate wallet in the background
   const [generatedWallet, setGeneratedWallet] = useState<GeneratedWallet>({});
 
-  const navigate = () => {
-    setLocation(`/${params.setup}/${page - 1}`);
+  const navigateToPreviousPage = () => {
+    navigate(`/${params.setup}/${page - 1}`);
   };
 
   async function generateWallet() {
@@ -173,7 +175,11 @@ export default function Setup({ setupMode, page }: Props) {
       <Spacer y={2} />
       <SetupCard>
         <HeaderContainer>
-          {page === 1 ? <Spacer /> : <BackButton onClick={navigate} />}
+          {page === 1 ? (
+            <Spacer />
+          ) : (
+            <BackButton onClick={navigateToPreviousPage} />
+          )}
           <PaginationContainer>
             {pageTitles.map((title, i) => (
               <Pagination

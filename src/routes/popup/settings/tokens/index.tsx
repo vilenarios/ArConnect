@@ -1,6 +1,5 @@
 import { useStorage } from "@plasmohq/storage/hook";
 import { ExtensionStorage } from "~utils/storage";
-import { useLocation } from "wouter";
 import { useEffect, useMemo, useState } from "react";
 import type { Token, TokenType } from "~tokens/token";
 import styled from "styled-components";
@@ -20,8 +19,11 @@ import aoLogo from "url:/assets/ecosystem/ao-logo.svg";
 import arLogoDark from "url:/assets/ar/logo_dark.png";
 import { getUserAvatar } from "~lib/avatar";
 import SearchInput from "~components/dashboard/SearchInput";
+import { useLocation } from "~wallets/router/router.utils";
 
 export function TokensSettingsView() {
+  const { navigate } = useLocation();
+
   // tokens
   const [tokens] = useStorage<Token[]>(
     {
@@ -61,9 +63,6 @@ export function TokensSettingsView() {
     })();
   }, []);
 
-  // router
-  const [, setLocation] = useLocation();
-
   // search
   const searchInput = useInput();
 
@@ -82,7 +81,7 @@ export function TokensSettingsView() {
   }
 
   const addToken = () => {
-    setLocation("/quick-settings/tokens/new");
+    navigate("/quick-settings/tokens/new");
   };
 
   const handleTokenClick = (token: {
@@ -93,14 +92,14 @@ export function TokensSettingsView() {
     type?: TokenType;
     name?: string;
   }) => {
-    setLocation(`/quick-settings/tokens/${token.id}`);
+    navigate(`/quick-settings/tokens/${token.id}`);
   };
 
   return (
     <>
       <HeadV2
         title={browser.i18n.getMessage("setting_tokens")}
-        back={() => setLocation("/quick-settings")}
+        back={() => navigate("/quick-settings")}
       />
       <Wrapper>
         <div>
@@ -149,7 +148,10 @@ export function TokensSettingsView() {
   );
 }
 
+// TODO: Convert to View (extract to its own file)
 function TokenListItem({ token, ao, onClick }: Props) {
+  const { navigate } = useLocation();
+
   // format address
   const formattedAddress = useMemo(
     () => formatAddress(token.id, 8),
@@ -197,14 +199,11 @@ function TokenListItem({ token, ao, onClick }: Props) {
     })();
   }, [token, theme, gateway, ao]);
 
-  // router
-  const [, setLocation] = useLocation();
-
   const handleClick = () => {
     if (onClick) {
       onClick();
     } else {
-      setLocation(`/quick-settings/tokens/${token.id}`);
+      navigate(`/quick-settings/tokens/${token.id}`);
     }
   };
 

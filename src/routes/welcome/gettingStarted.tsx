@@ -9,8 +9,8 @@ import styled from "styled-components";
 import Completed from "./gettingStarted/completed";
 import Enabled from "./gettingStarted/enableNotifications";
 import Connect from "./gettingStarted/connect";
-import { useLocation } from "wouter";
 import Explore from "./gettingStarted/explore";
+import { useLocation } from "~wallets/router/router.utils";
 
 const gettingStartedPages = [
   <Completed />,
@@ -19,10 +19,12 @@ const gettingStartedPages = [
   <Connect />
 ];
 
+// TODO: Convert to View
 export default function GettingStarted({ page }) {
+  const { navigate } = useLocation();
+
   // animate content sice
   const [contentSize, setContentSize] = useState<number>(0);
-  const [, setLocation] = useLocation();
   const contentRef = useCallback<(el: HTMLDivElement) => void>((el) => {
     if (!el) return;
 
@@ -34,9 +36,9 @@ export default function GettingStarted({ page }) {
     obs.observe(el);
   }, []);
 
-  const navigate = (pageNum: number) => {
+  const navigateToPage = (pageNum: number) => {
     if (pageNum < 5) {
-      setLocation(`/getting-started/${pageNum}`);
+      navigate(`/getting-started/${pageNum}`);
     } else {
       // reset before unload
       window.onbeforeunload = null;
@@ -68,7 +70,7 @@ export default function GettingStarted({ page }) {
           <PageIndicatorContainer>
             {gettingStartedPages.map((_, i) => (
               <PageIndicator
-                onClick={() => navigate(i + 1)}
+                onClick={() => navigateToPage(i + 1)}
                 active={page === i + 1}
               />
             ))}

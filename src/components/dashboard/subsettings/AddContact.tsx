@@ -30,17 +30,22 @@ import { findGateway } from "~gateways/wayfinder";
 import { uploadUserAvatar, getUserAvatar } from "~lib/avatar";
 // import { getAllArNSNames } from "~lib/arns";
 import styled from "styled-components";
-import { useLocation } from "wouter";
 import copy from "copy-to-clipboard";
 import { gql } from "~gateways/api";
 import { useTheme } from "~utils/theme";
+import { useLocation } from "~wallets/router/router.utils";
 // import { isAddressFormat } from "~utils/format";
 
 interface AddContactProps {
   isQuickSetting?: boolean;
 }
 
+// TODO: Convert to View
 export default function AddContact({ isQuickSetting }: AddContactProps) {
+  const { location, navigate } = useLocation();
+  // TODO: Get address from params, not by splitting the location:
+  const address = location.split("=")[1];
+
   // contacts
   const [storedContacts, setStoredContacts] = useStorage(
     {
@@ -58,8 +63,6 @@ export default function AddContact({ isQuickSetting }: AddContactProps) {
 
   const theme = useTheme();
   const { setToast } = useToasts();
-  const [location] = useLocation();
-  const address = location.split("=")[1];
 
   const [contact, setContact] = useState({
     name: "",
@@ -191,8 +194,6 @@ export default function AddContact({ isQuickSetting }: AddContactProps) {
     })();
   }, [contact.address, activeAddress]);
 
-  const [, setLocation] = useLocation();
-
   const saveNewContact = async () => {
     // check if the contact address already exists
     const addressUsed = storedContacts.some(
@@ -230,7 +231,7 @@ export default function AddContact({ isQuickSetting }: AddContactProps) {
         avatarId: ""
       });
 
-      setLocation(
+      navigate(
         `/${isQuickSetting ? "quick-settings/" : ""}contacts/${contact.address}`
       );
     } catch (error) {
@@ -252,7 +253,7 @@ export default function AddContact({ isQuickSetting }: AddContactProps) {
     });
 
     removeContactModal.setOpen(false);
-    setLocation(`/${isQuickSetting ? "quick-settings/" : ""}contacts`);
+    navigate(`/${isQuickSetting ? "quick-settings/" : ""}contacts`);
   };
 
   const areFieldsEmpty = () => {

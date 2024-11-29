@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { useLocation } from "wouter";
+import { useCallback, useEffect } from "react";
+import { useLocation as useWouterLocation } from "wouter";
 import type { RouteConfig, RouteString } from "~wallets/router/router.types";
 
 export function prefixRoutes(
@@ -13,7 +13,7 @@ export function prefixRoutes(
 }
 
 export function BodyScroller() {
-  const [location] = useLocation();
+  const { location } = useLocation();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -22,10 +22,16 @@ export function BodyScroller() {
   return null;
 }
 
-export function HistoryObserver() {
-  const [location] = useLocation();
+export function useLocation() {
+  const [location, navigate] = useWouterLocation();
 
-  // TODO: To be implemented...
+  const back = useCallback(() => {
+    history.back();
+  }, []);
 
-  return null;
+  return {
+    location,
+    navigate,
+    back
+  };
 }

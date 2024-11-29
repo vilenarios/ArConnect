@@ -32,7 +32,7 @@ import {
 } from "~components/dashboard/list/BaseElement";
 import { formatAddress } from "~utils/format";
 import { useTheme } from "~utils/theme";
-import { useHistory } from "~wallets/router/hash/hash-router.hook";
+import { useLocation } from "~wallets/router/router.utils";
 import { getPrice } from "~lib/coingecko";
 import useSetting from "~settings/hook";
 import { PageType, trackPage } from "~utils/analytics";
@@ -49,12 +49,11 @@ export type SubscriptionDetailsViewProps =
 export function SubscriptionDetailsView({
   params: { id }
 }: SubscriptionDetailsViewProps) {
+  const { navigate, back } = useLocation();
   const theme = useTheme();
   const [subData, setSubData] = useState<SubscriptionData | null>(null);
   const [checked, setChecked] = useState(false);
   const [autopayChecked, setAutopayChecked] = useState(false);
-
-  const [push, goBack] = useHistory();
   const { setToast } = useToasts();
   const [price, setPrice] = useState<BigNumber | null>();
   const [currency] = useSetting<string>("currency");
@@ -102,7 +101,7 @@ export function SubscriptionDetailsView({
     }
 
     browser.alarms.clear(`subscription-alarm-${subData.arweaveAccountAddress}`);
-    goBack();
+    back();
     // redirect to subscription page
   };
 
@@ -207,7 +206,7 @@ export function SubscriptionDetailsView({
                         SubscriptionStatus.AWAITING_PAYMENT && (
                         <PayNowButton
                           onClick={() =>
-                            push(
+                            navigate(
                               `/subscriptions/${subData.arweaveAccountAddress}/payment`
                             )
                           }
@@ -324,7 +323,7 @@ export function SubscriptionDetailsView({
             <ButtonV2
               fullWidth
               style={{ fontWeight: "500" }}
-              onClick={() => push(`/subscriptions/${id}/manage`)}
+              onClick={() => navigate(`/subscriptions/${id}/manage`)}
             >
               Manage Subscription
             </ButtonV2>

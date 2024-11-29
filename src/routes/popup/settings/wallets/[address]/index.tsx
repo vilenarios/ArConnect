@@ -24,8 +24,8 @@ import styled from "styled-components";
 import copy from "copy-to-clipboard";
 import { formatAddress } from "~utils/format";
 import HeadV2 from "~components/popup/HeadV2";
-import { useLocation } from "wouter";
 import type { CommonRouteProps } from "~wallets/router/router.types";
+import { useLocation } from "~wallets/router/router.utils";
 
 export interface WalletViewParams {
   address: string;
@@ -34,6 +34,8 @@ export interface WalletViewParams {
 export type WalletViewProps = CommonRouteProps<WalletViewParams>;
 
 export function WalletView({ params: { address } }: WalletViewProps) {
+  const { navigate } = useLocation();
+
   // wallets
   const [wallets, setWallets] = useStorage<StoredWallet[]>(
     {
@@ -51,9 +53,6 @@ export function WalletView({ params: { address } }: WalletViewProps) {
 
   // toasts
   const { setToast } = useToasts();
-
-  // location
-  const [, setLocation] = useLocation();
 
   // ans
   const [ansLabel, setAnsLabel] = useState<string>();
@@ -133,7 +132,7 @@ export function WalletView({ params: { address } }: WalletViewProps) {
     <>
       <HeadV2
         title={browser.i18n.getMessage("edit_wallet")}
-        back={() => setLocation("/quick-settings/wallets")}
+        back={() => navigate("/quick-settings/wallets")}
       />
       <Wrapper>
         <div>
@@ -203,7 +202,7 @@ export function WalletView({ params: { address } }: WalletViewProps) {
         <div>
           <ButtonV2
             fullWidth
-            onClick={() => setLocation(`/quick-settings/wallets/${address}/qr`)}
+            onClick={() => navigate(`/quick-settings/wallets/${address}/qr`)}
           >
             {browser.i18n.getMessage("generate_qr_code")}
             <QrCode02 style={{ marginLeft: "2px" }} />
@@ -213,7 +212,7 @@ export function WalletView({ params: { address } }: WalletViewProps) {
             fullWidth
             secondary
             onClick={() =>
-              setLocation(`/quick-settings/wallets/${address}/export`)
+              navigate(`/quick-settings/wallets/${address}/export`)
             }
             disabled={wallet.type === "hardware"}
           >
@@ -254,7 +253,7 @@ export function WalletView({ params: { address } }: WalletViewProps) {
                       ),
                       duration: 2000
                     });
-                    setLocation("/quick-settings/wallets");
+                    navigate("/quick-settings/wallets");
                   } catch (e) {
                     console.log("Error removing wallet", e);
                     setToast({

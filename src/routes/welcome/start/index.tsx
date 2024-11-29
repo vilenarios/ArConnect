@@ -1,6 +1,6 @@
 import { ButtonV2, Spacer, Text } from "@arconnect/components";
 import { ArrowRightIcon } from "@iconicicons/react";
-import { useLocation, useRoute } from "wouter";
+import { useRoute } from "wouter";
 import { motion } from "framer-motion";
 import { useMemo } from "react";
 import Screenshots from "~components/welcome/Screenshots";
@@ -8,18 +8,19 @@ import browser from "webextension-polyfill";
 import styled from "styled-components";
 import Ecosystem from "./ecosystem";
 import Arweave from "./arweave";
+import { useLocation } from "~wallets/router/router.utils";
 
+// TODO: Convert to View
 export default function Start() {
-  // router
-  const [, setLocation] = useLocation();
-
-  // route
+  const { navigate } = useLocation();
+  // TODO: Replace with useParams:
   const [, params] = useRoute<{ page: string }>("/start/:page");
 
   // page of the setup
   const page = useMemo(() => {
     const page = Number(params?.page || "1");
 
+    // TODO: This should be a redirect:
     if (![1, 2, 3].includes(page)) return 1;
 
     return page;
@@ -58,17 +59,13 @@ export default function Start() {
           <ButtonV2
             fullWidth
             onClick={() =>
-              setLocation(page === 3 ? "/generate/1" : `/start/${page + 1}`)
+              navigate(page === 3 ? "/generate/1" : `/start/${page + 1}`)
             }
           >
             {browser.i18n.getMessage("next")}
             <ArrowRightIcon style={{ marginLeft: "5px" }} />
           </ButtonV2>
-          <ButtonV2
-            secondary
-            fullWidth
-            onClick={() => setLocation("/generate/1")}
-          >
+          <ButtonV2 secondary fullWidth onClick={() => navigate("/generate/1")}>
             {browser.i18n.getMessage("skip")}
           </ButtonV2>
         </ButtonWrapper>
@@ -78,7 +75,7 @@ export default function Start() {
           .fill("")
           .map((_, i) => (
             <Page
-              onClick={() => setLocation(`/start/${i + 1}`)}
+              onClick={() => navigate(`/start/${i + 1}`)}
               key={i}
               active={page === i + 1}
             />

@@ -7,13 +7,13 @@ import {
   LinkExternal02,
   Coins04
 } from "@untitled-ui/icons-react";
-import { useLocation } from "wouter";
 import { useMemo } from "react";
 import { ListItem, ListItemIcon } from "@arconnect/components";
 import type { Icon } from "~settings/setting";
 import type { HTMLProps, ReactNode } from "react";
 import styled from "styled-components";
 import type { CommonRouteProps } from "~wallets/router/router.types";
+import { useLocation } from "~wallets/router/router.utils";
 
 export interface QuickSettingsViewParams {
   setting?: string;
@@ -23,8 +23,7 @@ export interface QuickSettingsViewParams {
 export type QuickSettingsViewProps = CommonRouteProps<QuickSettingsViewParams>;
 
 export function QuickSettingsView({ params }: QuickSettingsViewProps) {
-  // router location
-  const [, setLocation] = useLocation();
+  const { navigate } = useLocation();
 
   // active setting val
   const activeSetting = useMemo(() => params.setting, [params.setting]);
@@ -33,7 +32,7 @@ export function QuickSettingsView({ params }: QuickSettingsViewProps) {
     <>
       <HeadV2
         title={browser.i18n.getMessage("quick_settings")}
-        back={() => setLocation("/")}
+        back={() => navigate("/")}
       />
       <SettingsList>
         {allSettings.map((setting, i) => (
@@ -49,7 +48,7 @@ export function QuickSettingsView({ params }: QuickSettingsViewProps) {
                   url: browser.runtime.getURL(setting.externalLink)
                 });
               } else {
-                setLocation("/quick-settings/" + setting.name);
+                navigate("/quick-settings/" + setting.name);
               }
             }}
             key={i}

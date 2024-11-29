@@ -10,7 +10,7 @@ import Squircle from "~components/Squircle";
 import browser from "webextension-polyfill";
 import { getSubscriptionData, updateSubscription } from "~subscriptions";
 import dayjs from "dayjs";
-import { useHistory } from "~wallets/router/hash/hash-router.hook";
+import { useLocation } from "~wallets/router/router.utils";
 import {
   SettingIconWrapper,
   SettingImage
@@ -111,6 +111,9 @@ const SubscriptionListItem = ({
 
   icon
 }) => {
+  const { navigate } = useLocation();
+  const theme = useTheme();
+
   let period: string = "";
   const color: string = getColorByStatus(status as SubscriptionStatus);
 
@@ -130,10 +133,9 @@ const SubscriptionListItem = ({
     default:
       period = "";
   }
-  const theme = useTheme();
-  const [push] = useHistory();
+
   return (
-    <ListItem onClick={() => push(`/subscriptions/${id}`)}>
+    <ListItem onClick={() => navigate(`/subscriptions/${id}`)}>
       <Content>
         <SettingIconWrapper
           bg={theme === "light" ? "235,235,235" : "255, 255, 255"}

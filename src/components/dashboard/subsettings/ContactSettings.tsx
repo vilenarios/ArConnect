@@ -23,12 +23,15 @@ import browser from "webextension-polyfill";
 import { useTheme } from "~utils/theme";
 import styled from "styled-components";
 import { svgie } from "~utils/svgies";
-import { useLocation } from "wouter";
 import copy from "copy-to-clipboard";
 import { formatAddress } from "~utils/format";
+import { useLocation } from "~wallets/router/router.utils";
 // import { isAddressFormat } from "~utils/format";
 
+// TODO: Convert to View
 export default function ContactSettings({ address, isQuickSetting }: Props) {
+  const { navigate } = useLocation();
+
   // contacts
   const [storedContacts, setStoredContacts] = useStorage(
     {
@@ -253,8 +256,6 @@ export default function ContactSettings({ address, isQuickSetting }: Props) {
     }
   };
 
-  const [, setLocation] = useLocation();
-
   const removeContactModal = useModal();
 
   const confirmRemoveContact = async () => {
@@ -271,7 +272,7 @@ export default function ContactSettings({ address, isQuickSetting }: Props) {
     }
 
     removeContactModal.setOpen(false);
-    setLocation(`/${isQuickSetting ? "quick-settings/" : ""}contacts`);
+    navigate(`/${isQuickSetting ? "quick-settings/" : ""}contacts`);
   };
 
   const copyAddress: MouseEventHandler = (e) => {

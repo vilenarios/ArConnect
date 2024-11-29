@@ -3,14 +3,12 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   Compass03,
-  Home01,
   Home02
 } from "@untitled-ui/icons-react";
 import browser from "webextension-polyfill";
 import styled from "styled-components";
-import { useLocation } from "wouter";
-import { useHistory } from "~wallets/router/hash/hash-router.hook";
 import { useTheme } from "~utils/theme";
+import { useLocation } from "~wallets/router/router.utils";
 
 const buttons = [
   {
@@ -46,8 +44,7 @@ const buttons = [
 
 export const NavigationBar = () => {
   const theme = useTheme();
-  const [push] = useHistory();
-  const [location] = useLocation();
+  const { location, navigate } = useLocation();
 
   const shouldShowNavigationBar = buttons.some((button) => {
     if (button.title === "Send") {
@@ -70,7 +67,7 @@ export const NavigationBar = () => {
             displayTheme={theme}
             active={active}
             key={index}
-            onClick={() => push(button.route)}
+            onClick={() => navigate(button.route)}
           >
             <IconWrapper displayTheme={theme} size={button.size}>
               {button.icon}

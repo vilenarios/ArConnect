@@ -4,7 +4,6 @@ import SettingListItem, {
 } from "~components/dashboard/list/SettingListItem";
 import { SettingsList } from "~components/dashboard/list/BaseElement";
 import { useEffect, useMemo, useState } from "react";
-import { useLocation } from "wouter";
 import {
   GridIcon,
   InformationIcon,
@@ -40,10 +39,11 @@ import SignSettings from "~components/dashboard/SignSettings";
 import AddToken from "~components/dashboard/subsettings/AddToken";
 import NotificationSettings from "~components/dashboard/NotificationSettings";
 import SearchInput from "~components/dashboard/SearchInput";
+import { useLocation } from "~wallets/router/router.utils";
 
+// TODO: Convert to View
 export default function Settings({ params }: Props) {
-  // router location
-  const [, setLocation] = useLocation();
+  const { navigate } = useLocation();
 
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -100,7 +100,7 @@ export default function Settings({ params }: Props) {
   // if none is selected
   useEffect(() => {
     if (!!activeSetting) return;
-    setLocation("/" + allSettings[0].name);
+    navigate("/" + allSettings[0].name);
   }, [activeSetting]);
 
   // Segment
@@ -128,7 +128,7 @@ export default function Settings({ params }: Props) {
               description={setting.description}
               icon={setting.icon}
               active={activeSetting === setting.name}
-              onClick={() => setLocation("/" + setting.name)}
+              onClick={() => navigate("/" + setting.name)}
               key={`basic-settings-${i}`}
             />
           ))}
@@ -153,7 +153,7 @@ export default function Settings({ params }: Props) {
                   description={setting.description}
                   icon={setting.icon}
                   active={activeSetting === setting.name}
-                  onClick={() => setLocation("/" + setting.name)}
+                  onClick={() => navigate("/" + setting.name)}
                   key={`advanced-settings-${i}`}
                 />
               ))}

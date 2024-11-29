@@ -5,11 +5,10 @@ import { useBrowserExtensionWalletSetUp } from "~wallets/setup/browser-extension
 import type { InitialScreenType } from "~wallets/setup/wallet-setup.types";
 import { Routes } from "~wallets/router/routes.component";
 import { POPUP_ROUTES } from "~wallets/router/popup/popup.routes";
-import HistoryProvider from "~components/popup/HistoryProvider";
-import { useHashLocation } from "~wallets/router/hash/hash-router.hook";
 import { Router as Wouter } from "wouter";
-import { BodyScroller, HistoryObserver } from "~wallets/router/router.utils";
+import { BodyScroller } from "~wallets/router/router.utils";
 import { AnimatePresence } from "framer-motion";
+import { useHashLocation } from "wouter/use-hash-location";
 
 interface ArConnectBrowserExtensionAppProps {
   initialScreenType: InitialScreenType;
@@ -41,15 +40,10 @@ export function ArConnectBrowserExtensionAppRoot() {
     <ArConnectThemeProvider>
       <Wouter hook={useHashLocation}>
         <BodyScroller />
-        <HistoryObserver />
 
-        <HistoryProvider>
-          <AnimatePresence initial={false}>
-            <ArConnectBrowserExtensionApp
-              initialScreenType={initialScreenType}
-            />
-          </AnimatePresence>
-        </HistoryProvider>
+        <AnimatePresence initial={false}>
+          <ArConnectBrowserExtensionApp initialScreenType={initialScreenType} />
+        </AnimatePresence>
       </Wouter>
     </ArConnectThemeProvider>
   );

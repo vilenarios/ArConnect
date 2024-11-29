@@ -1,4 +1,4 @@
-import { useHashLocation } from "~wallets/router/hash/hash-router.hook";
+import { useHashLocation } from "wouter/use-hash-location";
 import { Router, Route } from "wouter";
 
 import Settings from "~routes/dashboard";

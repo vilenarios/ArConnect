@@ -7,16 +7,18 @@ import browser from "webextension-polyfill";
 import useSetting from "~settings/hook";
 import JSConfetti from "js-confetti";
 import { useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation } from "~wallets/router/router.utils";
 
+// TODO: Convert to View
 export default function Done() {
+  const { navigate } = useLocation();
+
   // analytics opt-in
   const [analytics, setAnalytics] = useSetting<boolean>("analytics");
   const [answered, setAnswered] = useStorage<boolean>({
     key: "analytics_consent_answered",
     instance: ExtensionStorage
   });
-  const [, setLocation] = useLocation();
 
   // finalize
   async function done() {
@@ -29,7 +31,7 @@ export default function Done() {
     window.onbeforeunload = null;
 
     // redirect to getting started pages
-    setLocation("/getting-started/1");
+    navigate("/getting-started/1");
   }
 
   // determine location

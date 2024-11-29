@@ -1,5 +1,5 @@
 import { ButtonV2, Spacer, Text } from "@arconnect/components";
-import { useLocation, useRoute } from "wouter";
+import { useRoute } from "wouter";
 import {
   ArrowRightIcon,
   DashboardIcon,
@@ -11,14 +11,16 @@ import useSetting from "~settings/hook";
 import styled from "styled-components";
 import { useEffect } from "react";
 import { PageType, trackPage } from "~utils/analytics";
+import { useLocation } from "~wallets/router/router.utils";
 
+// TODO: Convert to View
 export default function Theme() {
+  const { navigate } = useLocation();
+  // TODO: Replace with useParams:
+  const [, params] = useRoute<{ setup: string; page: string }>("/:setup/:page");
+
   // theme
   const [theme, setTheme] = useSetting("display_theme");
-
-  // route
-  const [, params] = useRoute<{ setup: string; page: string }>("/:setup/:page");
-  const [, setLocation] = useLocation();
 
   // Segment
   // TODO: specify if this is an imported or new wallet
@@ -49,9 +51,7 @@ export default function Theme() {
       <Spacer y={2.5} />
       <ButtonV2
         fullWidth
-        onClick={() =>
-          setLocation(`/${params.setup}/${Number(params.page) + 1}`)
-        }
+        onClick={() => navigate(`/${params.setup}/${Number(params.page) + 1}`)}
       >
         {browser.i18n.getMessage("next")}
         <ArrowRightIcon style={{ marginLeft: "5px" }} />

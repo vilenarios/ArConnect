@@ -17,9 +17,12 @@ import useSetting from "~settings/hook";
 import { ExtensionStorage } from "~utils/storage";
 import { useStorage } from "@plasmohq/storage/hook";
 import JSConfetti from "js-confetti";
-import { useLocation } from "wouter";
+import { useLocation } from "~wallets/router/router.utils";
 
+// TODO: Convert to View
 export default function Done() {
+  const { navigate } = useLocation();
+
   // wallet context
   const { wallet } = useContext(WalletContext);
   const walletRef = useRef(wallet);
@@ -29,8 +32,6 @@ export default function Done() {
 
   // wallet generation taking longer
   const [showLongWaitMessage, setShowLongWaitMessage] = useState(false);
-
-  const [, setLocation] = useLocation();
 
   // password
   const { password } = useContext(PasswordContext);
@@ -91,7 +92,7 @@ export default function Done() {
     }
 
     // redirect to getting started pages
-    setLocation("/getting-started/1");
+    navigate("/getting-started/1");
 
     setShowLongWaitMessage(false);
     setLoading(false);

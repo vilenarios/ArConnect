@@ -1,5 +1,5 @@
 import { ButtonV2, Spacer, Text } from "@arconnect/components";
-import { useLocation, useRoute } from "wouter";
+import { useRoute } from "wouter";
 import { useContext, useEffect, useRef, useState } from "react";
 import { WalletContext } from "../setup";
 import Paragraph from "~components/Paragraph";
@@ -14,8 +14,14 @@ import {
   EyeOffIcon
 } from "@iconicicons/react";
 import { PageType, trackPage } from "~utils/analytics";
+import { useLocation } from "~wallets/router/router.utils";
 
+// TODO: Convert to View
 export default function Backup() {
+  const { navigate } = useLocation();
+  // TODO: Replace with useParams:
+  const [, params] = useRoute<{ setup: string; page: string }>("/:setup/:page");
+
   // seed blur status
   const [shown, setShown] = useState(false);
 
@@ -24,10 +30,6 @@ export default function Backup() {
 
   // ref to track the latest generated wallet
   const walletRef = useRef(generatedWallet);
-
-  // route
-  const [, params] = useRoute<{ setup: string; page: string }>("/:setup/:page");
-  const [, setLocation] = useLocation();
 
   // icon displayed for "copy seedphrase"
   const [copyDisplay, setCopyDisplay] = useState(true);
@@ -64,9 +66,7 @@ export default function Backup() {
       <Spacer y={1} />
       <ButtonV2
         fullWidth
-        onClick={() =>
-          setLocation(`/${params.setup}/${Number(params.page) + 1}`)
-        }
+        onClick={() => navigate(`/${params.setup}/${Number(params.page) + 1}`)}
       >
         {browser.i18n.getMessage("next")}
         <ArrowRightIcon />
