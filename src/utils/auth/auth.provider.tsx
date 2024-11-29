@@ -460,12 +460,12 @@ export function AuthRequestsProvider({
       clearCloseAuthPopupTimeout = closeAuthPopup(AUTH_POPUP_CLOSING_DELAY_MS);
     }
 
+    // Not needed in the embedded wallet, but can be left alone. It won't do anything:
     function handleBeforeUnload() {
-      // Send cancel event for all pending requests if the popup is closed by the user:
-
       authRequests.forEach((authRequest) => {
         if (authRequest.status !== "pending") return;
 
+        // Send cancel event for all pending requests if the popup is closed by the user:
         replyToAuthRequest(
           authRequest.type,
           authRequest.authID,
@@ -474,7 +474,6 @@ export function AuthRequestsProvider({
       });
     }
 
-    // TODO: Not in the embedded wallet:
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
