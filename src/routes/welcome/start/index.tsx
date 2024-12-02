@@ -1,6 +1,5 @@
 import { ButtonV2, Spacer, Text } from "@arconnect/components";
 import { ArrowRightIcon } from "@iconicicons/react";
-import { useRoute } from "wouter";
 import { motion } from "framer-motion";
 import { useMemo } from "react";
 import Screenshots from "~components/welcome/Screenshots";
@@ -9,22 +8,28 @@ import styled from "styled-components";
 import Ecosystem from "./ecosystem";
 import Arweave from "./arweave";
 import { useLocation } from "~wallets/router/router.utils";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-// TODO: Convert to View
-export default function Start() {
+export interface StartWelcomeViewParams {
+  page: string;
+}
+
+export type StartWelcomeViewProps = CommonRouteProps<StartWelcomeViewParams>;
+
+export function StartWelcomeView({
+  params: { page: pageParam }
+}: StartWelcomeViewProps) {
   const { navigate } = useLocation();
-  // TODO: Replace with useParams:
-  const [, params] = useRoute<{ page: string }>("/start/:page");
 
   // page of the setup
   const page = useMemo(() => {
-    const page = Number(params?.page || "1");
+    const page = Number(pageParam || "1");
 
     // TODO: This should be a redirect:
     if (![1, 2, 3].includes(page)) return 1;
 
     return page;
-  }, [params]);
+  }, [pageParam]);
 
   // active page
   const activePage = useMemo(

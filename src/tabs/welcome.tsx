@@ -1,39 +1,36 @@
 import { useHashLocation } from "wouter/use-hash-location";
-import { Router, Route } from "wouter";
-
-import Home from "~routes/welcome";
-import Start from "~routes/welcome/start";
-import Setup from "~routes/welcome/setup";
-import GettingStarted from "~routes/welcome/gettingStarted";
+import { Route, Router as Wouter } from "wouter";
 
 import { ArConnectThemeProvider } from "~components/hardware/HardwareWalletTheme";
 import { useRemoveCover } from "~wallets/setup/non/non-wallet-setup.hook";
+import { BodyScroller } from "~wallets/router/router.utils";
+import { AnimatePresence } from "framer-motion";
+import { Routes } from "~wallets/router/routes.component";
+import { WELCOME_ROUTES } from "~wallets/router/welcome/welcome.routes";
 
-export default function Welcome() {
+export function ArConnectWelcomeApp() {
+  return <Routes routes={WELCOME_ROUTES} />;
+}
+
+export function ArConnectWelcomeAppRoot() {
   useRemoveCover();
-
-  // TODO: Make sure the router still works without the custom matcher:
 
   return (
     <ArConnectThemeProvider>
-      <Router hook={useHashLocation}>
-        <Route path="/" component={Home} />
-        <Route path="/start/:page" component={Start} />
-        <Route path="/getting-started/:page">
-          {(params: { page: string }) => (
-            <GettingStarted page={Number(params.page)} />
-          )}
-        </Route>
+      <Wouter hook={useHashLocation}>
+        <BodyScroller />
 
-        <Route path="/:setupMode(generate|load)/:page">
-          {(params: { setupMode: "generate" | "load"; page: string }) => (
-            <Setup setupMode={params.setupMode} page={Number(params.page)} />
-          )}
-        </Route>
-      </Router>
+        <AnimatePresence initial={false}>
+          <ArConnectWelcomeApp />
+        </AnimatePresence>
+      </Wouter>
     </ArConnectThemeProvider>
   );
 }
+
+export default ArConnectWelcomeAppRoot;
+
+// TODO: Make sure the router still works without the custom matcher:
 
 /*
 import makeCachedMatcher from "wouter/matcher";

@@ -17,8 +17,7 @@ import { popoverAnimation } from "~components/popup/WalletSwitcher";
 import { PageType, trackPage } from "~utils/analytics";
 import { useLocation } from "~wallets/router/router.utils";
 
-// TODO: Convert to View
-export default function Home() {
+export function HomeWelcomeView() {
   const { navigate } = useLocation();
 
   // button refs

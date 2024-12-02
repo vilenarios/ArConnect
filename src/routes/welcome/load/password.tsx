@@ -69,6 +69,9 @@ export default function Password() {
     // set password in global context
     setPassword(passwordInput.state);
 
+    console.log(params);
+    console.log(`/${params.setup}/${Number(params.page) + 1}`);
+
     // next page
     navigate(`/${params.setup}/${Number(params.page) + 1}`);
   }

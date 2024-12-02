@@ -28,6 +28,7 @@ import { defaultGateway } from "~gateways/gateway";
 import Pagination, { Status } from "~components/Pagination";
 import { getWalletKeyLength } from "~wallets";
 import { useLocation } from "~wallets/router/router.utils";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
 /** Wallet generate pages */
 const generatePages = [
@@ -54,11 +55,27 @@ const loadTitles = [
   "done"
 ];
 
-// TODO: Convert to View
-export default function Setup({ setupMode, page }: Props) {
+export interface SetupWelcomeViewParams {
+  setupMode: "generate" | "load";
+  page: string;
+}
+
+export type SetupWelcomeViewProps = CommonRouteProps<SetupWelcomeViewParams>;
+
+export function SetupWelcomeView({
+  params: { setupMode, page: pageParam }
+}: SetupWelcomeViewProps) {
   const { navigate } = useLocation();
-  // TODO: Replace with useParams:
-  const [, params] = useRoute<{ setup: string; page: string }>("/:setup/:page");
+  const page = Number(pageParam);
+
+  // redirect if not on a page
+  useEffect(() => {
+    // wrong setup mode
+    if (Number.isNaN(page) || page < 1 || page > pageCount) {
+      console.log("REDIRECT 1");
+      navigate(`/${setupMode}/1`);
+    }
+  }, [setupMode, page]);
 
   // total page count
   const pageCount = useMemo(
@@ -70,23 +87,16 @@ export default function Setup({ setupMode, page }: Props) {
     [setupMode]
   );
 
-  // redirect if not on a page
-  useEffect(() => {
-    // wrong setup mode
-    if (Number.isNaN(page) || page < 1 || page > pageCount) {
-      navigate(`/${setupMode}/1`);
-    }
-  }, [setupMode, page]);
-
   // temporarily stored password
   const [password, setPassword] = useState("");
 
   // check if the user is on the wrong page without a password
   useEffect(() => {
     if (page !== 1 && password === "") {
+      console.log("REDIRECT 2", setupMode);
       navigate(`/${setupMode}/1`);
     }
-  }, [page, password]);
+  }, [page, password, setupMode]);
 
   // is the setup mode "wallet generation"
   const [isGenerateWallet] = useRoute("/generate/:page");
@@ -98,7 +108,8 @@ export default function Setup({ setupMode, page }: Props) {
   const [generatedWallet, setGeneratedWallet] = useState<GeneratedWallet>({});
 
   const navigateToPreviousPage = () => {
-    navigate(`/${params.setup}/${page - 1}`);
+    console.log("REDIRECT 3");
+    navigate(`/${setupMode}/${page - 1}`);
   };
 
   async function generateWallet() {
@@ -324,9 +335,4 @@ interface GeneratedWallet {
   address?: string;
   mnemonic?: string;
   jwk?: JWKInterface;
-}
-
-interface Props {
-  setupMode: "generate" | "load";
-  page: number;
 }

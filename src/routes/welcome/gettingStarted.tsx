@@ -11,6 +11,7 @@ import Enabled from "./gettingStarted/enableNotifications";
 import Connect from "./gettingStarted/connect";
 import Explore from "./gettingStarted/explore";
 import { useLocation } from "~wallets/router/router.utils";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
 const gettingStartedPages = [
   <Completed />,
@@ -19,9 +20,18 @@ const gettingStartedPages = [
   <Connect />
 ];
 
-// TODO: Convert to View
-export default function GettingStarted({ page }) {
+export interface GettingStartedWelcomeViewParams {
+  page: string;
+}
+
+export type GettingStartedWelcomeViewProps =
+  CommonRouteProps<GettingStartedWelcomeViewParams>;
+
+export function GettingStartedWelcomeView({
+  params: { page: pageParam }
+}: GettingStartedWelcomeViewProps) {
   const { navigate } = useLocation();
+  const page = Number(pageParam);
 
   // animate content sice
   const [contentSize, setContentSize] = useState<number>(0);
@@ -75,7 +85,7 @@ export default function GettingStarted({ page }) {
               />
             ))}
           </PageIndicatorContainer>
-          <ButtonV2 fullWidth onClick={() => navigate(page + 1)}>
+          <ButtonV2 fullWidth onClick={() => navigateToPage(page + 1)}>
             {browser.i18n.getMessage(page + 1 < 4 ? "next" : "done")}
           </ButtonV2>
         </Footer>
