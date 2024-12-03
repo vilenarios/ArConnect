@@ -1,6 +1,5 @@
 import { ButtonV2, Spacer, Text, useToasts } from "@arconnect/components";
 import { ArrowRightIcon } from "@iconicicons/react";
-import { useRoute } from "wouter";
 import { useContext, useEffect, useState } from "react";
 import { WalletContext, type SetupWelcomeViewParams } from "../setup";
 import SeedInput from "~components/SeedInput";
@@ -14,8 +13,6 @@ export type ConfirmWelcomeViewProps = CommonRouteProps<SetupWelcomeViewParams>;
 
 export function ConfirmWelcomeView({ params }: ConfirmWelcomeViewProps) {
   const { navigate } = useLocation();
-  // TODO: Replace with useParams:
-  // const [, params] = useRoute<{ setup: string; page: string }>("/:setup/:page");
 
   // wallet context
   const { wallet: generatedWallet } = useContext(WalletContext);

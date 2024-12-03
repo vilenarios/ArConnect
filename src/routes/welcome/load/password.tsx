@@ -2,7 +2,6 @@ import PasswordStrength from "../../../components/welcome/PasswordStrength";
 import PasswordMatch from "~components/welcome/PasswordMatch";
 import { checkPasswordValid } from "~wallets/generator";
 import { ArrowRightIcon } from "@iconicicons/react";
-import { useRoute } from "wouter";
 import Paragraph from "~components/Paragraph";
 import { useContext, useMemo, useEffect } from "react";
 import browser from "webextension-polyfill";
@@ -26,8 +25,6 @@ export type PasswordWelcomeViewProps = CommonRouteProps<SetupWelcomeViewParams>;
 
 export function PasswordWelcomeView({ params }: PasswordWelcomeViewProps) {
   const { navigate } = useLocation();
-  // TODO: Replace with useParams:
-  // const [, params] = useRoute<{ setup: string; page: string }>("/:setup/:page");
 
   // input controls
   const passwordInput = useInput();

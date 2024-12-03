@@ -1,5 +1,4 @@
 import { ButtonV2, Spacer, Text } from "@arconnect/components";
-import { useRoute } from "wouter";
 import { useContext, useEffect, useRef, useState } from "react";
 import { WalletContext, type SetupWelcomeViewParams } from "../setup";
 import Paragraph from "~components/Paragraph";
@@ -21,8 +20,6 @@ export type BackupWelcomeViewProps = CommonRouteProps<SetupWelcomeViewParams>;
 
 export function BackupWelcomeView({ params }: BackupWelcomeViewProps) {
   const { navigate } = useLocation();
-  // TODO: Replace with useParams:
-  // const [, params] = useRoute<{ setup: string; page: string }>("/:setup/:page");
 
   // seed blur status
   const [shown, setShown] = useState(false);

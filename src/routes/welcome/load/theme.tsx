@@ -1,5 +1,4 @@
 import { ButtonV2, Spacer, Text } from "@arconnect/components";
-import { useRoute } from "wouter";
 import {
   ArrowRightIcon,
   DashboardIcon,
@@ -19,8 +18,6 @@ export type ThemeWelcomeViewProps = CommonRouteProps<SetupWelcomeViewParams>;
 
 export function ThemeWelcomeView({ params }: ThemeWelcomeViewProps) {
   const { navigate } = useLocation();
-  // TODO: Replace with useParams:
-  // const [, params] = useRoute<{ setup: string; page: string }>("/:setup/:page");
 
   // theme
   const [theme, setTheme] = useSetting("display_theme");

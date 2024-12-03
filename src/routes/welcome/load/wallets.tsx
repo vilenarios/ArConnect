@@ -11,7 +11,6 @@ import type { JWKInterface } from "arweave/web/lib/wallet";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { ArrowRightIcon } from "@iconicicons/react";
 import { useStorage } from "@plasmohq/storage/hook";
-import { useRoute } from "wouter";
 import { PasswordContext, type SetupWelcomeViewParams } from "../setup";
 import {
   ButtonV2,
@@ -35,8 +34,6 @@ export type WalletsWelcomeViewProps = CommonRouteProps<SetupWelcomeViewParams>;
 
 export function WalletsWelcomeView({ params }: WalletsWelcomeViewProps) {
   const { navigate } = useLocation();
-  // TODO: Replace with useParams:
-  // const [, params] = useRoute<{ setup: string; page: string }>("/:setup/:page");
 
   // password context
   const { password } = useContext(PasswordContext);
