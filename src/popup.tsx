@@ -129,14 +129,15 @@ export default function Popup() {
             </Route>
           </Switch>
           <Route path="/quick-settings/contacts" component={Contacts} />
-          <Switch>
-            <Route path="/quick-settings/contacts/new" component={NewContact} />
-            <Route path="/quick-settings/contacts/:address">
-              {(params: { address: string }) => (
-                <ContactSettings address={params?.address} />
-              )}
-            </Route>
-          </Switch>
+          <Route path="/quick-settings/contacts/:address">
+            {(params: { address: string }) =>
+              params.address.startsWith("new") ? (
+                <NewContact />
+              ) : (
+                <ContactSettings address={params.address} />
+              )
+            }
+          </Route>
           <Route
             path="/quick-settings/notifications"
             component={NotificationSettings}
