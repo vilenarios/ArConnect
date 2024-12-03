@@ -36,12 +36,13 @@ import { useTheme } from "~utils/theme";
 import { useLocation } from "~wallets/router/router.utils";
 // import { isAddressFormat } from "~utils/format";
 
-interface AddContactProps {
+export interface AddContactDashboardViewProps {
   isQuickSetting?: boolean;
 }
 
-// TODO: Convert to View
-export default function AddContact({ isQuickSetting }: AddContactProps) {
+export function AddContactDashboardView({
+  isQuickSetting
+}: AddContactDashboardViewProps) {
   const { location, navigate } = useLocation();
   // TODO: Get address from params, not by splitting the location:
   const address = location.split("=")[1];

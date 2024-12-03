@@ -72,8 +72,14 @@ export function SetupWelcomeView({ params }: SetupWelcomeViewProps) {
   const { navigate } = useLocation();
   const { setupMode, page: pageParam } = params;
   const page = Number(pageParam);
+
   const pageTitles = VIEW_TITLES_BY_SETUP_MODE[setupMode];
   const pageCount = pageTitles.length;
+
+  console.log({
+    setupMode,
+    page
+  });
 
   // temporarily stored password
   const [password, setPassword] = useState("");
@@ -164,14 +170,17 @@ export function SetupWelcomeView({ params }: SetupWelcomeViewProps) {
     isNaN(page) ||
     page < 1 ||
     page > pageCount ||
-    (page === 1 && password === "")
+    (page !== 1 && password === "")
   ) {
+    console.log("REDIRECT 1");
     return <Redirect to={`/${setupMode}/1`} />;
   }
 
   if (setupMode !== "generate" && setupMode !== "load") {
+    console.log("REDIRECT 2");
     return <Redirect to="/" />;
   }
+  console.log("CurrentView");
 
   const CurrentView = ViewsBySetupMode[setupMode][page - 1];
 

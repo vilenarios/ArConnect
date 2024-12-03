@@ -14,14 +14,22 @@ import { enrichContact } from "~contacts/hooks";
 import { EventType, trackEvent } from "~utils/analytics";
 import type { Contacts } from "~components/Recipient";
 import { useLocation } from "~wallets/router/router.utils";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-interface ContactsProps {
+export interface ContactsDashboardViewParams {
+  contact?: string;
+}
+
+export interface ContactsDashboardViewProps
+  extends CommonRouteProps<ContactsDashboardViewParams> {
   isQuickSetting?: boolean;
 }
 
-// TODO: Convert to View
-export default function Contacts({ isQuickSetting }: ContactsProps) {
+export function ContactsDashboardView({
+  isQuickSetting
+}: ContactsDashboardViewProps) {
   const { navigate } = useLocation();
+  // TODO: Make sure this works in the popup and in the dashboard...
   // TODO: Replace with useParams:
   const [matches, params] = useRoute<{ contact?: string }>(
     "/contacts/:contact?"

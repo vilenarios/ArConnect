@@ -28,8 +28,15 @@ import { formatAddress } from "~utils/format";
 import { useLocation } from "~wallets/router/router.utils";
 // import { isAddressFormat } from "~utils/format";
 
-// TODO: Convert to View
-export default function ContactSettings({ address, isQuickSetting }: Props) {
+interface ContactSettingsDashboardViewProps {
+  isQuickSetting?: boolean;
+  address: string;
+}
+
+export function ContactSettingsDashboardView({
+  isQuickSetting,
+  address
+}: ContactSettingsDashboardViewProps) {
   const { navigate } = useLocation();
 
   // contacts
@@ -691,8 +698,3 @@ export const Title = styled(Text).attrs({
   font-weight: 600;
   margin-bottom: 10px;
 `;
-
-interface Props {
-  address: string;
-  isQuickSetting?: boolean;
-}

@@ -14,8 +14,7 @@ import styled from "styled-components";
 import { useGateway } from "~gateways/wayfinder";
 import { useLocation } from "~wallets/router/router.utils";
 
-// TODO: Convert to View
-export default function Wallets() {
+export function WalletsDashboardView() {
   const { navigate } = useLocation();
   // TODO: Replace with useParams:
   const [matches, params] = useRoute<{ address?: string }>(
@@ -54,7 +53,7 @@ export default function Wallets() {
     // return if the new wallet page is open
     if (activeWalletSetting === "new") return;
 
-    navigate("/wallets/" + firstWallet.address);
+    navigate(`/wallets/${firstWallet.address}`);
   }, [wallets, activeWalletSetting]);
 
   // ans data
@@ -138,7 +137,7 @@ export default function Wallets() {
                 address={wallet.address}
                 avatar={findAvatar(wallet.address)}
                 active={activeWalletSetting === wallet.address}
-                onClick={() => navigate("/wallets/" + wallet.address)}
+                onClick={() => navigate(`/wallets/${wallet.address}`)}
                 key={wallet.address}
               />
             ))}

@@ -24,8 +24,7 @@ import { defaultGateway } from "~gateways/gateway";
 import { WalletKeySizeErrorModal } from "~components/modals/WalletKeySizeErrorModal";
 import { useLocation } from "~wallets/router/router.utils";
 
-// TODO: Convert to View
-export default function AddWallet() {
+export function AddWalletDashboardView() {
   const { navigate } = useLocation();
 
   // password input

@@ -88,8 +88,9 @@ export function GettingStartedWelcomeView({
           <PageIndicatorContainer>
             {Views.map((_, i) => (
               <PageIndicator
-                onClick={() => navigateToPage(i + 1)}
+                key={i}
                 active={page === i + 1}
+                onClick={() => navigateToPage(i + 1)}
               />
             ))}
           </PageIndicatorContainer>

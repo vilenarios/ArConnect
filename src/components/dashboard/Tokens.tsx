@@ -12,8 +12,7 @@ import { ButtonV2, Label, Spacer, Text } from "@arconnect/components";
 import { type TokenInfoWithBalance } from "~tokens/aoTokens/ao";
 import { useLocation } from "~wallets/router/router.utils";
 
-// TODO: Convert to View
-export default function Tokens() {
+export function TokensDashboardView() {
   const { navigate } = useLocation();
   // TODO: Replace with useParams:
   const [matches, params] = useRoute<{ id?: string }>("/tokens/:id?");
@@ -86,7 +85,7 @@ export default function Tokens() {
     }
 
     if (allTokens.length > 0) {
-      navigate("/tokens/" + allTokens[0].id);
+      navigate(`/tokens/${allTokens[0].id}`);
     }
   }, [tokens, enhancedAoTokens, activeTokenSetting, matches]);
 

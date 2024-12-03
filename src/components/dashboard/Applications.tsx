@@ -10,9 +10,16 @@ import browser from "webextension-polyfill";
 import SearchInput from "./SearchInput";
 import styled from "styled-components";
 import { useLocation } from "~wallets/router/router.utils";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-// TODO: Convert to View
-export default function Applications() {
+export interface ApplicationsDashboardViewParams {
+  app?: string;
+}
+
+export type ApplicationsDashboardViewProps =
+  CommonRouteProps<ApplicationsDashboardViewParams>;
+
+export function ApplicationsDashboardView() {
   const { navigate } = useLocation();
   // TODO: Replace with useParams:
   const [, params] = useRoute<{ app?: string }>("/apps/:app?");
@@ -62,7 +69,7 @@ export default function Applications() {
       return;
     }
 
-    navigate("/apps/" + firstApp);
+    navigate(`/apps/${firstApp}`);
   }, [connectedApps]);
 
   // search
@@ -98,7 +105,7 @@ export default function Applications() {
             url={app.url}
             icon={app.icon}
             active={activeApp === app.url}
-            onClick={() => navigate("/apps/" + encodeURIComponent(app.url))}
+            onClick={() => navigate(`/apps/${encodeURIComponent(app.url)}`)}
             key={i}
           />
         ))}

@@ -5,7 +5,7 @@ import { ConfirmPurchaseView } from "~routes/popup/confirm";
 import { ExploreView } from "~routes/popup/explore";
 import { MessageNotificationView } from "~routes/popup/notification/[id]";
 import { NotificationsView } from "~routes/popup/notifications";
-import { PendingPurchase } from "~routes/popup/pending";
+import { PendingPurchaseView } from "~routes/popup/pending";
 import { PurchaseView } from "~routes/popup/purchase";
 import { ReceiveView } from "~routes/popup/receive";
 import { SendView } from "~routes/popup/send";
@@ -43,6 +43,7 @@ export type PopupRoutePath =
   | `/confirm-purchase/${string}`
   | `/purchase-pending`
   | `/receive`
+  | `/send/transfer`
   | `/send/transfer/${string}`
   | `/send/auth/${string}`
   | `/explore`
@@ -58,6 +59,7 @@ export type PopupRoutePath =
   | `/collectibles`
   | `/collectible/${string}`
   | `/transaction/${string}/${string}`
+  | `/send/confirm/${string}/${string}/${string}`
   | `/send/confirm/${string}/${string}/${string}/${string}`
   | `/send/recipient/${string}/${string}/${string}`
   | `/quick-settings`
@@ -131,7 +133,7 @@ export const POPUP_ROUTES = [
   },
   {
     path: PopupPaths.PendingPurchase,
-    component: PendingPurchase
+    component: PendingPurchaseView
   },
   {
     path: PopupPaths.Receive,

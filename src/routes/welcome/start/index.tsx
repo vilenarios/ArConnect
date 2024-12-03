@@ -104,9 +104,9 @@ export function StartWelcomeView({
       <Pagination>
         {Views.map((_, i) => (
           <Page
-            onClick={() => navigate(`/start/${i + 1}`)}
             key={i}
             active={page === i + 1}
+            onClick={() => navigate(`/start/${i + 1}`)}
           />
         ))}
       </Pagination>

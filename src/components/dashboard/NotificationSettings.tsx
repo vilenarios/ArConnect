@@ -6,7 +6,7 @@ import { Input, Spacer, Text } from "@arconnect/components";
 import browser from "webextension-polyfill";
 import { Radio, RadioInner, RadioItem, RadioWrapper } from "./Setting";
 
-export default function NotificationSettings() {
+export function NotificationSettingsDashboardView() {
   const [notificationSettings, setNotificationSettings] = useStorage(
     {
       key: "setting_notifications",

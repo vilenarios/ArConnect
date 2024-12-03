@@ -13,7 +13,7 @@ import browser from "webextension-polyfill";
 import styled from "styled-components";
 import { useTheme } from "~utils/theme";
 
-export default function Reset() {
+export function ResetDashboardView() {
   // reset modal
   const resetModal = useModal();
 

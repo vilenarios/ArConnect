@@ -25,7 +25,13 @@ import styled from "styled-components";
 import copy from "copy-to-clipboard";
 import { formatAddress } from "~utils/format";
 
-export default function WalletSettings({ address }: Props) {
+export interface WalletSettingsDashboardViewProps {
+  address: string;
+}
+
+export function WalletSettingsDashboardView({
+  address
+}: WalletSettingsDashboardViewProps) {
   // wallets
   const [wallets, setWallets] = useStorage<StoredWallet[]>(
     {
@@ -375,7 +381,3 @@ const ButtonWrapper = styled.div`
   flex-direction: row;
   gap: 10px;
 `;
-
-interface Props {
-  address: string;
-}

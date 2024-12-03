@@ -1,6 +1,7 @@
 import type React from "react";
 import type { RouteComponentProps as WouteComponentProps } from "wouter";
 import type { AuthRoutePath } from "~wallets/router/auth/auth.routes";
+import type { DashboardRoutePath } from "~wallets/router/dashboard/dashboard.routes";
 import type { PopupRoutePath } from "~wallets/router/popup/popup.routes";
 import type { WelcomeRoutePath } from "~wallets/router/welcome/welcome.routes";
 
@@ -23,4 +24,5 @@ export interface RouteConfig<P extends BaseRoutePath = BaseRoutePath> {
 export type ArConnectRoutePath =
   | WelcomeRoutePath
   | AuthRoutePath
-  | PopupRoutePath;
+  | PopupRoutePath
+  | DashboardRoutePath;

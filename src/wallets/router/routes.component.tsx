@@ -61,7 +61,7 @@ export function Routes({
 
           return (
             <Woute
-              key={route.key}
+              key={route.key || route.path}
               path={route.path}
               component={PageWithComponent}
             />

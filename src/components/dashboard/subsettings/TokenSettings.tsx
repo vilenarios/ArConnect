@@ -27,7 +27,13 @@ import { RefreshCcw01 } from "@untitled-ui/icons-react";
 import { defaultAoTokens, type TokenInfo } from "~tokens/aoTokens/ao";
 import TokenLoading from "~components/popup/asset/Loading";
 
-export default function TokenSettings({ id }: Props) {
+interface TokenSettingsDashboardViewProps {
+  id: string;
+}
+
+export function TokenSettingsDashboardView({
+  id
+}: TokenSettingsDashboardViewProps) {
   // tokens
   const [tokens, setTokens] = useStorage<Token[]>(
     {
@@ -261,10 +267,6 @@ const Symbol = styled(Text).attrs({
   font-size: 1rem;
   margin-top: 8px;
 `;
-
-interface Props {
-  id: string;
-}
 
 const Title = styled(Text).attrs({
   noMargin: true

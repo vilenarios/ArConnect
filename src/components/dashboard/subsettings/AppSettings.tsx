@@ -27,7 +27,15 @@ import styled from "styled-components";
 import Arweave from "arweave";
 import { defaultGateway, suggestedGateways, testnets } from "~gateways/gateway";
 
-export default function AppSettings({ app, showTitle = false }: Props) {
+export interface AppSettingsDashboardViewProps {
+  app: Application;
+  showTitle?: boolean;
+}
+
+export function AppSettingsDashboardView({
+  app,
+  showTitle = false
+}: AppSettingsDashboardViewProps) {
   // app settings
   const [settings, updateSettings] = app.hook();
   const arweave = new Arweave(defaultGateway);
@@ -353,11 +361,6 @@ export default function AppSettings({ app, showTitle = false }: Props) {
       </ModalV2>
     </>
   );
-}
-
-interface Props {
-  app: Application;
-  showTitle?: boolean;
 }
 
 const AppName = styled(Text).attrs({

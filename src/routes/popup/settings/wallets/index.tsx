@@ -115,7 +115,7 @@ export function WalletsView() {
                     avatar={findAvatar(wallet.address)}
                     active={false}
                     onClick={() =>
-                      navigate("/quick-settings/wallets/" + wallet.address)
+                      navigate(`/quick-settings/wallets/${wallet.address}`)
                     }
                     key={wallet.address}
                   />

@@ -10,8 +10,7 @@ import { useStorage } from "@plasmohq/storage/hook";
 import type { Quote } from "~lib/onramper";
 import { useLocation } from "~wallets/router/router.utils";
 
-// TODO: Convert to View
-export function PendingPurchase() {
+export function PendingPurchaseView() {
   const theme = useTheme();
   const { navigate } = useLocation();
 

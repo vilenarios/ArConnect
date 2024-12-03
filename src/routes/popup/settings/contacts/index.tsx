@@ -1,7 +1,7 @@
 import HeadV2 from "~components/popup/HeadV2";
 import browser from "webextension-polyfill";
 import styled from "styled-components";
-import { default as ContactsComponent } from "~components/dashboard/Contacts";
+import { ContactsDashboardView } from "~components/dashboard/Contacts";
 import { useLocation } from "~wallets/router/router.utils";
 
 export function ContactsView() {
@@ -14,7 +14,7 @@ export function ContactsView() {
         back={() => navigate("/quick-settings")}
       />
       <Wrapper>
-        <ContactsComponent isQuickSetting={true} />
+        <ContactsDashboardView isQuickSetting={true} />
       </Wrapper>
     </>
   );

@@ -19,7 +19,6 @@ export interface ConfirmPurchaseViewParams {
 export type ConfirmPurchaseViewProps =
   CommonRouteProps<ConfirmPurchaseViewParams>;
 
-// TODO: Convert to View (remove unused params)
 export function ConfirmPurchaseView({
   params: { quoteId: id }
 }: ConfirmPurchaseViewProps) {

@@ -102,7 +102,10 @@ export function AppSettingsView({ params: { url } }: AppSettingsViewProps) {
   // remove modal
   const removeModal = useModal();
 
+  // TODO: ???
   if (!settings) return <></>;
+
+  // TODO: Is this only used for quick settings and not for the normal one?
 
   return (
     <>

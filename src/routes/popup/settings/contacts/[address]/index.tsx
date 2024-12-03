@@ -1,6 +1,6 @@
 import HeadV2 from "~components/popup/HeadV2";
 import browser from "webextension-polyfill";
-import { default as ContactSettingsComponent } from "~components/dashboard/subsettings/ContactSettings";
+import { ContactSettingsDashboardView } from "~components/dashboard/subsettings/ContactSettings";
 import styled from "styled-components";
 import type { CommonRouteProps } from "~wallets/router/router.types";
 import { useLocation } from "~wallets/router/router.utils";
@@ -24,7 +24,7 @@ export function ContactSettingsView({
         back={() => navigate("/quick-settings/contacts")}
       />
       <Wrapper>
-        <ContactSettingsComponent address={address} isQuickSetting={true} />
+        <ContactSettingsDashboardView address={address} isQuickSetting={true} />
       </Wrapper>
     </>
   );

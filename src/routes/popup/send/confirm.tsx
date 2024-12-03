@@ -80,7 +80,6 @@ export interface ConfirmViewParams {
 
 export type ConfirmViewProps = CommonRouteProps<ConfirmViewParams>;
 
-// TODO: Convert to View (fix param parsing)
 export function ConfirmView({
   params: { tokenID, qty: qtyParam, subscription }
 }: ConfirmViewProps) {
