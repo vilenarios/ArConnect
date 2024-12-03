@@ -15,88 +15,68 @@ import browser from "webextension-polyfill";
 import * as bip39 from "bip39-web-crypto";
 import styled from "styled-components";
 import Arweave from "arweave";
-
-import GenerateDone from "./generate/done";
-import Confirm from "./generate/confirm";
-import Backup from "./generate/backup";
-
-import Password from "./load/password";
-import Wallets from "./load/wallets";
-import LoadDone from "./load/done";
-import Theme from "./load/theme";
 import { defaultGateway } from "~gateways/gateway";
 import Pagination, { Status } from "~components/Pagination";
 import { getWalletKeyLength } from "~wallets";
 import { useLocation } from "~wallets/router/router.utils";
 import type { CommonRouteProps } from "~wallets/router/router.types";
 
-/** Wallet generate pages */
-const generatePages = [
-  <Password />,
-  <Backup />,
-  <Confirm />,
-  <Theme />,
-  <GenerateDone />
-];
-const generateTitles = [
-  "password",
-  "backup",
-  "confirm",
-  "setting_display_theme",
-  "done"
-];
+// Shared:
+import { PasswordWelcomeView } from "./load/password";
+import { ThemeWelcomeView } from "./load/theme";
 
-/** Wallet load pages */
-const loadPages = [<Password />, <Wallets />, <Theme />, <LoadDone />];
-const loadTitles = [
-  "password",
-  "setting_wallets",
-  "setting_display_theme",
-  "done"
-];
+// Generate:
+import { BackupWelcomeView } from "./generate/backup";
+import { ConfirmWelcomeView } from "./generate/confirm";
+import { GenerateDoneWelcomeView } from "./generate/done";
+
+// Load:
+import { WalletsWelcomeView } from "./load/wallets";
+import { LoadDoneWelcomeView } from "./load/done";
+import { Redirect } from "~wallets/router/components/redirect/Redirect";
+
+// Wallet generate pages:
+
+// TODO: Use a nested router instead:
+const ViewsBySetupMode = {
+  generate: [
+    PasswordWelcomeView,
+    BackupWelcomeView,
+    ConfirmWelcomeView,
+    ThemeWelcomeView,
+    GenerateDoneWelcomeView
+  ],
+  load: [
+    PasswordWelcomeView,
+    WalletsWelcomeView,
+    ThemeWelcomeView,
+    LoadDoneWelcomeView
+  ]
+} as const;
+
+const VIEW_TITLES_BY_SETUP_MODE = {
+  generate: ["password", "backup", "confirm", "setting_display_theme", "done"],
+  load: ["password", "setting_wallets", "setting_display_theme", "done"]
+} as const;
+
+export type WelcomeSetupMode = "generate" | "load";
 
 export interface SetupWelcomeViewParams {
-  setupMode: "generate" | "load";
+  setupMode: WelcomeSetupMode;
   page: string;
 }
 
 export type SetupWelcomeViewProps = CommonRouteProps<SetupWelcomeViewParams>;
 
-export function SetupWelcomeView({
-  params: { setupMode, page: pageParam }
-}: SetupWelcomeViewProps) {
+export function SetupWelcomeView({ params }: SetupWelcomeViewProps) {
   const { navigate } = useLocation();
+  const { setupMode, page: pageParam } = params;
   const page = Number(pageParam);
-
-  // redirect if not on a page
-  useEffect(() => {
-    // wrong setup mode
-    if (Number.isNaN(page) || page < 1 || page > pageCount) {
-      console.log("REDIRECT 1");
-      navigate(`/${setupMode}/1`);
-    }
-  }, [setupMode, page]);
-
-  // total page count
-  const pageCount = useMemo(
-    () => (setupMode === "load" ? loadTitles : generateTitles).length,
-    [setupMode]
-  );
-  const pageTitles = useMemo(
-    () => (setupMode === "load" ? loadTitles : generateTitles),
-    [setupMode]
-  );
+  const pageTitles = VIEW_TITLES_BY_SETUP_MODE[setupMode];
+  const pageCount = pageTitles.length;
 
   // temporarily stored password
   const [password, setPassword] = useState("");
-
-  // check if the user is on the wrong page without a password
-  useEffect(() => {
-    if (page !== 1 && password === "") {
-      console.log("REDIRECT 2", setupMode);
-      navigate(`/${setupMode}/1`);
-    }
-  }, [page, password, setupMode]);
 
   // is the setup mode "wallet generation"
   const [isGenerateWallet] = useRoute("/generate/:page");
@@ -108,7 +88,6 @@ export function SetupWelcomeView({
   const [generatedWallet, setGeneratedWallet] = useState<GeneratedWallet>({});
 
   const navigateToPreviousPage = () => {
-    console.log("REDIRECT 3");
     navigate(`/${setupMode}/${page - 1}`);
   };
 
@@ -181,6 +160,21 @@ export function SetupWelcomeView({
     obs.observe(el);
   }, []);
 
+  if (
+    isNaN(page) ||
+    page < 1 ||
+    page > pageCount ||
+    (page === 1 && password === "")
+  ) {
+    return <Redirect to={`/${setupMode}/1`} />;
+  }
+
+  if (setupMode !== "generate" && setupMode !== "load") {
+    return <Redirect to="/" />;
+  }
+
+  const CurrentView = ViewsBySetupMode[setupMode][page - 1];
+
   return (
     <Wrapper>
       <Spacer y={2} />
@@ -225,11 +219,7 @@ export function SetupWelcomeView({
               <PageWrapper style={{ height: contentSize }}>
                 <AnimatePresence initial={false}>
                   <Page key={page} ref={contentRef}>
-                    {
-                      (setupMode === "load" ? loadPages : generatePages)[
-                        page - 1
-                      ]
-                    }
+                    <CurrentView params={params} />
                   </Page>
                 </AnimatePresence>
               </PageWrapper>

@@ -1,7 +1,7 @@
 import { ButtonV2, Spacer, Text } from "@arconnect/components";
 import { useRoute } from "wouter";
 import { useContext, useEffect, useRef, useState } from "react";
-import { WalletContext } from "../setup";
+import { WalletContext, type SetupWelcomeViewParams } from "../setup";
 import Paragraph from "~components/Paragraph";
 import browser from "webextension-polyfill";
 import styled from "styled-components";
@@ -15,12 +15,14 @@ import {
 } from "@iconicicons/react";
 import { PageType, trackPage } from "~utils/analytics";
 import { useLocation } from "~wallets/router/router.utils";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-// TODO: Convert to View
-export default function Backup() {
+export type BackupWelcomeViewProps = CommonRouteProps<SetupWelcomeViewParams>;
+
+export function BackupWelcomeView({ params }: BackupWelcomeViewProps) {
   const { navigate } = useLocation();
   // TODO: Replace with useParams:
-  const [, params] = useRoute<{ setup: string; page: string }>("/:setup/:page");
+  // const [, params] = useRoute<{ setup: string; page: string }>("/:setup/:page");
 
   // seed blur status
   const [shown, setShown] = useState(false);
@@ -66,7 +68,9 @@ export default function Backup() {
       <Spacer y={1} />
       <ButtonV2
         fullWidth
-        onClick={() => navigate(`/${params.setup}/${Number(params.page) + 1}`)}
+        onClick={() =>
+          navigate(`/${params.setupMode}/${Number(params.page) + 1}`)
+        }
       >
         {browser.i18n.getMessage("next")}
         <ArrowRightIcon />

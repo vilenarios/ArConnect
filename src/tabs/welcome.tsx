@@ -29,19 +29,3 @@ export function ArConnectWelcomeAppRoot() {
 }
 
 export default ArConnectWelcomeAppRoot;
-
-// TODO: Make sure the router still works without the custom matcher:
-
-/*
-import makeCachedMatcher from "wouter/matcher";
-
-const convertPathToRegexp = (path: Path) => {
-  let keys = [];
-
-  // we use original pathToRegexp package here with keys
-  const regexp = pathToRegexp(path, keys, { strict: true });
-  return { keys, regexp };
-};
-
-const customMatcher = makeCachedMatcher(convertPathToRegexp);
-*/

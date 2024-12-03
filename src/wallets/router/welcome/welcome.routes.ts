@@ -1,10 +1,14 @@
 import { HomeWelcomeView } from "~routes/welcome";
 import { GettingStartedWelcomeView } from "~routes/welcome/gettingStarted";
-import { SetupWelcomeView } from "~routes/welcome/setup";
+import { SetupWelcomeView, type WelcomeSetupMode } from "~routes/welcome/setup";
 import { StartWelcomeView } from "~routes/welcome/start";
 import type { RouteConfig } from "~wallets/router/router.types";
 
-// TODO: Update with functions to pass params and replace in all usages:
+export type WelcomeRoutePath =
+  | "/"
+  | `/start/${string}`
+  | `/getting-started/${string}`
+  | `/${WelcomeSetupMode}/${string}`;
 
 export const WelcomePaths = {
   Home: "/",

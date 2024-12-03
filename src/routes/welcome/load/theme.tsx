@@ -12,12 +12,15 @@ import styled from "styled-components";
 import { useEffect } from "react";
 import { PageType, trackPage } from "~utils/analytics";
 import { useLocation } from "~wallets/router/router.utils";
+import type { SetupWelcomeViewParams } from "~routes/welcome/setup";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-// TODO: Convert to View
-export default function Theme() {
+export type ThemeWelcomeViewProps = CommonRouteProps<SetupWelcomeViewParams>;
+
+export function ThemeWelcomeView({ params }: ThemeWelcomeViewProps) {
   const { navigate } = useLocation();
   // TODO: Replace with useParams:
-  const [, params] = useRoute<{ setup: string; page: string }>("/:setup/:page");
+  // const [, params] = useRoute<{ setup: string; page: string }>("/:setup/:page");
 
   // theme
   const [theme, setTheme] = useSetting("display_theme");
@@ -51,7 +54,9 @@ export default function Theme() {
       <Spacer y={2.5} />
       <ButtonV2
         fullWidth
-        onClick={() => navigate(`/${params.setup}/${Number(params.page) + 1}`)}
+        onClick={() =>
+          navigate(`/${params.setupMode}/${Number(params.page) + 1}`)
+        }
       >
         {browser.i18n.getMessage("next")}
         <ArrowRightIcon style={{ marginLeft: "5px" }} />

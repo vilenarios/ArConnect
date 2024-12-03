@@ -1,16 +1,50 @@
 import { ButtonV2, Spacer, Text } from "@arconnect/components";
 import { ArrowRightIcon } from "@iconicicons/react";
 import { motion } from "framer-motion";
-import { useMemo } from "react";
-import Screenshots from "~components/welcome/Screenshots";
 import browser from "webextension-polyfill";
 import styled from "styled-components";
-import Ecosystem from "./ecosystem";
-import Arweave from "./arweave";
 import { useLocation } from "~wallets/router/router.utils";
 import type { CommonRouteProps } from "~wallets/router/router.types";
 
+import { ArweaveWelcomeView } from "./arweave";
+import { EcosystemWelcomeView } from "./ecosystem";
+import { ScreenshotsWelcomeView } from "./screenshots";
+import { Redirect } from "wouter";
+
+interface PageInfo {
+  // i18n key
+  title: string;
+  // i18n key
+  content: string;
+  // arwiki link
+  arWiki?: string;
+}
+
+const pagesInfo: PageInfo[] = [
+  {
+    title: "what_is_arweave",
+    content: "about_arweave",
+    arWiki: "https://arwiki.wiki/#/en/Arweave"
+  },
+  {
+    title: "what_is_the_permaweb",
+    content: "about_permaweb",
+    arWiki: "https://arwiki.wiki/#/en/the-permaweb"
+  },
+  {
+    title: "what_is_arconnect",
+    content: "about_arconnect"
+  }
+] as const;
+
+const Views = [
+  ArweaveWelcomeView,
+  EcosystemWelcomeView,
+  ScreenshotsWelcomeView
+] as const;
+
 export interface StartWelcomeViewParams {
+  // TODO: Use a nested router instead:
   page: string;
 }
 
@@ -20,36 +54,28 @@ export function StartWelcomeView({
   params: { page: pageParam }
 }: StartWelcomeViewProps) {
   const { navigate } = useLocation();
+  const page = Number(pageParam);
 
-  // page of the setup
-  const page = useMemo(() => {
-    const page = Number(pageParam || "1");
+  if (isNaN(page) || page < 1 || page > 3) {
+    return <Redirect to="/welcome/1" />;
+  }
 
-    // TODO: This should be a redirect:
-    if (![1, 2, 3].includes(page)) return 1;
-
-    return page;
-  }, [pageParam]);
-
-  // active page
-  const activePage = useMemo(
-    () => pages.find((_, i) => i === page - 1),
-    [page]
-  );
+  const pageInfo = pagesInfo[page - 1];
+  const View = Views[page - 1];
 
   return (
     <Wrapper>
       <ExplainerSection>
-        <ExplainTitle>{browser.i18n.getMessage(activePage.title)}</ExplainTitle>
+        <ExplainTitle>{browser.i18n.getMessage(pageInfo.title)}</ExplainTitle>
         <Spacer y={0.5} />
         <ExplainerContent>
-          {browser.i18n.getMessage(activePage.content)}
-          {activePage.arWiki && (
+          {browser.i18n.getMessage(pageInfo.content)}
+          {pageInfo.arWiki && (
             <>
               <br />
               {" " + browser.i18n.getMessage("read_more_arwiki") + " "}
               <a
-                href={activePage.arWiki}
+                href={pageInfo.arWiki}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -76,39 +102,18 @@ export function StartWelcomeView({
         </ButtonWrapper>
       </ExplainerSection>
       <Pagination>
-        {Array(3)
-          .fill("")
-          .map((_, i) => (
-            <Page
-              onClick={() => navigate(`/start/${i + 1}`)}
-              key={i}
-              active={page === i + 1}
-            />
-          ))}
+        {Views.map((_, i) => (
+          <Page
+            onClick={() => navigate(`/start/${i + 1}`)}
+            key={i}
+            active={page === i + 1}
+          />
+        ))}
       </Pagination>
-      {page === 1 && <Arweave />}
-      {page === 2 && <Ecosystem />}
-      {page === 3 && <Screenshots />}
+      <View />
     </Wrapper>
   );
 }
-
-const pages: PageInterface[] = [
-  {
-    title: "what_is_arweave",
-    content: "about_arweave",
-    arWiki: "https://arwiki.wiki/#/en/Arweave"
-  },
-  {
-    title: "what_is_the_permaweb",
-    content: "about_permaweb",
-    arWiki: "https://arwiki.wiki/#/en/the-permaweb"
-  },
-  {
-    title: "what_is_arconnect",
-    content: "about_arconnect"
-  }
-];
 
 const Wrapper = styled(motion.div).attrs({
   initial: { opacity: 0 },
@@ -169,12 +174,3 @@ const ButtonWrapper = styled.div`
   flex-direction: column;
   gap: 8px;
 `;
-
-interface PageInterface {
-  // i18n key
-  title: string;
-  // i18n key
-  content: string;
-  // arwiki link
-  arWiki?: string;
-}

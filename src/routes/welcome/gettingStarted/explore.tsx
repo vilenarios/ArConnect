@@ -8,7 +8,7 @@ import styled from "styled-components";
 import { useEffect } from "react";
 import { PageType, trackPage } from "~utils/analytics";
 
-export default function Explore() {
+export function ExploreWelcomeView() {
   // Segment
   useEffect(() => {
     trackPage(PageType.SETUP_EXPLORE);

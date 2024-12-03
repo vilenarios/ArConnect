@@ -1,10 +1,14 @@
 import { useCallback, useEffect } from "react";
 import { useLocation as useWouterLocation } from "wouter";
-import type { RouteConfig, RouteString } from "~wallets/router/router.types";
+import type {
+  RouteConfig,
+  BaseRoutePath,
+  ArConnectRoutePath
+} from "~wallets/router/router.types";
 
 export function prefixRoutes(
   routes: RouteConfig[],
-  prefix: RouteString
+  prefix: BaseRoutePath
 ): RouteConfig[] {
   return routes.map((route) => ({
     ...route,
@@ -33,5 +37,15 @@ export function useLocation() {
     location,
     navigate,
     back
+  } as {
+    location: ArConnectRoutePath;
+    navigate: <S = any>(
+      to: ArConnectRoutePath,
+      options?: {
+        replace?: boolean;
+        state?: S;
+      }
+    ) => void;
+    back: typeof back;
   };
 }

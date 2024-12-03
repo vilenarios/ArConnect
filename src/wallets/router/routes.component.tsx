@@ -9,11 +9,19 @@ import { useLocation } from "~wallets/router/router.utils";
 
 export interface RoutesProps {
   routes: RouteConfig[];
+  diffLocation?: boolean;
   pageComponent?: React.ComponentType<PropsWithChildren>;
 }
 
+// TODO: Consider adding `<AnimatePresence>` and `<BodyScroller>` inside here.
+
+// TODO: Consider adding a prop to `RouteConfig.component.parseParams` to parse
+// params globally inside `PageWithComponent` (e.g. to replace the `Number()`)
+// conversions in the Welcome views.
+
 export function Routes({
   routes,
+  diffLocation = false,
   pageComponent: PageComponent = Page
 }: RoutesProps) {
   const { location } = useLocation();
@@ -61,7 +69,7 @@ export function Routes({
         })}
       </Switch>
     );
-  }, [routes, location]);
+  }, [routes, diffLocation ? location : undefined]);
 
   return memoizedRoutes;
 }

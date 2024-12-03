@@ -19,8 +19,7 @@ import { useStorage } from "@plasmohq/storage/hook";
 import JSConfetti from "js-confetti";
 import { useLocation } from "~wallets/router/router.utils";
 
-// TODO: Convert to View
-export default function Done() {
+export function GenerateDoneWelcomeView() {
   const { navigate } = useLocation();
 
   // wallet context

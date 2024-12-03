@@ -6,7 +6,7 @@ import { useRoute } from "wouter";
 import Paragraph from "~components/Paragraph";
 import { useContext, useMemo, useEffect } from "react";
 import browser from "webextension-polyfill";
-import { PasswordContext } from "../setup";
+import { PasswordContext, type SetupWelcomeViewParams } from "../setup";
 import {
   ButtonV2,
   InputV2,
@@ -20,12 +20,14 @@ import { PageType, trackPage } from "~utils/analytics";
 import { PasswordWarningModal } from "~routes/popup/passwordPopup";
 import { passwordStrength } from "check-password-strength";
 import { useLocation } from "~wallets/router/router.utils";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-// TODO: Convert to View
-export default function Password() {
+export type PasswordWelcomeViewProps = CommonRouteProps<SetupWelcomeViewParams>;
+
+export function PasswordWelcomeView({ params }: PasswordWelcomeViewProps) {
   const { navigate } = useLocation();
   // TODO: Replace with useParams:
-  const [, params] = useRoute<{ setup: string; page: string }>("/:setup/:page");
+  // const [, params] = useRoute<{ setup: string; page: string }>("/:setup/:page");
 
   // input controls
   const passwordInput = useInput();
@@ -69,11 +71,8 @@ export default function Password() {
     // set password in global context
     setPassword(passwordInput.state);
 
-    console.log(params);
-    console.log(`/${params.setup}/${Number(params.page) + 1}`);
-
     // next page
-    navigate(`/${params.setup}/${Number(params.page) + 1}`);
+    navigate(`/${params.setupMode}/${Number(params.page) + 1}`);
   }
 
   // passwords match

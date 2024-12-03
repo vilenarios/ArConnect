@@ -6,21 +6,23 @@ import browser from "webextension-polyfill";
 
 import styled from "styled-components";
 
-import Completed from "./gettingStarted/completed";
-import Enabled from "./gettingStarted/enableNotifications";
-import Connect from "./gettingStarted/connect";
-import Explore from "./gettingStarted/explore";
+import { CompletedWelcomeView } from "./gettingStarted/completed";
+import { EnableNotificationsWelcomeView } from "./gettingStarted/enableNotifications";
+import { ConnectWelcomeView } from "./gettingStarted/connect";
+import { ExploreWelcomeView } from "./gettingStarted/explore";
 import { useLocation } from "~wallets/router/router.utils";
 import type { CommonRouteProps } from "~wallets/router/router.types";
+import { Redirect } from "~wallets/router/components/redirect/Redirect";
 
-const gettingStartedPages = [
-  <Completed />,
-  <Enabled />,
-  <Explore />,
-  <Connect />
+const Views = [
+  CompletedWelcomeView,
+  EnableNotificationsWelcomeView,
+  ExploreWelcomeView,
+  ConnectWelcomeView
 ];
 
 export interface GettingStartedWelcomeViewParams {
+  // TODO: Use a nested router instead:
   page: string;
 }
 
@@ -33,7 +35,7 @@ export function GettingStartedWelcomeView({
   const { navigate } = useLocation();
   const page = Number(pageParam);
 
-  // animate content sice
+  // animate content size
   const [contentSize, setContentSize] = useState<number>(0);
   const contentRef = useCallback<(el: HTMLDivElement) => void>((el) => {
     if (!el) return;
@@ -46,6 +48,10 @@ export function GettingStartedWelcomeView({
     obs.observe(el);
   }, []);
 
+  if (isNaN(page) || page < 1 || page > 5) {
+    return <Redirect to="/getting-started/1" />;
+  }
+
   const navigateToPage = (pageNum: number) => {
     if (pageNum < 5) {
       navigate(`/getting-started/${pageNum}`);
@@ -55,6 +61,8 @@ export function GettingStartedWelcomeView({
       window.top.close();
     }
   };
+
+  const View = Views[page - 1];
 
   return (
     <Wrapper>
@@ -71,14 +79,14 @@ export function GettingStartedWelcomeView({
           <PageWrapper style={{ height: contentSize }}>
             <AnimatePresence initial={false}>
               <Page key={page} ref={contentRef}>
-                {gettingStartedPages[page - 1]}
+                <View />
               </Page>
             </AnimatePresence>
           </PageWrapper>
         </Content>
         <Footer>
           <PageIndicatorContainer>
-            {gettingStartedPages.map((_, i) => (
+            {Views.map((_, i) => (
               <PageIndicator
                 onClick={() => navigateToPage(i + 1)}
                 active={page === i + 1}

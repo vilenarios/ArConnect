@@ -37,7 +37,7 @@ export function AuthApp({ initialScreenType }: AuthAppProps) {
       />
     );
   } else if (initialScreenType === "default") {
-    content = <Routes routes={AUTH_ROUTES} />;
+    content = <Routes routes={AUTH_ROUTES} diffLocation />;
   }
 
   return <>{content}</>;

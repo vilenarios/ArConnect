@@ -9,8 +9,7 @@ import JSConfetti from "js-confetti";
 import { useEffect } from "react";
 import { useLocation } from "~wallets/router/router.utils";
 
-// TODO: Convert to View
-export default function Done() {
+export function LoadDoneWelcomeView() {
   const { navigate } = useLocation();
 
   // analytics opt-in

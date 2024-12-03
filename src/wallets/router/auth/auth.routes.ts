@@ -9,6 +9,18 @@ import { SubscriptionAuthRequestView } from "~routes/auth/subscription";
 import { TokenAuthRequestView } from "~routes/auth/token";
 import type { RouteConfig } from "~wallets/router/router.types";
 
+export type AuthRoutePath =
+  | "/"
+  | `/connect/${string}`
+  | `/allowance/${string}`
+  | `/token/${string}`
+  | `/sign/${string}`
+  | `/signKeystone/${string}`
+  | `/signature/${string}`
+  | `/subscription/${string}`
+  | `/signDataItem/${string}`
+  | `/batchSignDataItem/${string}`;
+
 export const AuthPaths = {
   Connect: "/connect/:authID",
   Allowance: "/allowance/:authID",
@@ -19,7 +31,7 @@ export const AuthPaths = {
   Subscription: "/subscription/:authID",
   SignDataItem: "/signDataItem/:authID",
   BatchSignDataItem: "/batchSignDataItem/:authID"
-} as const;
+} as const satisfies Record<string, AuthRoutePath>;
 
 export const AUTH_ROUTES = [
   {

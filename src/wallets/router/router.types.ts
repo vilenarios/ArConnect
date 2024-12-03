@@ -1,18 +1,26 @@
 import type React from "react";
 import type { RouteComponentProps as WouteComponentProps } from "wouter";
+import type { AuthRoutePath } from "~wallets/router/auth/auth.routes";
+import type { PopupRoutePath } from "~wallets/router/popup/popup.routes";
+import type { WelcomeRoutePath } from "~wallets/router/welcome/welcome.routes";
 
 export interface CommonRouteProps<T = any>
   extends Omit<WouteComponentProps, "params"> {
   params: T;
 }
 
-export type RouteString = `/${string}`;
+export type BaseRoutePath = `/${string}`;
 
 export type RouteAuthType = "auth" | "anon";
 
-export interface RouteConfig {
+export interface RouteConfig<P extends BaseRoutePath = BaseRoutePath> {
   key?: string;
-  path: RouteString;
+  path: P;
   component: React.ComponentType<CommonRouteProps>;
   authType?: RouteAuthType;
 }
+
+export type ArConnectRoutePath =
+  | WelcomeRoutePath
+  | AuthRoutePath
+  | PopupRoutePath;
