@@ -163,15 +163,12 @@ export function SetupWelcomeView({ params }: SetupWelcomeViewProps) {
     page > pageCount ||
     (page !== 1 && password === "")
   ) {
-    console.log("REDIRECT 1");
     return <Redirect to={`/${setupMode}/1`} />;
   }
 
   if (setupMode !== "generate" && setupMode !== "load") {
-    console.log("REDIRECT 2");
     return <Redirect to="/" />;
   }
-  console.log("CurrentView");
 
   const CurrentView = ViewsBySetupMode[setupMode][page - 1];
 
