@@ -57,7 +57,7 @@ export function StartWelcomeView({
   const page = Number(pageParam);
 
   if (isNaN(page) || page < 1 || page > 3) {
-    return <Redirect to="/welcome/1" />;
+    return <Redirect to="/start/1" />;
   }
 
   const pageInfo = pagesInfo[page - 1];
