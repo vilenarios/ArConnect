@@ -1,9 +1,20 @@
-import { onMessage, sendMessage } from "@arconnect/webext-bridge";
 import { bytesToChunks, deconstructTransaction } from "./transaction_builder";
 import type Transaction from "arweave/web/lib/transaction";
-import type { AuthResult } from "shim";
-import authenticate from "../connect/auth";
+import {
+  getAuthPopupWindowTabID,
+  requestUserAuthorization
+} from "../../../utils/auth/auth.utils";
 import { nanoid } from "nanoid";
+import type { ModuleAppData } from "~api/background/background-modules";
+import { isomorphicSendMessage } from "~utils/messaging/messaging.utils";
+import type { Chunk } from "~api/modules/sign/chunks";
+import { log, LOG_GROUP } from "~utils/log/log.utils";
+import type { AuthSuccessResult } from "~utils/auth/auth.types";
+
+interface SignatureResult {
+  id: string;
+  signature: string;
+}
 
 /**
  * Request a manual signature for the transaction.
@@ -14,65 +25,96 @@ import { nanoid } from "nanoid";
  * @param transaction Transaction to sign
  * @param address Address of the wallet that signs the tx
  */
-export const signAuth = (
-  tabURL: string,
+export function signAuth(
+  appData: ModuleAppData,
   transaction: Transaction,
   address: string
-) =>
-  new Promise<AuthResult<{ id: string; signature: string } | undefined>>(
-    (resolve, reject) => {
+) {
+  log(LOG_GROUP.AUTH, "signAuth()", transaction);
+
+  return new Promise<AuthSuccessResult<SignatureResult | undefined>>(
+    async (resolve, reject) => {
       // generate chunks
       const {
         transaction: tx,
         dataChunks,
         tagChunks,
-        chunkCollectionID
+        chunkCollectionID: collectionID
       } = deconstructTransaction(transaction);
 
       // start auth
-      authenticate({
-        type: "sign",
-        url: tabURL,
-        address,
-        transaction: tx,
-        collectionID: chunkCollectionID
-      })
-        .then((res) => resolve(res))
-        .catch((err) => reject(err));
+      requestUserAuthorization<SignatureResult | undefined>(
+        {
+          type: "sign",
+          address,
+          transaction: tx,
+          collectionID
+        },
+        appData
+      )
+        .then((res) => {
+          resolve(res);
+        })
+        .catch((err) => {
+          reject(err);
+        });
 
-      // send tx in chunks to sign if requested
-      onMessage("auth_listening", async ({ sender }) => {
-        if (sender.context !== "web_accessible") return;
+      const popupWindowTabID = await getAuthPopupWindowTabID();
 
-        // send data chunks
+      try {
+        log(
+          LOG_GROUP.CHUNKS,
+          `Sending ${
+            dataChunks.concat(tagChunks).length || 0
+          } txs chunks for collection`,
+          collectionID,
+          "to popup",
+          popupWindowTabID
+        );
+
         for (const chunk of dataChunks.concat(tagChunks)) {
-          try {
-            await sendMessage(
-              "auth_chunk",
-              chunk,
-              `web_accessible@${sender.tabId}`
-            );
-          } catch (e) {
-            // chunk fail
-            return reject(
-              `Error while sending a data chunk of collection "${chunkCollectionID}": \n${e}`
-            );
-          }
+          await isomorphicSendMessage({
+            messageId: "auth_chunk",
+            tabId: popupWindowTabID,
+            data: chunk
+          });
         }
 
-        // end chunk
-        await sendMessage(
-          "auth_chunk",
-          {
-            collectionID: chunkCollectionID,
-            type: "end",
-            index: dataChunks.concat(tagChunks).length
-          },
-          `web_accessible@${sender.tabId}`
+        log(
+          LOG_GROUP.CHUNKS,
+          `Sending "end" chunk for collection`,
+          collectionID,
+          "to popup",
+          popupWindowTabID
         );
-      });
+
+        const endChunk: Chunk = {
+          collectionID,
+          type: "end",
+          index: dataChunks.concat(tagChunks).length
+        };
+
+        await isomorphicSendMessage({
+          messageId: "auth_chunk",
+          tabId: popupWindowTabID,
+          data: endChunk
+        });
+
+        log(
+          LOG_GROUP.CHUNKS,
+          "Done sending txs chunks for collection",
+          collectionID,
+          "to popup",
+          popupWindowTabID
+        );
+      } catch (err) {
+        return reject(
+          `Error in signAuth while sending a data chunk of collection "${collectionID}": \n${err}`
+        );
+      }
     }
   );
+}
 
 export type AuthKeystoneType = "Message" | "DataItem";
 
@@ -81,50 +123,85 @@ export interface AuthKeystoneData {
   data: Uint8Array;
 }
 
-export const signAuthKeystone = (dataToSign: AuthKeystoneData) =>
-  new Promise<AuthResult<{ id: string; signature: string } | undefined>>(
-    (resolve, reject) => {
-      // start auth
+export function signAuthKeystone(
+  appData: ModuleAppData,
+  dataToSign: AuthKeystoneData
+) {
+  log(LOG_GROUP.AUTH, "signAuthKeystone()");
+
+  return new Promise<AuthSuccessResult<SignatureResult | undefined>>(
+    async (resolve, reject) => {
+      // generate chunks
       const collectionID = nanoid();
-      authenticate({
-        type: "signKeystone",
-        keystoneSignType: dataToSign.type,
-        collectionID
-      })
-        .then((res) => resolve(res))
-        .catch((err) => reject(err));
       const dataChunks = bytesToChunks(dataToSign.data, collectionID, 0);
 
-      // send tx in chunks to sign if requested
-      onMessage("auth_listening", async ({ sender }) => {
-        if (sender.context !== "web_accessible") return;
+      // start auth
+      requestUserAuthorization<SignatureResult | undefined>(
+        {
+          type: "signKeystone",
+          keystoneSignType: dataToSign.type,
+          collectionID
+        },
+        appData
+      )
+        .then((res) => {
+          resolve(res);
+        })
+        .catch((err) => {
+          reject(err);
+        });
 
-        // send data chunks
+      const popupWindowTabID = await getAuthPopupWindowTabID();
+
+      try {
+        log(
+          LOG_GROUP.CHUNKS,
+          `Sending ${dataChunks.length || 0} txs chunks for collection`,
+          collectionID,
+          "to popup",
+          popupWindowTabID
+        );
+
         for (const chunk of dataChunks) {
-          try {
-            await sendMessage(
-              "auth_chunk",
-              chunk,
-              `web_accessible@${sender.tabId}`
-            );
-          } catch (e) {
-            // chunk fail
-            return reject(
-              `Error while sending a data chunk of collection "${collectionID}": \n${e}`
-            );
-          }
+          await isomorphicSendMessage({
+            messageId: "auth_chunk",
+            tabId: popupWindowTabID,
+            data: chunk
+          });
         }
 
-        // end chunk
-        await sendMessage(
-          "auth_chunk",
-          {
-            collectionID,
-            type: "end",
-            index: dataChunks.length
-          },
-          `web_accessible@${sender.tabId}`
+        log(
+          LOG_GROUP.CHUNKS,
+          `Sending "end" chunk for collection`,
+          collectionID,
+          "to popup",
+          popupWindowTabID
         );
-      });
+
+        const endChunk: Chunk = {
+          collectionID,
+          type: "end",
+          index: dataChunks.length
+        };
+
+        await isomorphicSendMessage({
+          messageId: "auth_chunk",
+          tabId: popupWindowTabID,
+          data: endChunk
+        });
+
+        log(
+          LOG_GROUP.CHUNKS,
+          "Done sending txs chunks for collection",
+          collectionID,
+          "to popup",
+          popupWindowTabID
+        );
+      } catch (err) {
+        return reject(
+          `Error in signAuthKeystone while sending a data chunk of collection "${collectionID}": \n${err}`
+        );
+      }
     }
   );
+}

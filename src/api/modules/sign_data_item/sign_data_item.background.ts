@@ -1,28 +1,20 @@
-import { allowanceAuth, updateAllowance } from "../sign/allowance";
-import {
-  isLocalWallet,
-  isNotCancelError,
-  isRawDataItem
-} from "~utils/assertions";
+import { isRawDataItem } from "~utils/assertions";
 import { freeDecryptedWallet } from "~wallets/encryption";
-import type { ModuleFunction } from "~api/background";
+import type { BackgroundModuleFunction } from "~api/background/background-modules";
 import { ArweaveSigner, createData } from "arbundles";
 import Application from "~applications/application";
-import { getPrice } from "../dispatch/uploader";
 import { getActiveKeyfile, getActiveWallet } from "~wallets";
-import browser from "webextension-polyfill";
 import {
   signAuth,
   signAuthKeystone,
   type AuthKeystoneData
 } from "../sign/sign_auth";
 import Arweave from "arweave";
-import authenticate from "../connect/auth";
+import { requestUserAuthorization } from "../../../utils/auth/auth.utils";
 import BigNumber from "bignumber.js";
 import { createDataItem } from "~utils/data_item";
-import signMessage from "../sign_message";
 
-const background: ModuleFunction<number[]> = async (
+const background: BackgroundModuleFunction<number[]> = async (
   appData,
   dataItem: unknown
 ) => {
@@ -33,7 +25,7 @@ const background: ModuleFunction<number[]> = async (
     throw new Error(err);
   }
 
-  const app = new Application(appData.appURL);
+  const app = new Application(appData.url);
   const allowance = await app.getAllowance();
   const alwaysAsk = allowance.enabled && allowance.limit.eq(BigNumber("0"));
 
@@ -63,25 +55,20 @@ const background: ModuleFunction<number[]> = async (
       }
     }
     try {
-      await authenticate({
-        type: "signDataItem",
-        data: dataItem,
+      await requestUserAuthorization(
+        {
+          type: "signDataItem",
+          data: dataItem
+        },
         appData
-      });
+      );
     } catch {
       throw new Error("User rejected the sign data item request");
     }
   }
 
   // grab the user's keyfile
-  const decryptedWallet = await getActiveKeyfile().catch((e) => {
-    isNotCancelError(e);
-
-    // if there are no wallets added, open the welcome page
-    browser.tabs.create({ url: browser.runtime.getURL("tabs/welcome.html") });
-
-    throw new Error("No wallets added");
-  });
+  const decryptedWallet = await getActiveKeyfile(appData);
 
   // create app
 
@@ -110,7 +97,7 @@ const background: ModuleFunction<number[]> = async (
         );
 
         await signAuth(
-          appData.appURL,
+          appData,
           // @ts-expect-error
           dataEntry.toJSON(),
           address
@@ -124,7 +111,7 @@ const background: ModuleFunction<number[]> = async (
     await dataEntry.sign(dataSigner);
 
     // update allowance spent amount (in winstons)
-    // await updateAllowance(appData.appURL, price);
+    // await updateAllowance(appData.url, price);
 
     // remove keyfile
     freeDecryptedWallet(decryptedWallet.keyfile);
@@ -148,7 +135,7 @@ const background: ModuleFunction<number[]> = async (
         type: "DataItem",
         data: dataEntry.getRaw()
       };
-      const res = await signAuthKeystone(data);
+      const res = await signAuthKeystone(appData, data);
       dataEntry.setSignature(
         Buffer.from(Arweave.utils.b64UrlToBuffer(res.data.signature))
       );

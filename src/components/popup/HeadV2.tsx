@@ -2,10 +2,10 @@ import {
   type DisplayTheme,
   Section,
   Text,
-  Spacer
+  TooltipV2
 } from "@arconnect/components";
 import { Avatar, CloseLayer, NoAvatarIcon } from "./WalletHeader";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { useTheme } from "~utils/theme";
 import { useStorage } from "@plasmohq/storage/hook";
 import { ArrowLeftIcon } from "@iconicicons/react";
@@ -16,19 +16,24 @@ import HardwareWalletIcon, {
 } from "~components/hardware/HardwareWalletIcon";
 import { useHardwareApi } from "~wallets/hooks";
 import { useHistory } from "~utils/hash_router";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import keystoneLogo from "url:/assets/hardware/keystone.png";
 import WalletSwitcher from "./WalletSwitcher";
 import styled from "styled-components";
 import { svgie } from "~utils/svgies";
+import type { AppInfo } from "~applications/application";
+import Application from "~applications/application";
+import Squircle from "~components/Squircle";
 
-interface HeadV2Props {
+export interface HeadV2Props {
   title: string;
   showOptions?: boolean;
   // allow opening the wallet switcher
   showBack?: boolean;
   padding?: string;
   back?: (...args) => any;
+  appInfo?: AppInfo;
+  onAppInfoClick?: () => void;
 }
 
 export default function HeadV2({
@@ -36,7 +41,9 @@ export default function HeadV2({
   showOptions = true,
   back,
   padding,
-  showBack = true
+  showBack = true,
+  appInfo,
+  onAppInfoClick
 }: HeadV2Props) {
   // scroll position
   const [scrollDirection, setScrollDirection] = useState<"up" | "down">("up");
@@ -87,11 +94,6 @@ export default function HeadV2({
     [activeAddress]
   );
 
-  // first render for animation
-  const [firstRender, setFirstRender] = useState(true);
-
-  useEffect(() => setFirstRender(false), []);
-
   // wallet switcher open
   const [isOpen, setOpen] = useState(false);
 
@@ -101,12 +103,19 @@ export default function HeadV2({
   // history back
   const [, goBack] = useHistory();
 
+  const appName = appInfo?.name;
+  const appIconPlaceholderText = appName?.slice(0, 2).toUpperCase();
+
+  const SquircleWrapper = onAppInfoClick ? ButtonSquircle : React.Fragment;
+
   return (
     <HeadWrapper
       displayTheme={theme}
       collapse={scrollDirection === "down"}
       scrolled={scrolled}
       padding={padding}
+      center={appName === undefined}
+      hasBackButton={showBack}
     >
       {showBack ? (
         <BackButton
@@ -121,36 +130,50 @@ export default function HeadV2({
 
       <PageTitle>{title}</PageTitle>
 
-      {showOptions ? (
-        <AvatarButton>
-          <ButtonAvatar
-            img={ans?.avatar || svgieAvatar}
-            onClick={() => {
-              setOpen(true);
-            }}
-          >
-            {!ans?.avatar && !svgieAvatar && <NoAvatarIcon />}
-            <AnimatePresence initial={false}>
-              {hardwareApi === "keystone" && (
-                <HardwareWalletIcon
-                  icon={keystoneLogo}
-                  color="#2161FF"
-                  {...hwIconAnimateProps}
-                />
-              )}
-            </AnimatePresence>
-          </ButtonAvatar>
-        </AvatarButton>
+      {appName ? (
+        <TooltipV2 content={appName} position="bottomEnd">
+          <SquircleWrapper>
+            <SquircleImg
+              img={appInfo?.logo}
+              placeholderText={appIconPlaceholderText}
+              onClick={onAppInfoClick}
+            />
+          </SquircleWrapper>
+        </TooltipV2>
       ) : null}
 
-      {isOpen && <CloseLayer onClick={() => setOpen(false)} />}
+      {showOptions ? (
+        <>
+          <AvatarButton>
+            <ButtonAvatar
+              img={ans?.avatar || svgieAvatar}
+              onClick={() => {
+                setOpen(true);
+              }}
+            >
+              {!ans?.avatar && !svgieAvatar && <NoAvatarIcon />}
+              <AnimatePresence initial={false}>
+                {hardwareApi === "keystone" && (
+                  <HardwareWalletIcon
+                    icon={keystoneLogo}
+                    color="#2161FF"
+                    {...hwIconAnimateProps}
+                  />
+                )}
+              </AnimatePresence>
+            </ButtonAvatar>
+          </AvatarButton>
 
-      <WalletSwitcher
-        open={isOpen}
-        close={() => setOpen(false)}
-        exactTop={true}
-        showOptions={showOptions}
-      />
+          <WalletSwitcher
+            open={isOpen}
+            close={() => setOpen(false)}
+            exactTop={true}
+            showOptions={showOptions}
+          />
+
+          {isOpen && <CloseLayer onClick={() => setOpen(false)} />}
+        </>
+      ) : null}
     </HeadWrapper>
   );
 }
@@ -160,6 +183,8 @@ const HeadWrapper = styled(Section)<{
   scrolled: boolean;
   displayTheme: DisplayTheme;
   padding: string;
+  center: boolean;
+  hasBackButton: boolean;
 }>`
   position: sticky;
   top: 0;
@@ -169,8 +194,11 @@ const HeadWrapper = styled(Section)<{
   display: flex;
   flex-direction: row;
   width: full;
+  transition: padding 0.07s ease-in-out, border-color 0.23s ease-in-out;
   padding: ${(props) => (props.padding ? props.padding : "15px")};
-  justify-content: center;
+  padding-left: ${(props) =>
+    props.hasBackButton ? "32px" : props.padding || "15px"};
+  justify-content: ${(props) => (props.center ? "center" : "space-between")};
   align-items: center;
   background-color: rgba(${(props) => props.theme.background}, 0.75);
   backdrop-filter: blur(15px);
@@ -181,24 +209,36 @@ const HeadWrapper = styled(Section)<{
         (props.displayTheme === "light" ? "235, 235, 241" : "31, 30, 47") +
         ")"
       : "transparent"};
-  transition: border-color 0.23s ease-in-out;
   user-select: none;
 `;
 
 const BackButton = styled.button`
   position: absolute;
-  top: 0;
-  bottom: 0;
+  width: 32px;
+  height: 32px;
+  top: 50%;
   left: 0;
+  transform: translate(0, -50%);
   display: flex;
-  width: max-content;
   align-items: center;
   justify-content: center;
-  padding: 0 15px;
-  height: 100%;
   cursor: pointer;
   background: transparent;
   border: 0;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset -15px 0;
+  }
+
+  & svg {
+    transition: transform 0.07s ease-in-out;
+  }
+
+  &:hover svg {
+    transform: scale(1.08);
+  }
 
   &:active svg {
     transform: scale(0.92);
@@ -258,4 +298,32 @@ const ButtonAvatar = styled(Avatar)`
   ${NoAvatarIcon} {
     font-size: 1.4rem;
   }
+`;
+
+const ButtonSquircle = styled.button`
+  position: relative;
+  cursor: pointer;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset -15px;
+  }
+
+  & svg {
+    transition: transform 0.07s ease-in-out;
+  }
+
+  &:hover svg {
+    transform: scale(1.08);
+  }
+
+  &:active svg {
+    transform: scale(0.92);
+  }
+`;
+
+const SquircleImg = styled(Squircle)`
+  width: 32px;
+  height: 32px;
 `;

@@ -16,7 +16,7 @@ import { type AnsUser, getAnsProfile } from "~lib/ans";
 import { ExtensionStorage } from "~utils/storage";
 import { formatAddress } from "~utils/format";
 import type { StoredWallet } from "~wallets";
-import { useEffect, useState, type MouseEventHandler } from "react";
+import { useEffect, useState } from "react";
 import HardwareWalletIcon from "~components/hardware/HardwareWalletIcon";
 import keystoneLogo from "url:/assets/hardware/keystone.png";
 import { findGateway } from "~gateways/wayfinder";

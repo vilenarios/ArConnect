@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { createElement, type PropsWithChildren } from "react";
 import { useRoute, Route as BaseRoute } from "wouter";
 import styled from "styled-components";
@@ -8,6 +8,7 @@ import styled from "styled-components";
  */
 const Route: typeof BaseRoute = ({ path, component, children }) => {
   const [matches, params] = useRoute(path);
+
   if (!matches) return null;
 
   const routeContent = component

@@ -6,14 +6,12 @@ import {
 } from "~utils/assertions";
 import { getMissingPermissions } from "~applications/permissions";
 import { createContextMenus } from "~utils/context_menus";
-import type { ModuleFunction } from "~api/background";
+import type { BackgroundModuleFunction } from "~api/background/background-modules";
 import { updateIcon } from "~utils/icon";
-import { getWallets } from "~wallets";
 import Application from "~applications/application";
-import browser from "webextension-polyfill";
-import authenticate from "./auth";
+import { requestUserAuthorization } from "../../../utils/auth/auth.utils";
 
-const background: ModuleFunction<void> = async (
+const background: BackgroundModuleFunction<void> = async (
   appData,
   permissions: unknown,
   appInfo: unknown = {},
@@ -26,19 +24,12 @@ const background: ModuleFunction<void> = async (
 
   if (gateway) isGateway(gateway);
 
-  // check if there are any wallets added
-  const wallets = await getWallets();
-
-  if (wallets.length === 0) {
-    // open setup
-    await browser.tabs.create({
-      url: browser.runtime.getURL("tabs/welcome.html")
-    });
-    throw new Error("No wallets added");
-  }
+  // Note we are not checking if there are any wallets added anymore, as `requestUserAuthorization` (actually
+  // `createAuthPopup`) do that automatically now and will open the Welcome page and throw a "No wallets" added error if
+  // there are no wallets.
 
   // get permissions
-  const app = new Application(appData.appURL);
+  const app = new Application(appData.url);
   const existingPermissions = await app.getPermissions();
 
   // compare existing permissions
@@ -61,13 +52,15 @@ const background: ModuleFunction<void> = async (
 
   try {
     // authenticate the user with the requested permissions
-    await authenticate({
-      type: "connect",
-      url: appData.appURL,
-      permissions,
-      appInfo,
-      gateway
-    });
+    await requestUserAuthorization(
+      {
+        type: "connect",
+        permissions,
+        appInfo,
+        gateway
+      },
+      appData
+    );
 
     // add features available after connection
     await updateIcon(true);

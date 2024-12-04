@@ -1,5 +1,4 @@
 import { unlock } from "~wallets/auth";
-import { useHistory } from "~utils/hash_router";
 import Wrapper from "~components/auth/Wrapper";
 import browser from "webextension-polyfill";
 import {
@@ -20,9 +19,6 @@ export default function Unlock() {
   // toasts
   const { setToast } = useToasts();
 
-  // router push
-  const [push] = useHistory();
-
   // unlock ArConnect
   async function unlockWallet() {
     // unlock using password
@@ -36,8 +32,6 @@ export default function Unlock() {
         duration: 2200
       });
     }
-
-    push("/");
   }
 
   return (

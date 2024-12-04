@@ -1,37 +1,26 @@
 import Arweave from "arweave";
-import type { Alarms } from "webextension-polyfill";
 import browser from "webextension-polyfill";
-import {
-  getAoTokens,
-  getAoTokensCache,
-  getAoTokensAutoImportRestrictedIds
-} from "~tokens";
+import { getAoTokensCache } from "~tokens";
 import type { GQLTransactionsResultInterface } from "ar-gql/dist/faces";
 import { ExtensionStorage } from "~utils/storage";
 import { getActiveAddress } from "~wallets";
-import {
-  getTagValue,
-  timeoutPromise,
-  type Message,
-  type TokenInfo,
-  Id,
-  Owner
-} from "./ao";
-import { withRetry } from "~utils/retry";
+import { getTagValue, type Message, type TokenInfo, Id, Owner } from "./ao";
+import { withRetry } from "~utils/promises/retry";
+import { timeoutPromise } from "~utils/promises/timeout";
 
 /** Tokens storage name */
-const AO_TOKENS = "ao_tokens";
-const AO_TOKENS_CACHE = "ao_tokens_cache";
-const AO_TOKENS_IDS = "ao_tokens_ids";
-const AO_TOKENS_IMPORT_TIMESTAMP = "ao_tokens_import_timestamp";
-const AO_TOKENS_AUTO_IMPORT_RESTRICTED_IDS =
+export const AO_TOKENS = "ao_tokens";
+export const AO_TOKENS_CACHE = "ao_tokens_cache";
+export const AO_TOKENS_IDS = "ao_tokens_ids";
+export const AO_TOKENS_IMPORT_TIMESTAMP = "ao_tokens_import_timestamp";
+export const AO_TOKENS_AUTO_IMPORT_RESTRICTED_IDS =
   "ao_tokens_auto_import_restricted_ids";
 
 /** Variables for sync */
 let isSyncInProgress = false;
 let lastHasNextPage = true;
 
-const gateway = {
+export const gateway = {
   host: "arweave-search.goldsky.com",
   port: 443,
   protocol: "https"
@@ -118,7 +107,7 @@ function getNoticeTransactionsQuery(
   }`;
 }
 
-async function getNoticeTransactions(
+export async function getNoticeTransactions(
   arweave: Arweave,
   address: string,
   filterProcesses: string[] = [],
@@ -271,101 +260,6 @@ export async function syncAoTokens() {
     return { hasNextPage: false, syncCount: 0 };
   } finally {
     isSyncInProgress = false;
-  }
-}
-
-/**
- *  Import AO Tokens
- */
-export async function importAoTokens(alarm: Alarms.Alarm) {
-  if (alarm?.name !== "import_ao_tokens") return;
-
-  try {
-    const activeAddress = await getActiveAddress();
-
-    console.log("Importing AO tokens...");
-
-    let [aoTokens, aoTokensCache, removedTokenIds = []] = await Promise.all([
-      getAoTokens(),
-      getAoTokensCache(),
-      getAoTokensAutoImportRestrictedIds()
-    ]);
-
-    let aoTokensIds = new Set(aoTokens.map(({ processId }) => processId));
-    const aoTokensCacheIds = new Set(
-      aoTokensCache.map(({ processId }) => processId)
-    );
-    let tokenIdstoExclude = new Set([...aoTokensIds, ...removedTokenIds]);
-    const walletTokenIds = new Set([...tokenIdstoExclude, ...aoTokensCacheIds]);
-
-    const arweave = new Arweave(gateway);
-    const { processIds } = await getNoticeTransactions(
-      arweave,
-      activeAddress,
-      Array.from(walletTokenIds)
-    );
-
-    const newProcessIds = Array.from(
-      new Set([...processIds, ...aoTokensCacheIds])
-    ).filter((processId) => !tokenIdstoExclude.has(processId));
-
-    if (newProcessIds.length === 0) {
-      console.log("No new ao tokens found!");
-      return;
-    }
-
-    const promises = newProcessIds
-      .filter((processId) => !aoTokensCacheIds.has(processId))
-      .map((processId) =>
-        withRetry(async () => {
-          const token = await timeoutPromise(getTokenInfo(processId), 3000);
-          return { ...token, processId };
-        }, 2)
-      );
-    const results = await Promise.allSettled(promises);
-
-    const tokens = [];
-    const tokensToRestrict = [];
-    results.forEach((result) => {
-      if (result.status === "fulfilled") {
-        const token = result.value;
-        if (token.Ticker) {
-          tokens.push(token);
-        } else if (!removedTokenIds.includes(token.processId)) {
-          tokensToRestrict.push(token);
-        }
-      }
-    });
-
-    const updatedTokens = [...aoTokensCache, ...tokens];
-
-    aoTokens = await getAoTokens();
-    aoTokensIds = new Set(aoTokens.map(({ processId }) => processId));
-    tokenIdstoExclude = new Set([...aoTokensIds, ...removedTokenIds]);
-
-    if (tokensToRestrict.length > 0) {
-      removedTokenIds.push(
-        ...tokensToRestrict.map(({ processId }) => processId)
-      );
-      await ExtensionStorage.set(
-        AO_TOKENS_AUTO_IMPORT_RESTRICTED_IDS,
-        removedTokenIds
-      );
-    }
-
-    const newTokens = updatedTokens.filter(
-      (token) => !tokenIdstoExclude.has(token.processId)
-    );
-    if (newTokens.length === 0) return;
-
-    newTokens.forEach((token) => aoTokens.push(token));
-    await ExtensionStorage.set(AO_TOKENS, aoTokens);
-
-    console.log("Imported ao tokens!");
-  } catch (error: any) {
-    console.log("Error importing tokens: ", error?.message);
-  } finally {
-    await ExtensionStorage.set(AO_TOKENS_IMPORT_TIMESTAMP, 0);
   }
 }
 

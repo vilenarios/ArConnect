@@ -1,9 +1,9 @@
-import { replyToAuthRequest, useAuthParams, useAuthUtils } from "~utils/auth";
+import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import {
-  ButtonV2,
   InputV2,
   ListItem,
   Section,
+  Spacer,
   Text,
   useInput,
   useToasts
@@ -13,56 +13,42 @@ import browser from "webextension-polyfill";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 
-import { ResetButton } from "~components/dashboard/Reset";
 import SignDataItemDetails from "~components/signDataItem";
-import HeadV2 from "~components/popup/HeadV2";
 import { Quantity, Token } from "ao-tokens";
-import { timeoutPromise } from "~tokens/aoTokens/ao";
 import { ExtensionStorage } from "~utils/storage";
 import { useStorage } from "@plasmohq/storage/hook";
 import { checkPassword } from "~wallets/auth";
-
-interface Tag {
-  name: string;
-  value: string;
-}
-
-interface DataStructure {
-  data: number[];
-  target?: string;
-  tags: Tag[];
-}
+import { timeoutPromise } from "~utils/promises/timeout";
+import { HeadAuth } from "~components/HeadAuth";
+import { AuthButtons } from "~components/auth/AuthButtons";
 
 export default function BatchSignDataItem() {
-  // connect params
-  const params = useAuthParams<{
-    appData: { appURL: string };
-    data: DataStructure;
-  }>();
+  const { authRequest, acceptRequest, rejectRequest } =
+    useCurrentAuthRequest("batchSignDataItem");
+  const { data, url } = authRequest;
   const { setToast } = useToasts();
   const [loading, setLoading] = useState<boolean>(false);
   const [transaction, setTransaction] = useState<any | null>(null);
   const [transactionList, setTransactionList] = useState<any | null>(null);
   const [password, setPassword] = useState<boolean>(false);
-  const { closeWindow, cancel } = useAuthUtils(
-    "batchSignDataItem",
-    params?.authID
-  );
   const passwordInput = useInput();
+
   async function sign() {
     if (password) {
       const checkPw = await checkPassword(passwordInput.state);
+
       if (!checkPw) {
         setToast({
           type: "error",
           content: browser.i18n.getMessage("invalidPassword"),
           duration: 2400
         });
+
         return;
       }
     }
-    await replyToAuthRequest("batchSignDataItem", params?.authID);
-    closeWindow();
+
+    acceptRequest();
   }
 
   const [signatureAllowance] = useStorage(
@@ -76,10 +62,11 @@ export default function BatchSignDataItem() {
   useEffect(() => {
     const fetchTransactionList = async () => {
       setLoading(true);
+
       try {
-        if (Array.isArray(params?.data)) {
+        if (Array.isArray(data)) {
           const listItems = await Promise.all(
-            params.data.map(async (item, index) => {
+            data.map(async (item, index) => {
               let amount = "";
               let name = "";
               const quantity =
@@ -132,22 +119,19 @@ export default function BatchSignDataItem() {
     };
 
     fetchTransactionList();
-  }, [params]);
+  }, [data]);
 
   return (
     <Wrapper>
       <div>
-        <HeadV2
+        <HeadAuth
           title={browser.i18n.getMessage("batch_sign_items")}
-          showOptions={false}
-          back={() => (transaction ? setTransaction(null) : cancel())}
+          back={transaction ? () => setTransaction(null) : undefined}
         />
+
         <Description>
           <Text noMargin>
-            {browser.i18n.getMessage(
-              "batch_sign_data_description",
-              params?.appData.appURL
-            )}
+            {browser.i18n.getMessage("batch_sign_data_description", url)}
           </Text>
         </Description>
 
@@ -160,50 +144,50 @@ export default function BatchSignDataItem() {
         )}
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "8px",
-          padding: "16px"
-        }}
-      >
+      <Section>
         {!transaction ? (
           <>
             {password && (
-              <div style={{ paddingBottom: "16px" }}>
-                <InputV2
-                  placeholder="Enter your password"
-                  small
-                  {...passwordInput.bindings}
-                  label={"Password"}
-                  type="password"
-                  onKeyDown={async (e) => {
-                    if (e.key !== "Enter") return;
-                    await sign();
-                  }}
-                  fullWidth
-                />
-              </div>
+              <>
+                <PasswordWrapper>
+                  <InputV2
+                    placeholder="Enter your password"
+                    small
+                    {...passwordInput.bindings}
+                    label={"Password"}
+                    type="password"
+                    onKeyDown={async (e) => {
+                      if (e.key !== "Enter") return;
+                      await sign();
+                    }}
+                    fullWidth
+                  />
+                </PasswordWrapper>
+                <Spacer y={1} />
+              </>
             )}
 
-            <ButtonV2
-              fullWidth
-              onClick={sign}
-              disabled={(password && !passwordInput.state) || loading}
-            >
-              {browser.i18n.getMessage("signature_authorize")}
-            </ButtonV2>
-            <ResetButton fullWidth onClick={cancel}>
-              {browser.i18n.getMessage("cancel")}
-            </ResetButton>
+            <AuthButtons
+              authRequest={authRequest}
+              primaryButtonProps={{
+                label: browser.i18n.getMessage("sign_authorize_all"),
+                disabled: (password && !passwordInput.state) || loading,
+                onClick: sign
+              }}
+              secondaryButtonProps={{
+                onClick: () => rejectRequest()
+              }}
+            />
           </>
         ) : (
-          <ButtonV2 fullWidth onClick={() => setTransaction(null)}>
-            {browser.i18n.getMessage("continue")}
-          </ButtonV2>
+          <AuthButtons
+            authRequest={authRequest}
+            primaryButtonProps={{
+              onClick: () => setTransaction(null)
+            }}
+          />
         )}
-      </div>
+      </Section>
     </Wrapper>
   );
 }
@@ -222,4 +206,13 @@ const Description = styled(Section)`
   display: flex;
   flex-direction: column;
   gap: 18px;
+`;
+
+const PasswordWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+
+  p {
+    text-transform: capitalize;
+  }
 `;

@@ -1379,6 +1379,10 @@
       "message": "授权",
       "description": "Authorize button label"
   },
+  "sign_authorize_all": {
+    "message": "Authorize all",
+    "description": "Authorize all button label"
+  },
   "sign_enter_password": {
       "message": "输入密码以签署交易",
       "description": "Request to enter password to sign transaction"
@@ -2271,5 +2275,95 @@
     "new_transaction": {
         "message": "新交易",
         "description": "New transaction description"
+    },
+    "batchSignDataItemRequestLoading": {
+      "message": "Signing...",
+      "description": "Loading message for AuthRequest of type batchSignDataItem"
+    },
+    "connectRequestLoading": {
+      "message": "Connecting...",
+      "description": "Loading message for AuthRequest of type connect"
+    },
+    "allowanceRequestLoading": {
+      "message": "Updating allowance...",
+      "description": "Loading message for AuthRequest of type allowance"
+    },
+    "tokenRequestLoading": {
+      "message": "Adding token...",
+      "description": "Loading message for AuthRequest of type token"
+    },
+    "signRequestLoading": {
+      "message": "Signing...",
+      "description": "Loading message for AuthRequest of type sign"
+    },
+    "subscriptionRequestLoading": {
+      "message": "Subscribing...",
+      "description": "Loading message for AuthRequest of type subscription"
+    },
+    "signKeystoneRequestLoading": {
+      "message": "Signing...",
+      "description": "Loading message for AuthRequest of type signKeystone"
+    },
+    "signatureRequestLoading": {
+      "message": "Signing...",
+      "description": "Loading message for AuthRequest of type signature"
+    },
+    "signDataItemRequestLoading": {
+      "message": "Signing...",
+      "description": "Loading message for AuthRequest of type signDataItem"
+    },
+    "abortingRequestLoading": {
+      "message": "Aborting...",
+      "description": "Loading message for rejected/aborted AuthRequests"
+    },
+    "pendingTransactionStatusAt": {
+      "message": "Requested",
+      "description": "Label to display next to the elapsed time since the AuthRequest was created"
+    },
+    "acceptedTransactionStatusAt": {
+      "message": "Accepted",
+      "description": "Label to display next to the elapsed time since the AuthRequest was accepted"
+    },
+    "rejectedTransactionStatusAt": {
+      "message": "Rejected",
+      "description": "Label to display next to the elapsed time since the AuthRequest was rejected"
+    },
+    "abortedTransactionStatusAt": {
+      "message": "Aborted",
+      "description": "Label to display next to the elapsed time since the AuthRequest was aborted"
+    },
+    "errorTransactionStatusAt": {
+      "message": "Failed",
+      "description": "Label to display next to the elapsed time since the AuthRequest was aborted"
+    },
+    "formattedElapsedSeconds": {
+      "message": "$SECONDS$ seconds ago",
+      "description": "Format elapsed seconds",
+      "placeholders": {
+        "seconds": {
+          "content": "$1",
+          "example": "10"
+        }
+      }
+    },
+    "formattedElapsedMinutes": {
+      "message": "$MINUTES$ minutes ago",
+      "description": "Format elapsed minutes",
+      "placeholders": {
+        "minutes": {
+          "content": "$1",
+          "example": "10"
+        }
+      }
+    },
+    "formattedElapsedHours": {
+      "message": "$HOURS$ hours ago",
+      "description": "Format elapsed hours",
+      "placeholders": {
+        "hours": {
+          "content": "$1",
+          "example": "10"
+        }
+      }
     }
 }
