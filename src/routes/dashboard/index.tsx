@@ -26,6 +26,7 @@ import {
   type DashboardRouteConfig
 } from "~routes/dashboard/dashboard.constants";
 import type Setting from "~settings/setting";
+import type { DashboardRoutePath } from "~wallets/router/dashboard/dashboard.routes";
 
 export interface SettingsDashboardViewParams {
   setting?: string;
@@ -126,7 +127,7 @@ export function SettingsDashboardView({ params }: SettingsDashboardViewProps) {
               description={setting.description}
               icon={setting.icon}
               active={activeSetting === setting.name}
-              onClick={() => navigate(`/${setting.name}`)}
+              onClick={() => navigate(`/${setting.name}` as DashboardRoutePath)}
               key={`basic-settings-${i}`}
             />
           ))}
@@ -151,7 +152,9 @@ export function SettingsDashboardView({ params }: SettingsDashboardViewProps) {
                   description={setting.description}
                   icon={setting.icon}
                   active={activeSetting === setting.name}
-                  onClick={() => navigate(`/${setting.name}`)}
+                  onClick={() =>
+                    navigate(`/${setting.name}` as DashboardRoutePath)
+                  }
                   key={`advanced-settings-${i}`}
                 />
               ))}

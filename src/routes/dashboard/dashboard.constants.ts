@@ -1,4 +1,4 @@
-import { type Props as SettingItemData } from "~components/dashboard/list/SettingListItem";
+import { type SettingItemProps } from "~components/dashboard/list/SettingListItem";
 import {
   GridIcon,
   InformationIcon,
@@ -6,7 +6,7 @@ import {
   WalletIcon,
   BellIcon
 } from "@iconicicons/react";
-import { Coins04, Users01 } from "@untitled-ui/icons-react";
+import { Coins04, Settings01, Users01 } from "@untitled-ui/icons-react";
 import settings, { getSetting } from "~settings";
 import type Setting from "~settings/setting";
 
@@ -23,8 +23,9 @@ import { AboutDashboardView } from "~components/dashboard/About";
 import { SignSettingsDashboardView } from "~components/dashboard/SignSettings";
 import { ResetDashboardView } from "~components/dashboard/Reset";
 
-export interface DashboardRouteConfig extends Omit<SettingItemData, "active"> {
+export interface DashboardRouteConfig extends Omit<SettingItemProps, "active"> {
   name: string;
+  externalLink?: string;
   component?: (...args: any[]) => JSX.Element;
 }
 
@@ -116,3 +117,15 @@ export const allSettings = [
   ...basicSettings,
   ...advancedSettings
 ] as const satisfies (DashboardRouteConfig | Setting)[];
+
+// Menu items are: wallets, apps, tokens, contact, notifications and "All Settings":
+export const quickSettingsMenuItems: DashboardRouteConfig[] = [
+  ...(basicSettings.slice(0, 5) as DashboardRouteConfig[]),
+  {
+    name: "All Settings",
+    displayName: "setting_all_settings",
+    description: "setting_all_settings_description",
+    icon: Settings01,
+    externalLink: "tabs/dashboard.html"
+  }
+];
