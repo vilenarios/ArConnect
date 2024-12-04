@@ -29,19 +29,52 @@ export function BodyScroller() {
   return null;
 }
 
+export type NavigateAction = "prev" | "next" | "up";
+
+function isNavigateAction(
+  to: ArConnectRoutePath | NavigateAction
+): to is NavigateAction {
+  return !to.startsWith("/");
+}
+
 export function useLocation() {
-  const [location, wavigate] = useWouterLocation();
+  const [wocation, wavigate] = useWouterLocation();
 
   const navigate = useCallback(
     <S = any>(
-      to: ArConnectRoutePath,
+      to: ArConnectRoutePath | NavigateAction,
       options?: {
         replace?: boolean;
         state?: S;
         search?: Record<string, string | number>;
       }
     ) => {
-      let toPath = to;
+      let toPath = to as ArConnectRoutePath;
+
+      if (isNavigateAction(to)) {
+        const toParts = to.split("/");
+        const lastPart = toParts.pop();
+        const parentPath = `/${toParts.join("/")}` as ArConnectRoutePath;
+
+        if (to === "up") {
+          toPath = parentPath;
+        } else {
+          const index = parseInt(lastPart);
+
+          if (isNaN(index))
+            throw new Error(
+              `The current location "${location}" doesn't end with an index`
+            );
+
+          if (to === "prev") {
+            if (index === 0) throw new Error(`Index -1 out of bounds`);
+
+            toPath = `${parentPath}/${index - 1}` as ArConnectRoutePath;
+          } else if (to === "next") {
+            toPath = `/${parentPath}/${index + 1}` as ArConnectRoutePath;
+          }
+        }
+      }
 
       if (options?.search) {
         const searchParams = new URLSearchParams();
@@ -57,7 +90,7 @@ export function useLocation() {
 
       return wavigate(toPath, options);
     },
-    [wavigate]
+    [wocation, wavigate]
   );
 
   const back = useCallback(() => {
@@ -65,7 +98,7 @@ export function useLocation() {
   }, []);
 
   return {
-    location,
+    location: wocation,
     navigate,
     back
   } as {
