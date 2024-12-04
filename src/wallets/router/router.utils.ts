@@ -27,7 +27,35 @@ export function BodyScroller() {
 }
 
 export function useLocation() {
-  const [location, navigate] = useWouterLocation();
+  const [location, wavigate] = useWouterLocation();
+
+  const navigate = useCallback(
+    <S = any>(
+      to: ArConnectRoutePath,
+      options?: {
+        replace?: boolean;
+        state?: S;
+        search?: Record<string, string | number>;
+      }
+    ) => {
+      let toPath = to;
+
+      if (options.search) {
+        const searchParams = new URLSearchParams();
+
+        Object.entries(options.search).forEach(([key, value]) => {
+          searchParams.append(key, encodeURIComponent(value));
+        });
+
+        if (searchParams.size > 0) {
+          toPath += `?${searchParams.toString()}`;
+        }
+      }
+
+      return wavigate(toPath, options);
+    },
+    [wavigate]
+  );
 
   const back = useCallback(() => {
     history.back();
@@ -39,13 +67,7 @@ export function useLocation() {
     back
   } as {
     location: ArConnectRoutePath;
-    navigate: <S = any>(
-      to: ArConnectRoutePath,
-      options?: {
-        replace?: boolean;
-        state?: S;
-      }
-    ) => void;
+    navigate: typeof navigate;
     back: typeof back;
   };
 }

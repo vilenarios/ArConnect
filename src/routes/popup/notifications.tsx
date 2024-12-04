@@ -226,17 +226,16 @@ export function NotificationsView() {
   };
 
   const handleLink = (n) => {
-    n.transactionType === "Message"
-      ? navigate(
-          `/notification/${n.node.id}?back=${encodeURIComponent(
-            "/notifications"
-          )}`
-        )
-      : navigate(
-          `/transaction/${n.node.id}?back=${encodeURIComponent(
-            "/notifications"
-          )}`
-        );
+    navigate(
+      `/${n.transactionType === "Message" ? "notification" : "transaction"}/${
+        n.node.id
+      }`,
+      {
+        search: {
+          back: "/notifications"
+        }
+      }
+    );
   };
 
   return (
