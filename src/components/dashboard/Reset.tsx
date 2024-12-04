@@ -31,9 +31,9 @@ export function ResetDashboardView() {
       );
 
       // remove all keys
-      for (const key of allStoredKeys) {
-        await ExtensionStorage.remove(key);
-      }
+      await Promise.allSettled(
+        allStoredKeys.map((key) => ExtensionStorage.remove(key))
+      );
 
       // close window
       window.top.close();

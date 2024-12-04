@@ -142,6 +142,19 @@ export async function openOrSelectWelcomePage(force = false) {
 
   log(LOG_GROUP.AUTH, `openOrSelectWelcomePage(${force})`);
 
+  // Make sure we clear any stored value from previous installations before
+  // opening the welcome page to onboard the user:
+
+  // get all keys
+  const allStoredKeys = Object.keys(
+    (await browser.storage.local.get(null)) || {}
+  );
+
+  // remove all keys
+  await Promise.allSettled(
+    allStoredKeys.map((key) => ExtensionStorage.remove(key))
+  );
+
   const url = browser.runtime.getURL("tabs/welcome.html");
   const welcomePageTabs = await browser.tabs.query({ url });
   const welcomePageTabID = welcomePageTabs[0]?.id;
