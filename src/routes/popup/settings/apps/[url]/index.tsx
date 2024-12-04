@@ -33,8 +33,6 @@ export interface AppSettingsViewParams {
 
 export type AppSettingsViewProps = CommonRouteProps<AppSettingsViewParams>;
 
-// TODO: Is this only used for quick settings and not for the normal one?
-
 export function AppSettingsView({ params: { url } }: AppSettingsViewProps) {
   const { navigate } = useLocation();
 

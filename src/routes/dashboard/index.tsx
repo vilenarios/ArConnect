@@ -169,7 +169,11 @@ export function SettingsDashboardView({ params }: SettingsDashboardViewProps) {
       </Panel>
 
       <Panel>
-        <Routes routes={DASHBOARD_SUB_SETTING_ROUTES} diffLocation />
+        <Routes
+          routes={DASHBOARD_SUB_SETTING_ROUTES}
+          diffLocation
+          pageComponent={null}
+        />
       </Panel>
     </SettingsWrapper>
   );

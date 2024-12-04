@@ -1,6 +1,5 @@
 import HeadV2 from "~components/popup/HeadV2";
 import browser from "webextension-polyfill";
-import { useMemo } from "react";
 import styled from "styled-components";
 import type { CommonRouteProps } from "~wallets/router/router.types";
 import { useLocation } from "~wallets/router/router.utils";

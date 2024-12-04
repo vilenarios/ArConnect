@@ -9,7 +9,7 @@ import { Routes } from "~wallets/router/routes.component";
 import { WELCOME_ROUTES } from "~wallets/router/welcome/welcome.routes";
 
 export function ArConnectWelcomeApp() {
-  return <Routes routes={WELCOME_ROUTES} />;
+  return <Routes routes={WELCOME_ROUTES} pageComponent={null} />;
 }
 
 export function ArConnectWelcomeAppRoot() {

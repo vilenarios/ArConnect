@@ -15,18 +15,14 @@ export interface RoutesProps {
 
 // TODO: Consider adding `<AnimatePresence>` and `<BodyScroller>` inside here.
 
-// TODO: Consider adding a prop to `RouteConfig.component.parseParams` to parse
+// TODO: Consider adding a prop to `RouteConfig.parseParams` to parse
 // params globally inside `PageWithComponent` (e.g. to replace the `Number()`)
 // conversions in the Welcome views.
-
-// TODO: Review:
-// - View all collectibles not opening.
-// - Dashboard view buttons do not have spacing in-between.
 
 export function Routes({
   routes,
   diffLocation = false,
-  pageComponent: PageComponent = Page
+  pageComponent
 }: RoutesProps) {
   const { location } = useLocation();
 
@@ -50,6 +46,8 @@ export function Routes({
       <Switch>
         {routes.map((route) => {
           const Component = route.component;
+          const PageComponent =
+            pageComponent === null ? React.Fragment : pageComponent || Page;
 
           // TODO: Async-loaded components?
 

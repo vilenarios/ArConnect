@@ -29,7 +29,6 @@ export function ContactsDashboardView({
   isQuickSetting
 }: ContactsDashboardViewProps) {
   const { navigate } = useLocation();
-  // TODO: Make sure this works in the popup and in the dashboard...
   // TODO: Replace with useParams:
   const [matches, params] = useRoute<{ contact?: string }>(
     "/contacts/:contact?"
