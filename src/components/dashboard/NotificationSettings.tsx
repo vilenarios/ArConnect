@@ -2,7 +2,7 @@ import { useStorage } from "@plasmohq/storage/hook";
 import styled from "styled-components";
 import PermissionCheckbox from "~components/auth/PermissionCheckbox";
 import { ExtensionStorage } from "~utils/storage";
-import { Input, Spacer, Text } from "@arconnect/components";
+import { Spacer, Text } from "@arconnect/components";
 import browser from "webextension-polyfill";
 import { Radio, RadioInner, RadioItem, RadioWrapper } from "./Setting";
 

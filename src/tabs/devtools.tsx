@@ -5,7 +5,7 @@ import { ExtensionStorage } from "~utils/storage";
 import { getTab } from "~applications/tab";
 import { getAppURL } from "~utils/format";
 import { useNoWallets } from "~wallets";
-import AppSettings from "~components/dashboard/subsettings/AppSettings";
+import { AppSettingsDashboardView } from "~components/dashboard/subsettings/AppSettings";
 import Connector from "~components/devtools/Connector";
 import NoWallets from "~components/devtools/NoWallets";
 import Application from "~applications/application";
@@ -64,7 +64,7 @@ export default function DevTools() {
           </ConnectionText>
           <Spacer y={1.5} />
           {(!connected && app && <Connector appUrl={app.url} />) ||
-            (connected && app && <AppSettings app={app} />)}
+            (connected && app && <AppSettingsDashboardView app={app} />)}
         </CardBody>
       </Wrapper>
     </ArConnectThemeProvider>

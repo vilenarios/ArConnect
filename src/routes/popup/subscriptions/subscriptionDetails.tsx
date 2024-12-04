@@ -20,11 +20,9 @@ import {
   ButtonV2,
   type DisplayTheme,
   useToasts,
-  TooltipV2,
-  InputV2,
-  useInput
+  TooltipV2
 } from "@arconnect/components";
-import { AppIcon, Content, Title, getColorByStatus } from "./subscriptions";
+import { Content, Title, getColorByStatus } from "./subscriptions";
 import { CreditCardUpload } from "@untitled-ui/icons-react";
 import {
   SettingIconWrapper,
