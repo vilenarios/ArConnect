@@ -52,7 +52,7 @@ export function useLocation() {
       let toPath = to as ArConnectRoutePath;
 
       if (isNavigateAction(to)) {
-        const toParts = to.split("/");
+        const toParts = wocation.split("/");
         const lastPart = toParts.pop();
         const parentPath = `/${toParts.join("/")}` as ArConnectRoutePath;
 
