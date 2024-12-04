@@ -73,6 +73,13 @@ export function useSetUp() {
         case undefined:
         case "extension": {
           if (!hasWallets) {
+            const allStoredKeys = Object.keys(
+              (await browser.storage.local.get(null)) || {}
+            );
+            await Promise.all(
+              allStoredKeys.map((key) => ExtensionStorage.remove(key))
+            );
+
             await browser.tabs.create({
               url: browser.runtime.getURL("tabs/welcome.html")
             });
