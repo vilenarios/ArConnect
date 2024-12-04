@@ -14,7 +14,7 @@ export function ContactsView() {
         back={() => navigate("/quick-settings")}
       />
       <Wrapper>
-        <ContactsDashboardView isQuickSetting={true} />
+        <ContactsDashboardView isQuickSetting={true} params={{}} />
       </Wrapper>
     </>
   );
