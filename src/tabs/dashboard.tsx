@@ -1,5 +1,5 @@
 import { useHashLocation } from "wouter/use-hash-location";
-import { Router, Route } from "wouter";
+import { Router as Wouter, Route as Woute } from "wouter";
 
 import { SettingsDashboardView } from "~routes/dashboard";
 import { ArConnectThemeProvider } from "~components/hardware/HardwareWalletTheme";
@@ -10,12 +10,12 @@ export default function Dashboard() {
 
   return (
     <ArConnectThemeProvider>
-      <Router hook={useHashLocation}>
-        <Route
+      <Wouter hook={useHashLocation}>
+        <Woute
           path="/:setting?/:subsetting?"
           component={SettingsDashboardView}
         />
-      </Router>
+      </Wouter>
     </ArConnectThemeProvider>
   );
 }

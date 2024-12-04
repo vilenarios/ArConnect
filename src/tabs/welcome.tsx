@@ -1,5 +1,5 @@
 import { useHashLocation } from "wouter/use-hash-location";
-import { Route, Router as Wouter } from "wouter";
+import { Router as Wouter } from "wouter";
 
 import { ArConnectThemeProvider } from "~components/hardware/HardwareWalletTheme";
 import { useRemoveCover } from "~wallets/setup/non/non-wallet-setup.hook";

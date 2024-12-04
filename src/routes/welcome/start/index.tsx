@@ -9,7 +9,7 @@ import type { CommonRouteProps } from "~wallets/router/router.types";
 import { ArweaveWelcomeView } from "./arweave";
 import { EcosystemWelcomeView } from "./ecosystem";
 import { ScreenshotsWelcomeView } from "./screenshots";
-import { Redirect } from "wouter";
+import { Redirect } from "~wallets/router/components/redirect/Redirect";
 
 interface PageInfo {
   // i18n key

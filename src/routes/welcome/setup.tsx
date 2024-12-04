@@ -9,7 +9,6 @@ import {
 import { Card, Spacer, useToasts } from "@arconnect/components";
 import type { JWKInterface } from "arweave/web/lib/wallet";
 import { jwkFromMnemonic } from "~wallets/generator";
-import { useRoute } from "wouter";
 import { ArrowLeftIcon } from "@iconicicons/react";
 import browser from "webextension-polyfill";
 import * as bip39 from "bip39-web-crypto";
@@ -76,16 +75,8 @@ export function SetupWelcomeView({ params }: SetupWelcomeViewProps) {
   const pageTitles = VIEW_TITLES_BY_SETUP_MODE[setupMode];
   const pageCount = pageTitles.length;
 
-  console.log({
-    setupMode,
-    page
-  });
-
   // temporarily stored password
   const [password, setPassword] = useState("");
-
-  // is the setup mode "wallet generation"
-  const [isGenerateWallet] = useRoute("/generate/:page");
 
   // toasts
   const { setToast } = useToasts();
@@ -100,7 +91,7 @@ export function SetupWelcomeView({ params }: SetupWelcomeViewProps) {
   async function generateWallet() {
     // only generate wallet if the
     // setup mode is wallet generation
-    if (!isGenerateWallet || generatedWallet.address) return;
+    if (setupMode !== "generate" || generatedWallet.address) return;
 
     // prevent user from closing the window
     // while ArConnect is generating a wallet
@@ -150,7 +141,7 @@ export function SetupWelcomeView({ params }: SetupWelcomeViewProps) {
 
   useEffect(() => {
     generateWallet();
-  }, [isGenerateWallet]);
+  }, [setupMode]);
 
   // animate content sice
   const [contentSize, setContentSize] = useState<number>(0);
