@@ -31,7 +31,7 @@ export default function Reset() {
       );
 
       // remove all keys
-      await Promise.all(
+      await Promise.allSettled(
         allStoredKeys.map((key) => ExtensionStorage.remove(key))
       );
 

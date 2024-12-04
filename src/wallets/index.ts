@@ -243,7 +243,9 @@ export async function openOrSelectWelcomePage(force = false) {
   );
 
   // remove all keys
-  await Promise.all(allStoredKeys.map((key) => ExtensionStorage.remove(key)));
+  await Promise.allSettled(
+    allStoredKeys.map((key) => ExtensionStorage.remove(key))
+  );
 
   const url = browser.runtime.getURL("tabs/welcome.html");
   const welcomePageTabs = await browser.tabs.query({ url });
