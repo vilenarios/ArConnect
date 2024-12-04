@@ -12,9 +12,7 @@ export interface ContactSettingsViewParams {
 export type ContactSettingsViewProps =
   CommonRouteProps<ContactSettingsViewParams>;
 
-export function ContactSettingsView({
-  params: { address }
-}: ContactSettingsViewProps) {
+export function ContactSettingsView({ params }: ContactSettingsViewProps) {
   const { navigate } = useLocation();
 
   return (
@@ -24,7 +22,7 @@ export function ContactSettingsView({
         back={() => navigate("/quick-settings/contacts")}
       />
       <Wrapper>
-        <ContactSettingsDashboardView address={address} isQuickSetting={true} />
+        <ContactSettingsDashboardView isQuickSetting={true} params={params} />
       </Wrapper>
     </>
   );

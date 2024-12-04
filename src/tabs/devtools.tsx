@@ -64,7 +64,9 @@ export default function DevTools() {
           </ConnectionText>
           <Spacer y={1.5} />
           {(!connected && app && <Connector appUrl={app.url} />) ||
-            (connected && app && <AppSettingsDashboardView app={app} />)}
+            (connected && app && (
+              <AppSettingsDashboardView noTitle params={{ url: app.url }} />
+            ))}
         </CardBody>
       </Wrapper>
     </ArConnectThemeProvider>

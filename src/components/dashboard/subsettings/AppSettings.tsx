@@ -21,21 +21,30 @@ import {
   useToasts
 } from "@arconnect/components";
 import { concatGatewayURL, urlToGateway } from "~gateways/utils";
-import type Application from "~applications/application";
+import Application from "~applications/application";
 import browser from "webextension-polyfill";
 import styled from "styled-components";
 import Arweave from "arweave";
 import { defaultGateway, suggestedGateways, testnets } from "~gateways/gateway";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-export interface AppSettingsDashboardViewProps {
-  app: Application;
-  showTitle?: boolean;
+export interface AppSettingsDashboardViewParams {
+  url: string;
+}
+
+export interface AppSettingsDashboardViewProps
+  extends CommonRouteProps<AppSettingsDashboardViewParams> {
+  noTitle?: boolean;
 }
 
 export function AppSettingsDashboardView({
-  app,
-  showTitle = false
+  noTitle = false,
+  params: { url }
 }: AppSettingsDashboardViewProps) {
+  const app = useMemo(() => {
+    return new Application(decodeURIComponent(url));
+  }, [url]);
+
   // app settings
   const [settings, updateSettings] = app.hook();
   const arweave = new Arweave(defaultGateway);
@@ -103,7 +112,7 @@ export function AppSettingsDashboardView({
 
   return (
     <>
-      {showTitle && (
+      {noTitle ? null : (
         <>
           <Spacer y={0.45} />
           <AppName>{settings?.name || settings?.url}</AppName>

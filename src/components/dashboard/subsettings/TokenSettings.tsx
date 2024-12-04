@@ -26,13 +26,17 @@ import { ResetButton } from "../Reset";
 import { RefreshCcw01 } from "@untitled-ui/icons-react";
 import { defaultAoTokens, type TokenInfo } from "~tokens/aoTokens/ao";
 import TokenLoading from "~components/popup/asset/Loading";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-interface TokenSettingsDashboardViewProps {
+export interface TokenSettingsDashboardViewParams {
   id: string;
 }
 
+export type TokenSettingsDashboardViewProps =
+  CommonRouteProps<TokenSettingsDashboardViewParams>;
+
 export function TokenSettingsDashboardView({
-  id
+  params: { id }
 }: TokenSettingsDashboardViewProps) {
   // tokens
   const [tokens, setTokens] = useStorage<Token[]>(

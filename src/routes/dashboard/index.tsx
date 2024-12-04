@@ -3,30 +3,26 @@ import SettingListItem from "~components/dashboard/list/SettingListItem";
 import { SettingsList } from "~components/dashboard/list/BaseElement";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronUp, ChevronDown } from "@untitled-ui/icons-react";
-import Application from "~applications/application";
 import browser from "webextension-polyfill";
 import styled from "styled-components";
-import settings from "~settings";
 import { PageType, trackPage } from "~utils/analytics";
 import SearchInput from "~components/dashboard/SearchInput";
 import { useLocation } from "~wallets/router/router.utils";
-
-import { WalletSettingsDashboardView } from "~components/dashboard/subsettings/WalletSettings";
-import { TokenSettingsDashboardView } from "~components/dashboard/subsettings/TokenSettings";
-import { AppSettingsDashboardView } from "~components/dashboard/subsettings/AppSettings";
-import { ContactSettingsDashboardView } from "~components/dashboard/subsettings/ContactSettings";
-import { AddWalletDashboardView } from "~components/dashboard/subsettings/AddWallet";
-import { AddContactDashboardView } from "~components/dashboard/subsettings/AddContact";
 import { SettingDashboardView } from "~components/dashboard/Setting";
-import { AddTokenDashboardView } from "~components/dashboard/subsettings/AddToken";
 import {
   advancedSettings,
   allSettings,
   basicSettings,
+  isDashboardRouteConfig,
   type DashboardRouteConfig
 } from "~routes/dashboard/dashboard.constants";
 import type Setting from "~settings/setting";
-import type { DashboardRoutePath } from "~wallets/router/dashboard/dashboard.routes";
+import {
+  DASHBOARD_SUB_SETTING_ROUTES,
+  type DashboardRoutePath
+} from "~wallets/router/dashboard/dashboard.routes";
+import { Redirect } from "~wallets/router/components/redirect/Redirect";
+import { Routes } from "~wallets/router/routes.component";
 
 export interface SettingsDashboardViewParams {
   setting?: string;
@@ -39,38 +35,14 @@ export interface SettingsDashboardViewProps {
 
 export function SettingsDashboardView({ params }: SettingsDashboardViewProps) {
   const { navigate } = useLocation();
+  const { setting: activeSettingParam } = params;
 
   const [showAdvanced, setShowAdvanced] = useState(false);
-
-  // search
   const searchInput = useInput();
 
-  const { setting: activeSetting, subsetting: activeSubSetting } = params;
-
-  // active setting val
-  // const activeSetting = useMemo(() => params.setting, [params.setting]);
-
-  // active subsetting val
-  // const activeSubSetting = useMemo(
-  //   () => params.subsetting,
-  //   [params.subsetting]
-  // );
-
-  // whether the active setting is a setting defined
-  // in "~settings/index.ts" or not
-  const definedSetting = useMemo(
-    () => !!settings.find((s) => s.name === activeSetting),
-    [activeSetting]
-  );
-
-  // active app setting
-  const activeAppSetting = useMemo(() => {
-    if (!activeSubSetting || activeSetting !== "apps") {
-      return undefined;
-    }
-
-    return new Application(decodeURIComponent(activeSubSetting));
-  }, [activeSubSetting]);
+  const actualActiveSetting = useMemo(() => {
+    return allSettings.find(({ name }) => name === activeSettingParam);
+  }, [activeSettingParam]);
 
   // search filter function
   function filterSearchResults(
@@ -95,42 +67,57 @@ export function SettingsDashboardView({ params }: SettingsDashboardViewProps) {
     );
   }
 
-  // redirect to the first setting
-  // if none is selected
-  useEffect(() => {
-    if (!!activeSetting) return;
-    navigate(`/${allSettings[0].name}`);
-  }, [activeSetting]);
-
   // Segment
   useEffect(() => {
     trackPage(PageType.SETTINGS);
   }, []);
 
+  // Redirect to the first setting if none is selected:
+  if (!actualActiveSetting) {
+    return <Redirect to={`/${allSettings[0].name}` as DashboardRoutePath} />;
+  }
+
+  if (
+    isDashboardRouteConfig(actualActiveSetting) &&
+    !actualActiveSetting.component
+  ) {
+    throw new Error(
+      `Missing component for ${actualActiveSetting.displayName} (${actualActiveSetting.name}) setting`
+    );
+  }
+
   return (
     <SettingsWrapper>
       <Panel normalPadding showRightBorder>
         <Spacer y={0.45} />
+
         <SettingsTitle>{browser.i18n.getMessage("settings")}</SettingsTitle>
+
         <Spacer y={0.85} />
+
         <SearchInput
           placeholder={browser.i18n.getMessage("search")}
           {...searchInput.bindings}
         />
+
         <Spacer y={0.85} />
+
         <Text noMargin>{browser.i18n.getMessage("general")}</Text>
+
         <Spacer y={0.85} />
+
         <SettingsList>
           {basicSettings.filter(filterSearchResults).map((setting, i) => (
             <SettingListItem
               displayName={setting.displayName}
               description={setting.description}
               icon={setting.icon}
-              active={activeSetting === setting.name}
+              active={activeSettingParam === setting.name}
               onClick={() => navigate(`/${setting.name}` as DashboardRoutePath)}
               key={`basic-settings-${i}`}
             />
           ))}
+
           <AdvancedWrapper>
             <Text noMargin>{browser.i18n.getMessage("advanced")}</Text>
             <div
@@ -143,7 +130,8 @@ export function SettingsDashboardView({ params }: SettingsDashboardViewProps) {
               <Action as={showAdvanced ? ChevronUp : ChevronDown} />
             </div>
           </AdvancedWrapper>
-          {showAdvanced &&
+
+          {(showAdvanced || searchInput.state) &&
             advancedSettings
               .filter(filterSearchResults)
               .map((setting, i) => (
@@ -151,7 +139,7 @@ export function SettingsDashboardView({ params }: SettingsDashboardViewProps) {
                   displayName={setting.displayName}
                   description={setting.description}
                   icon={setting.icon}
-                  active={activeSetting === setting.name}
+                  active={activeSettingParam === setting.name}
                   onClick={() =>
                     navigate(`/${setting.name}` as DashboardRoutePath)
                   }
@@ -160,74 +148,28 @@ export function SettingsDashboardView({ params }: SettingsDashboardViewProps) {
               ))}
         </SettingsList>
       </Panel>
+
       <Panel normalPadding showRightBorder>
         <Spacer y={0.45} />
+
         <MidSettingsTitle>
-          {allSettings &&
-            browser.i18n.getMessage(
-              allSettings.find((s) => s.name === activeSetting)?.displayName ||
-                ""
-            )}
+          {browser.i18n.getMessage(actualActiveSetting?.displayName || "")}
         </MidSettingsTitle>
+
         <Spacer y={0.85} />
-        {activeSetting &&
-          ((definedSetting && (
-            <SettingDashboardView
-              setting={settings.find((s) => s.name === activeSetting)}
-              key={activeSetting}
-            />
-          )) ||
-            (() => {
-              const Component = allSettings.find(
-                (s) => s.name === activeSetting
-              )?.component;
 
-              if (!Component) {
-                // TODO: Should this be a redirect?
-                return <></>;
-              }
-
-              return <Component />;
-            })())}
-      </Panel>
-      <Panel>
-        {!!activeAppSetting && (
-          <AppSettingsDashboardView
-            app={activeAppSetting}
-            showTitle
-            key={activeAppSetting.url}
+        {isDashboardRouteConfig(actualActiveSetting) ? (
+          <actualActiveSetting.component />
+        ) : (
+          <SettingDashboardView
+            key={activeSettingParam}
+            setting={actualActiveSetting}
           />
         )}
-        {activeSetting === "wallets" &&
-          !!activeSubSetting &&
-          activeSubSetting !== "new" && (
-            <WalletSettingsDashboardView
-              address={activeSubSetting}
-              key={activeSubSetting}
-            />
-          )}
-        {activeSetting === "wallets" && activeSubSetting === "new" && (
-          <AddWalletDashboardView key="new-wallet" />
-        )}
-        {activeSetting === "tokens" && activeSubSetting !== "new" && (
-          <TokenSettingsDashboardView id={activeSubSetting} />
-        )}
-        {activeSetting === "tokens" && activeSubSetting === "new" && (
-          <AddTokenDashboardView key="new-token" />
-        )}
-        {activeSetting === "contacts" &&
-          activeSubSetting &&
-          activeSubSetting.startsWith("new") && (
-            <AddContactDashboardView key="new-contacts" />
-          )}
-        {activeSetting === "contacts" &&
-          activeSubSetting &&
-          !activeSubSetting.startsWith("new") && (
-            <ContactSettingsDashboardView
-              address={activeSubSetting}
-              key={activeSubSetting}
-            />
-          )}
+      </Panel>
+
+      <Panel>
+        <Routes routes={DASHBOARD_SUB_SETTING_ROUTES} diffLocation />
       </Panel>
     </SettingsWrapper>
   );

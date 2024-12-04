@@ -26,16 +26,21 @@ import { svgie } from "~utils/svgies";
 import copy from "copy-to-clipboard";
 import { formatAddress } from "~utils/format";
 import { useLocation } from "~wallets/router/router.utils";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 // import { isAddressFormat } from "~utils/format";
 
-interface ContactSettingsDashboardViewProps {
-  isQuickSetting?: boolean;
+export interface ContactSettingsDashboardViewParams {
   address: string;
+}
+
+export interface ContactSettingsDashboardViewProps
+  extends CommonRouteProps<ContactSettingsDashboardViewParams> {
+  isQuickSetting?: boolean;
 }
 
 export function ContactSettingsDashboardView({
   isQuickSetting,
-  address
+  params: { address }
 }: ContactSettingsDashboardViewProps) {
   const { navigate } = useLocation();
 

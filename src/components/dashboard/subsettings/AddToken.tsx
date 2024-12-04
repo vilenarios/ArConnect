@@ -20,8 +20,9 @@ import { DREContract, DRENode } from "@arconnect/warp-dre";
 import type { TokenState, TokenType } from "~tokens/token";
 import { concatGatewayURL } from "~gateways/utils";
 import { useGateway } from "~gateways/wayfinder";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-export interface AddTokenDashboardViewProps {
+export interface AddTokenDashboardViewProps extends CommonRouteProps {
   isQuickSetting?: boolean;
 }
 

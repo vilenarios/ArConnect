@@ -35,7 +35,7 @@ export function isDashboardRouteConfig(
   return data.hasOwnProperty("component");
 }
 
-export const basicSettings = [
+export const basicSettings: (DashboardRouteConfig | Setting)[] = [
   {
     name: "wallets",
     displayName: "setting_wallets",
@@ -79,9 +79,9 @@ export const basicSettings = [
     icon: InformationIcon,
     component: AboutDashboardView
   }
-] as const satisfies (DashboardRouteConfig | Setting)[];
+];
 
-export const advancedSettings = [
+export const advancedSettings: (DashboardRouteConfig | Setting)[] = [
   {
     name: "sign_settings",
     displayName: "setting_sign_settings",
@@ -111,12 +111,12 @@ export const advancedSettings = [
     icon: TrashIcon,
     component: ResetDashboardView
   }
-] as const satisfies (DashboardRouteConfig | Setting)[];
+];
 
-export const allSettings = [
+export const allSettings: (DashboardRouteConfig | Setting)[] = [
   ...basicSettings,
   ...advancedSettings
-] as const satisfies (DashboardRouteConfig | Setting)[];
+];
 
 // Menu items are: wallets, apps, tokens, contact, notifications and "All Settings":
 export const quickSettingsMenuItems: DashboardRouteConfig[] = [

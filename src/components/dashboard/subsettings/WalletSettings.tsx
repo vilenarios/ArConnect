@@ -24,13 +24,17 @@ import browser from "webextension-polyfill";
 import styled from "styled-components";
 import copy from "copy-to-clipboard";
 import { formatAddress } from "~utils/format";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-export interface WalletSettingsDashboardViewProps {
+export interface WalletSettingsDashboardViewParams {
   address: string;
 }
 
+export type WalletSettingsDashboardViewProps =
+  CommonRouteProps<WalletSettingsDashboardViewParams>;
+
 export function WalletSettingsDashboardView({
-  address
+  params: { address }
 }: WalletSettingsDashboardViewProps) {
   // wallets
   const [wallets, setWallets] = useStorage<StoredWallet[]>(

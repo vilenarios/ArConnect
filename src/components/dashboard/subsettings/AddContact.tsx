@@ -34,9 +34,10 @@ import copy from "copy-to-clipboard";
 import { gql } from "~gateways/api";
 import { useTheme } from "~utils/theme";
 import { useLocation } from "~wallets/router/router.utils";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 // import { isAddressFormat } from "~utils/format";
 
-export interface AddContactDashboardViewProps {
+export interface AddContactDashboardViewProps extends CommonRouteProps {
   isQuickSetting?: boolean;
 }
 
