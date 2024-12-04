@@ -87,6 +87,7 @@ export function ExportWalletView({
     }
   }
 
+  // TODO: Should this be a redirect?
   if (!wallet) return <></>;
 
   return (

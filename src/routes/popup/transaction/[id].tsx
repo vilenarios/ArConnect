@@ -76,7 +76,7 @@ export function TransactionView({
   // fixup id
   const id = useMemo(() => rawId.split("?")[0], [rawId]);
 
-  // TODO: This should be a redirect...
+  // TODO: Should this be a redirect?
   if (!id) return <></>;
 
   // fetch tx data

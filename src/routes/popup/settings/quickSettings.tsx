@@ -48,7 +48,7 @@ export function QuickSettingsView({ params }: QuickSettingsViewProps) {
                   url: browser.runtime.getURL(setting.externalLink)
                 });
               } else {
-                navigate("/quick-settings/" + setting.name);
+                navigate(`/quick-settings/${setting.name}`);
               }
             }}
             key={i}

@@ -33,6 +33,8 @@ export interface AppSettingsViewParams {
 
 export type AppSettingsViewProps = CommonRouteProps<AppSettingsViewParams>;
 
+// TODO: Is this only used for quick settings and not for the normal one?
+
 export function AppSettingsView({ params: { url } }: AppSettingsViewProps) {
   const { navigate } = useLocation();
 
@@ -102,10 +104,8 @@ export function AppSettingsView({ params: { url } }: AppSettingsViewProps) {
   // remove modal
   const removeModal = useModal();
 
-  // TODO: ???
+  // TODO: Should this be a redirect?
   if (!settings) return <></>;
-
-  // TODO: Is this only used for quick settings and not for the normal one?
 
   return (
     <>

@@ -82,6 +82,7 @@ export function TokenSettingsView({ params: { id } }: TokenSettingsProps) {
     });
   }
 
+  // TODO: Should this be a redirect?
   if (!token) return null;
 
   return (

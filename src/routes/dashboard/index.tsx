@@ -180,6 +180,7 @@ export function SettingsDashboardView({ params }: SettingsDashboardViewProps) {
               )?.component;
 
               if (!Component) {
+                // TODO: Should this be a redirect?
                 return <></>;
               }
 

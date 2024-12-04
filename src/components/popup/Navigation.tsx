@@ -16,31 +16,30 @@ const buttons = [
     dictionaryKey: "home",
     icon: <Home02 />,
     size: "24px",
-    route: "/"
+    route: "/",
   },
   {
     title: "Send",
     dictionaryKey: "send",
     icon: <ArrowUpRight />,
     size: "24px",
-    route: "/send/transfer"
+    route: "/send/transfer",
   },
   {
     title: "Receive",
     dictionaryKey: "receive",
     icon: <ArrowDownLeft />,
     size: "24px",
-    route: "/receive"
+    route: "/receive",
   },
   {
     title: "Explore",
     dictionaryKey: "explore",
     icon: <Compass03 />,
     size: "24px",
-
-    route: "/explore"
+    route: "/explore",
   }
-];
+] as const;
 
 export const NavigationBar = () => {
   const theme = useTheme();

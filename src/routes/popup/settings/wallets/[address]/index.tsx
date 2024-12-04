@@ -126,6 +126,7 @@ export function WalletView({ params: { address } }: WalletViewProps) {
   // wallet remove modal
   const removeModal = useModal();
 
+  // TODO: Should this be a redirect?
   if (!wallet) return <></>;
 
   return (

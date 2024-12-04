@@ -13,6 +13,12 @@ import useActiveTab from "~applications/useActiveTab";
 import { getAppURL } from "~utils/format";
 import { useLocation } from "~wallets/router/router.utils";
 
+interface SettingsAppData {
+  name: string;
+  url: string;
+  icon?: string;
+}
+
 export function ApplicationsView() {
   const { navigate } = useLocation();
 
@@ -110,7 +116,7 @@ export function ApplicationsView() {
               icon={app.icon}
               active={false}
               onClick={() =>
-                navigate("/quick-settings/apps/" + encodeURIComponent(app.url))
+                navigate(`/quick-settings/apps/${encodeURIComponent(app.url)}`)
               }
               key={i}
             />
@@ -123,12 +129,6 @@ export function ApplicationsView() {
       </Wrapper>
     </>
   );
-}
-
-interface SettingsAppData {
-  name: string;
-  url: string;
-  icon?: string;
 }
 
 const Wrapper = styled.div`

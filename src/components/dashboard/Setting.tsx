@@ -136,6 +136,7 @@ export function SettingDashboardView({ setting }: SettingDashboardViewProps) {
       );
 
     default:
+      // TODO: Should this be a redirect?
       return <></>;
   }
 }

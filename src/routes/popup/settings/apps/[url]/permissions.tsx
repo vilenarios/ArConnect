@@ -24,6 +24,7 @@ export function AppPermissionsView({
   const app = new Application(decodeURIComponent(url));
   const [settings, updateSettings] = app.hook();
 
+  // TODO: Should this be a redirect?
   if (!settings) return <></>;
 
   return (
@@ -87,10 +88,6 @@ export function AppPermissionsView({
       </Wrapper>
     </>
   );
-}
-
-interface Props {
-  url: string;
 }
 
 const Wrapper = styled.div`

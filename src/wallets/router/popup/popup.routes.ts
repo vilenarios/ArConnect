@@ -58,6 +58,7 @@ export type PopupRoutePath =
   | `/token/${string}`
   | `/collectibles`
   | `/collectible/${string}`
+  | `/transaction/${string}`
   | `/transaction/${string}/${string}`
   | `/send/confirm/${string}/${string}/${string}`
   | `/send/confirm/${string}/${string}/${string}/${string}`
