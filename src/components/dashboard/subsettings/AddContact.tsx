@@ -33,7 +33,7 @@ import styled from "styled-components";
 import copy from "copy-to-clipboard";
 import { gql } from "~gateways/api";
 import { useTheme } from "~utils/theme";
-import { useLocation } from "~wallets/router/router.utils";
+import { useLocation, useSearchParams } from "~wallets/router/router.utils";
 import type { CommonRouteProps } from "~wallets/router/router.types";
 // import { isAddressFormat } from "~utils/format";
 
@@ -44,9 +44,8 @@ export interface AddContactDashboardViewProps extends CommonRouteProps {
 export function AddContactDashboardView({
   isQuickSetting
 }: AddContactDashboardViewProps) {
-  const { location, navigate } = useLocation();
-  // TODO: Get address from params, not by splitting the location:
-  const address = location.split("=")[1];
+  const { navigate } = useLocation();
+  const { address } = useSearchParams<{ address: string }>();
 
   // contacts
   const [storedContacts, setStoredContacts] = useStorage(

@@ -10,7 +10,6 @@ export const useAuthRequestsLocation: BaseLocationHook = () => {
     ? `/${currentAuthRequest.type}/${currentAuthRequest.authID}`
     : "";
 
-  // TODO: Implement a navigate function that just selects a different route...
-  // TODO: Also use <Link> when possible.
+  // TODO: Implement a navigate function that selects a different AuthRequest and also use <Link> whenever possible:
   return [currentAuthRequestType, (path: string) => ""];
 };

@@ -19,6 +19,10 @@ export interface RoutesProps {
 // params globally inside `PageWithComponent` (e.g. to replace the `Number()`)
 // conversions in the Welcome views.
 
+// TODO: Review:
+// - View all collectibles not opening.
+// - Dashboard view buttons do not have spacing in-between.
+
 export function Routes({
   routes,
   diffLocation = false,

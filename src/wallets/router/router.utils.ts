@@ -1,5 +1,8 @@
-import { useCallback, useEffect } from "react";
-import { useLocation as useWouterLocation } from "wouter";
+import { useCallback, useEffect, useMemo } from "react";
+import {
+  useSearch as useWearch,
+  useLocation as useWouterLocation
+} from "wouter";
 import type {
   RouteConfig,
   BaseRoutePath,
@@ -40,7 +43,7 @@ export function useLocation() {
     ) => {
       let toPath = to;
 
-      if (options.search) {
+      if (options?.search) {
         const searchParams = new URLSearchParams();
 
         Object.entries(options.search).forEach(([key, value]) => {
@@ -70,4 +73,16 @@ export function useLocation() {
     navigate: typeof navigate;
     back: typeof back;
   };
+}
+
+export function useSearchParams<S>() {
+  const searchString = useWearch();
+
+  return useMemo(() => {
+    if (!searchString) return {};
+
+    const searchParams = new URLSearchParams(searchString);
+
+    return Object.fromEntries(searchParams.entries());
+  }, [searchString]) as S;
 }

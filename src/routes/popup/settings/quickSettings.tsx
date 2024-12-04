@@ -17,9 +17,7 @@ export type QuickSettingsViewProps = CommonRouteProps<QuickSettingsViewParams>;
 
 export function QuickSettingsView({ params }: QuickSettingsViewProps) {
   const { navigate } = useLocation();
-
-  // active setting val
-  const activeSetting = useMemo(() => params.setting, [params.setting]);
+  const activeSetting = params.setting;
 
   return (
     <>
