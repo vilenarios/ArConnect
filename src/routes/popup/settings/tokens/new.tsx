@@ -14,7 +14,7 @@ export function NewTokenSettingsView() {
         back={() => navigate("/quick-settings/tokens")}
       />
       <Wrapper>
-        <AddTokenDashboardView isQuickSetting={true} />
+        <AddTokenDashboardView isQuickSetting params={{}} />
       </Wrapper>
     </>
   );

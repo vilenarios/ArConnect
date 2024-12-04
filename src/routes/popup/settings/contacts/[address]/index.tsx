@@ -22,7 +22,7 @@ export function ContactSettingsView({ params }: ContactSettingsViewProps) {
         back={() => navigate("/quick-settings/contacts")}
       />
       <Wrapper>
-        <ContactSettingsDashboardView isQuickSetting={true} params={params} />
+        <ContactSettingsDashboardView isQuickSetting params={params} />
       </Wrapper>
     </>
   );
