@@ -29,12 +29,12 @@ export function BodyScroller() {
   return null;
 }
 
-export type NavigateAction = "prev" | "next" | "up";
+export type NavigateAction = "prev" | "next" | "up" | number;
 
 function isNavigateAction(
   to: ArConnectRoutePath | NavigateAction
 ): to is NavigateAction {
-  return !to.startsWith("/");
+  return typeof to === "number" || !to.startsWith("/");
 }
 
 export function useLocation() {
@@ -58,21 +58,25 @@ export function useLocation() {
 
         if (to === "up") {
           toPath = parentPath;
-        } else {
-          const index = parseInt(lastPart);
+        } else if (typeof to === "string") {
+          const page = parseInt(lastPart);
 
-          if (isNaN(index))
+          if (isNaN(page))
             throw new Error(
               `The current location "${location}" doesn't end with an index`
             );
 
           if (to === "prev") {
-            if (index === 0) throw new Error(`Index -1 out of bounds`);
+            if (page === 1) throw new Error(`Page 0 out of bounds`);
 
-            toPath = `${parentPath}/${index - 1}` as ArConnectRoutePath;
+            toPath = `${parentPath}/${page - 1}` as ArConnectRoutePath;
           } else if (to === "next") {
-            toPath = `/${parentPath}/${index + 1}` as ArConnectRoutePath;
+            toPath = `/${parentPath}/${page + 1}` as ArConnectRoutePath;
           }
+        } else {
+          if (to <= 0) throw new Error(`Page ${to} out of bounds`);
+
+          toPath = `${parentPath}/${to}` as ArConnectRoutePath;
         }
       }
 
