@@ -63,19 +63,48 @@ async function getTokenInfo(id: string): Promise<TokenInfo> {
 
   // find message with token info
   for (const msg of res.Messages as Message[]) {
+    if (msg?.Data) {
+      try {
+        const data = JSON.parse(msg.Data);
+        const Ticker = data.Ticker || data.ticker;
+        const Name = data.Name || data.name;
+        const Denomination = data.Denomination || data.denomination;
+        const Logo = data.Logo || data.logo || id;
+        const type =
+          typeof data?.transferable === "boolean" ||
+          typeof data?.Transferable === "boolean" ||
+          Ticker === "ATOMIC"
+            ? "collectible"
+            : "asset";
+
+        if (Ticker && Name) {
+          return {
+            processId: id,
+            Ticker,
+            Name,
+            Denomination: Number(Denomination || 0),
+            Logo,
+            type
+          } as TokenInfo;
+        }
+      } catch {}
+    }
     const Ticker = getTagValue("Ticker", msg.Tags);
     const Name = getTagValue("Name", msg.Tags);
     const Denomination = getTagValue("Denomination", msg.Tags);
     const Logo = getTagValue("Logo", msg.Tags);
+    const Transferable = getTagValue("Transferable", msg.Tags);
 
     if (!Ticker && !Name) continue;
 
     // if the message was found, return the token details
     return {
+      processId: id,
       Name,
       Ticker,
       Denomination: Number(Denomination || 0),
-      Logo
+      Logo,
+      type: Transferable || Ticker === "ATOMIC" ? "collectible" : "asset"
     };
   }
 

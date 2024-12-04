@@ -1,12 +1,8 @@
-import { EyeIcon, MessageIcon, ShareIcon, GlobeIcon } from "@iconicicons/react";
+import { EyeIcon, GlobeIcon } from "@iconicicons/react";
 import { concatGatewayURL } from "~gateways/utils";
 import { Section, Spacer, Text } from "@arconnect/components";
-import { getSettings, type TokenState } from "~tokens/token";
-import { DREContract, DRENode } from "@arconnect/warp-dre";
 import { useEffect, useMemo, useState } from "react";
-import { getDreForToken, useTokens } from "~tokens";
 import { AnimatePresence } from "framer-motion";
-import { getCommunityUrl } from "~utils/format";
 import { Link } from "../token/[id]";
 import TokenLoading from "~components/popup/asset/Loading";
 import Thumbnail from "~components/popup/asset/Thumbnail";
@@ -16,60 +12,74 @@ import Title from "~components/popup/Title";
 import styled from "styled-components";
 import { useGateway } from "~gateways/wayfinder";
 import HeadV2 from "~components/popup/HeadV2";
+import placeholderUrl from "url:/assets/placeholder.png";
+import { useStorage } from "@plasmohq/storage/hook";
+import { getTagValue, type TokenInfoWithBalance } from "~tokens/aoTokens/ao";
+import { ExtensionStorage } from "~utils/storage";
+import { gql } from "~gateways/api";
 
 export default function Collectible({ id }: Props) {
-  // load state
-  const [state, setState] = useState<TokenState>();
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-
-      const dre = await getDreForToken(id);
-      const contract = new DREContract(id, new DRENode(dre));
-      const { state } = await contract.getState<TokenState>();
-
-      setState(state);
-      setLoading(false);
-    })();
-  }, [id]);
-
-  // community settings
-  const settings = useMemo(() => {
-    if (!state || !state.settings) return undefined;
-
-    return getSettings(state);
-  }, [state]);
-
-  // links
-  const chatLinks = useMemo<string[]>(() => {
-    const val = settings?.get("communityDiscussionLinks");
-
-    if (!val) return [];
-
-    return val as string[];
-  }, [settings]);
+  const [description, setDescription] = useState<string>("");
+  const [aoTokens] = useStorage<TokenInfoWithBalance[]>(
+    {
+      key: "ao_tokens",
+      instance: ExtensionStorage
+    },
+    []
+  );
+  const token = useMemo(() => {
+    return aoTokens.find((t) => t.processId === id);
+  }, [aoTokens, id]);
 
   // price
   const [price, setPrice] = useState<number>();
 
-  // token gateway
-  const tokens = useTokens();
   const defaultGateway = useGateway({ startBlock: 0 });
-  const gateway = useMemo(
-    () => tokens.find((t) => t.id === id)?.gateway || defaultGateway,
-    [id, defaultGateway]
-  );
+
+  async function getCollectionDescription() {
+    setLoading(true);
+    try {
+      const { data } = await gql(
+        `query ($id: ID!) {
+          transaction (id: $id) {
+            tags {
+              name
+              value
+            }
+          }
+        }`,
+        { id }
+      );
+
+      const description = getTagValue(
+        "Description",
+        data.transaction.tags as any[]
+      );
+      setDescription(description);
+    } catch {
+      //
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!id || description) return;
+    getCollectionDescription();
+  }, [id]);
 
   return (
     <>
       <HeadV2 title={browser.i18n.getMessage("collectible")} />
       <Spacer y={0.75} />
-      <Thumbnail src={`${concatGatewayURL(gateway)}/${id}`} />
+      <Thumbnail
+        src={`${concatGatewayURL(defaultGateway)}/${id}`}
+        fallback={placeholderUrl}
+      />
       <Section>
         <Title heading noMargin>
-          {state?.name || state?.ticker || <Skeleton width="6rem" />}
+          {token?.Name || token?.Ticker || <Skeleton width="6rem" />}
         </Title>
         {price && (
           <Price noMargin>
@@ -79,12 +89,8 @@ export default function Collectible({ id }: Props) {
         )}
         <Spacer y={1} />
         <Description>
-          {(state && (
-            <>
-              {(settings && settings.get("communityDescription")) ||
-                state?.description ||
-                browser.i18n.getMessage("no_description")}
-            </>
+          {(!loading && (
+            <>{description || browser.i18n.getMessage("no_description")}</>
           )) ||
             new Array(5)
               .fill("")
@@ -100,24 +106,6 @@ export default function Collectible({ id }: Props) {
         <Spacer y={1} />
         <Title noMargin>{browser.i18n.getMessage("info_title")}</Title>
         <Spacer y={0.6} />
-        {chatLinks.map((link, i) => (
-          <div key={i}>
-            <Link href={link}>
-              <MessageIcon />
-              {getCommunityUrl(link)}
-            </Link>
-            <Spacer y={0.22} />
-          </div>
-        ))}
-        {settings?.get("communityAppUrl") && (
-          <>
-            <Link href={settings.get("communityAppUrl") as string}>
-              <ShareIcon />
-              {getCommunityUrl(settings.get("communityAppUrl") as string)}
-            </Link>
-            <Spacer y={0.22} />
-          </>
-        )}
         {(!loading && (
           <>
             <Link href={`https://bazar.arweave.dev/#/asset/${id}`}>
@@ -125,9 +113,9 @@ export default function Collectible({ id }: Props) {
               Bazar
             </Link>
             <Spacer y={0.22} />
-            <Link href={`https://sonar.warp.cc/#/app/contract/${id}`}>
+            <Link href={`https://www.ao.link/#/entity/${id}`}>
               <GlobeIcon />
-              Sonar
+              AO Link
             </Link>
             <Spacer y={0.22} />
             <Link href={`https://viewblock.io/arweave/address/${id}`}>

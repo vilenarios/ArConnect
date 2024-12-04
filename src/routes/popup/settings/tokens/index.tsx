@@ -45,7 +45,7 @@ export default function Tokens() {
       defaultLogo: token.Logo,
       balance: "0",
       ticker: token.Ticker,
-      type: "asset" as TokenType,
+      type: token.type || "asset",
       name: token.Name
     }));
   }, [aoTokens]);

@@ -13,7 +13,7 @@ export default function Tokens() {
   const tokens = useTokens();
 
   // all tokens
-  const [aoTokens, loading] = useAoTokens();
+  const [aoTokens, loading] = useAoTokens({ type: "asset" });
 
   // assets
   const assets = useMemo(

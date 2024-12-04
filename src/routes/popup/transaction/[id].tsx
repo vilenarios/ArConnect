@@ -183,7 +183,12 @@ export default function Transaction({ id: rawId, gw, message }: Props) {
                 id: data.transaction.recipient,
                 decimals: Number(tokenInfo.Denomination)
               });
-              setTicker(tokenInfo.Ticker);
+              setTicker(
+                tokenInfo?.type === "collectible" ||
+                  tokenInfo?.Ticker === "ATOMIC"
+                  ? tokenInfo.Name!
+                  : tokenInfo.Ticker!
+              );
               data.transaction.quantity = { ar: amount.toFixed(), winston: "" };
               data.transaction.recipient = aoRecipient.value;
             }
