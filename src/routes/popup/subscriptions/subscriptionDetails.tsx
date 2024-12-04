@@ -22,7 +22,11 @@ import {
   useToasts,
   TooltipV2
 } from "@arconnect/components";
-import { Content, Title, getColorByStatus } from "~components/popup/list/SubscriptionListItem";
+import {
+  Content,
+  Title,
+  getColorByStatus
+} from "~components/popup/list/SubscriptionListItem";
 import { CreditCardUpload } from "@untitled-ui/icons-react";
 import {
   SettingIconWrapper,
