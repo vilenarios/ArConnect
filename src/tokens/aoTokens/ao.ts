@@ -17,7 +17,7 @@ import type { Alarms } from "webextension-polyfill";
 import type { KeystoneSigner } from "~wallets/hardware/keystone";
 import browser from "webextension-polyfill";
 import { fetchTokenByProcessId } from "~lib/transactions";
-import { tokenTypeRegistry, type TokenType } from "~tokens/token";
+import { getTokenInfoFromData } from "./router";
 
 export type AoInstance = ReturnType<typeof connect>;
 
@@ -512,61 +512,11 @@ export const aoTokensCacheHandler = async (alarmInfo?: Alarms.Alarm) => {
       );
 
       if (res.Messages && Array.isArray(res.Messages)) {
-        let updatedToken: TokenInfo | undefined;
-
-        for (const msg of res.Messages as Message[]) {
-          // If we already found token info from Data, don't process Tags
-          if (updatedToken) break;
-
-          // Try to parse from Data first
-          if (msg?.Data) {
-            try {
-              const data = JSON.parse(msg.Data);
-              const Ticker = data.Ticker || data.ticker;
-              const Name = data.Name || data.name;
-              const Denomination = data.Denomination || data.denomination;
-              const Logo = data.Logo || data.logo || token.processId;
-              const type =
-                typeof data?.transferable === "boolean" ||
-                typeof data?.Transferable === "boolean" ||
-                Ticker === "ATOMIC"
-                  ? "collectible"
-                  : "asset";
-
-              if (Ticker && Name) {
-                updatedToken = {
-                  processId: token.processId,
-                  Ticker,
-                  Name,
-                  Denomination: Number(Denomination || 0),
-                  Logo,
-                  lastUpdated: new Date().toISOString(),
-                  type
-                } as TokenInfo;
-                break;
-              }
-            } catch {}
-          }
-
-          const Ticker = getTagValue("Ticker", msg.Tags);
-          const Name = getTagValue("Name", msg.Tags);
-          const Denomination = getTagValue("Denomination", msg.Tags);
-          const Logo = getTagValue("Logo", msg.Tags);
-          const Transferable = getTagValue("Transferable", msg.Tags);
-
-          if (!Ticker && !Name) continue;
-
-          updatedToken = {
-            Name,
-            Ticker,
-            Denomination: Number(Denomination || 0),
-            processId: token.processId,
-            Logo,
-            lastUpdated: new Date().toISOString(),
-            type: Transferable || Ticker === "ATOMIC" ? "collectible" : "asset"
-          };
-          break;
-        }
+        const tokenInfo = getTokenInfoFromData(res, token.processId);
+        const updatedToken = {
+          ...tokenInfo,
+          lastUpdated: new Date().toISOString()
+        };
 
         if (updatedToken) {
           const index = updatedTokens.findIndex(

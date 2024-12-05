@@ -110,7 +110,7 @@ export default function Notifications() {
                 quantityTransfered = notification.quantity;
               } else {
                 ticker =
-                  token?.type === "collectible" || token?.Ticker === "ATOMIC"
+                  token?.type === "collectible"
                     ? token.Name! || token.Ticker!
                     : token.Ticker! || token.Name!;
                 quantityTransfered = balanceToFractioned(

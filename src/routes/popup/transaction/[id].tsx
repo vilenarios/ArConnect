@@ -184,8 +184,7 @@ export default function Transaction({ id: rawId, gw, message }: Props) {
                 decimals: Number(tokenInfo.Denomination)
               });
               setTicker(
-                tokenInfo?.type === "collectible" ||
-                  tokenInfo?.Ticker === "ATOMIC"
+                tokenInfo?.type === "collectible"
                   ? tokenInfo.Name!
                   : tokenInfo.Ticker!
               );

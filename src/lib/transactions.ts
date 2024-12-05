@@ -131,8 +131,7 @@ const processAoTransaction = async (
   const quantityTag = transaction.node.tags.find(
     (tag) => tag.name === "Quantity"
   );
-  const isCollectible =
-    tokenData?.type === "collectible" || tokenData?.Ticker === "ATOMIC";
+  const isCollectible = tokenData?.type === "collectible";
 
   return {
     ...transaction,

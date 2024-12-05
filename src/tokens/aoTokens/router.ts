@@ -5,15 +5,7 @@ import { useStorage } from "@plasmohq/storage/hook";
 import { ExtensionStorage } from "~utils/storage";
 import { dryrun } from "@permaweb/aoconnect/browser";
 
-export async function getTokenInfo(id: string): Promise<TokenInfo> {
-  // query ao
-  const res = await dryrun({
-    Id,
-    Owner,
-    process: id,
-    tags: [{ name: "Action", value: "Info" }]
-  });
-
+export function getTokenInfoFromData(res: any, id: string): TokenInfo {
   // find message with token info
   for (const msg of res.Messages as Message[]) {
     if (msg?.Data) {
@@ -61,6 +53,18 @@ export async function getTokenInfo(id: string): Promise<TokenInfo> {
   }
 
   throw new Error("Could not load token info.");
+}
+
+export async function getTokenInfo(id: string): Promise<TokenInfo> {
+  // query ao
+  const res = await dryrun({
+    Id,
+    Owner,
+    process: id,
+    tags: [{ name: "Action", value: "Info" }]
+  });
+
+  return getTokenInfoFromData(res, id);
 }
 
 export function useTokenIDs(): [string[], boolean] {
