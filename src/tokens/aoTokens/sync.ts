@@ -94,6 +94,96 @@ function getNoticeTransactionsQuery(
   }`;
 }
 
+function getCollectiblesQuery() {
+  return `query ($ids: [ID!]!) {
+    transactions(
+      ids: $ids
+      tags: [
+        { name: "Data-Protocol", values: ["ao"] },
+        { name: "Type", values: ["Process"] },
+        { name: "Implements", values: ["ANS-110"] },
+        { name: "Content-Type" }
+      ]
+      first: 100
+    ) {
+      pageInfo {
+        hasNextPage
+      }
+      edges {
+        node {
+          id
+          tags {
+            name,
+            value
+          }
+        }
+      }
+    }
+  }`;
+}
+
+async function verifyCollectiblesType(tokens: TokenInfo[], arweave: Arweave) {
+  const batchSize = 100;
+
+  // Get IDs of tokens that are already marked as collectibles
+  const idsToCheck = tokens
+    .filter((token) => token.type === "collectible")
+    .map((token) => token.processId);
+
+  const collectibleIds = new Set<string>();
+  const verifiedIds = new Set<string>();
+
+  if (idsToCheck.length === 0) return tokens;
+
+  const totalBatches = Math.ceil(idsToCheck.length / batchSize);
+
+  // Process IDs in batches
+  for (let batch = 0; batch < totalBatches; batch++) {
+    try {
+      const startIndex = batch * batchSize;
+      const currentBatch = idsToCheck.slice(startIndex, startIndex + batchSize);
+
+      const query = getCollectiblesQuery();
+      const transactions = await withRetry(async () => {
+        const response = await arweave.api.post("/graphql", {
+          query,
+          variables: { ids: currentBatch }
+        });
+
+        return response.data.data
+          .transactions as GQLTransactionsResultInterface;
+      }, 2);
+
+      // Mark all IDs in this batch as verified
+      currentBatch.forEach((id) => verifiedIds.add(id));
+
+      if (transactions.edges.length > 0) {
+        const processIds = transactions.edges.map((edge) => edge.node.id);
+        processIds.forEach((processId) => collectibleIds.add(processId));
+      }
+    } catch (error) {
+      console.error(
+        `Failed to get transactions for batch ${batch}, error:`,
+        error
+      );
+      continue;
+    }
+  }
+
+  tokens = tokens.map((token) => {
+    // Only modify tokens we've successfully verified
+    if (token.type === "collectible" && verifiedIds.has(token.processId)) {
+      if (collectibleIds.has(token.processId)) {
+        return { ...token, type: "collectible" };
+      }
+      return { ...token, type: "asset" };
+    }
+    return token;
+  });
+
+  return tokens;
+}
+
 async function getNoticeTransactions(
   arweave: Arweave,
   address: string,
@@ -329,10 +419,13 @@ export async function importAoTokens(alarm: Alarms.Alarm) {
       );
     }
 
-    const newTokens = updatedTokens.filter(
+    let newTokens = updatedTokens.filter(
       (token) => !tokenIdstoExclude.has(token.processId)
     );
     if (newTokens.length === 0) return;
+
+    // verify collectible type
+    newTokens = await verifyCollectiblesType(newTokens, arweave);
 
     newTokens.forEach((token) => aoTokens.push(token));
     await ExtensionStorage.set(AO_TOKENS, aoTokens);
