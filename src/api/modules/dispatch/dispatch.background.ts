@@ -1,13 +1,9 @@
-import {
-  isLocalWallet,
-  isNotCancelError,
-  isSplitTransaction
-} from "~utils/assertions";
+import { isLocalWallet, isSplitTransaction } from "~utils/assertions";
 import { constructTransaction } from "../sign/transaction_builder";
 import { arconfettiIcon, signNotification } from "../sign/utils";
 import { cleanUpChunks, getChunks } from "../sign/chunks";
 import { freeDecryptedWallet } from "~wallets/encryption";
-import type { ModuleFunction } from "~api/background";
+import type { BackgroundModuleFunction } from "~api/background/background-modules";
 import { createData, ArweaveSigner } from "arbundles";
 import { getPrice, uploadDataToTurbo } from "./uploader";
 import type { DispatchResult } from "./index";
@@ -15,7 +11,6 @@ import { signedTxTags } from "../sign/tags";
 import { getActiveKeyfile } from "~wallets";
 import { isString } from "typed-assert";
 import Application from "~applications/application";
-import browser from "webextension-polyfill";
 import Arweave from "arweave";
 import { ensureAllowanceDispatch } from "./allowance";
 import { updateAllowance } from "../sign/allowance";
@@ -26,7 +21,7 @@ type ReturnType = {
   res: DispatchResult;
 };
 
-const background: ModuleFunction<ReturnType> = async (
+const background: BackgroundModuleFunction<ReturnType> = async (
   appData,
   tx: unknown,
   chunkCollectionID: unknown
@@ -36,18 +31,11 @@ const background: ModuleFunction<ReturnType> = async (
   isString(chunkCollectionID);
 
   // create client
-  const app = new Application(appData.appURL);
+  const app = new Application(appData.url);
   const arweave = new Arweave(await app.getGatewayConfig());
 
   // grab the user's keyfile
-  const decryptedWallet = await getActiveKeyfile().catch((e) => {
-    isNotCancelError(e);
-
-    // if there are no wallets added, open the welcome page
-    browser.tabs.create({ url: browser.runtime.getURL("tabs/welcome.html") });
-
-    throw new Error("No wallets added");
-  });
+  const decryptedWallet = await getActiveKeyfile(appData);
 
   // ensure that the currently selected
   // wallet is not a local wallet
@@ -56,7 +44,7 @@ const background: ModuleFunction<ReturnType> = async (
   const keyfile = decryptedWallet.keyfile;
 
   // get chunks for transaction
-  const chunks = getChunks(chunkCollectionID, appData.appURL);
+  const chunks = getChunks(chunkCollectionID, appData.url);
 
   // reconstruct the transaction from the chunks
   let transaction = arweave.transactions.fromRaw({
@@ -107,10 +95,10 @@ const background: ModuleFunction<ReturnType> = async (
     await uploadDataToTurbo(dataEntry, await app.getBundler());
 
     // update allowance spent amount (in winstons)
-    await updateAllowance(appData.appURL, price);
+    await updateAllowance(appData.url, price);
 
     // show notification
-    await signNotification(0, dataEntry.id, appData.appURL, "dispatch");
+    await signNotification(0, dataEntry.id, appData.url, "dispatch");
 
     // remove wallet from memory
     freeDecryptedWallet(keyfile);
@@ -150,10 +138,10 @@ const background: ModuleFunction<ReturnType> = async (
     }
 
     // update allowance spent amount (in winstons)
-    await updateAllowance(appData.appURL, price);
+    await updateAllowance(appData.url, price);
 
     // show notification
-    await signNotification(price, transaction.id, appData.appURL);
+    await signNotification(price, transaction.id, appData.url);
 
     // remove wallet from memory
     freeDecryptedWallet(keyfile);

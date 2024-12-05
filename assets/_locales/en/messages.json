@@ -615,11 +615,11 @@
   },
   "enter_new_password": {
     "message": "Enter your new password...",
-    "description": "Password input placeholder" 
+    "description": "Password input placeholder"
   },
   "reenter_new_password": {
     "message": "Re-enter your new password...",
-    "description": "Re-enter input placeholder" 
+    "description": "Re-enter input placeholder"
   },
   "enter_password": {
     "message": "Enter your password...",
@@ -1334,11 +1334,11 @@
     "description": "View last tx prompt content"
   },
   "sign_item": {
-    "message": "Sign Item",
+    "message": "Sign item",
     "description": "Sign message popup title"
   },
   "batch_sign_items": {
-    "message": "Batch Sign Items",
+    "message": "Sign items",
     "description": "Batch sign message popup title"
   },
   "titles_signature": {
@@ -1390,6 +1390,10 @@
   "sign_authorize": {
     "message": "Authorize",
     "description": "Authorize button label"
+  },
+  "sign_authorize_all": {
+    "message": "Authorize all",
+    "description": "Authorize all button label"
   },
   "sign_enter_password": {
     "message": "Enter password to sign transaction",
@@ -1604,7 +1608,7 @@
     "description": "Lock wallet and terminate current session icon button"
   },
   "home": {
-    "message":"Home", 
+    "message":"Home",
     "description": "Home Button"
   },
   "home_no_balance": {
@@ -1673,11 +1677,11 @@
     "message": "Toggle to receive alerts for new transactions in your wallet.",
     "description": "Toggle notifications description text"
   },
-  "get_started":{    
+  "get_started":{
     "message": "Get Started",
     "description": "Get started title"
   },
-  "get_started_description":{    
+  "get_started_description":{
     "message": "Explore the endless possibilities on Arweave and aoComputer through ArConnect",
     "description": "Get started description"
   },
@@ -1806,7 +1810,7 @@
     "description": "Currency search placeholder text"
   },
   "receive_AR_button": {
-    "message": "Receive AR", 
+    "message": "Receive AR",
     "description": "Button text for the receive AR button"
   },
   "search_contacts": {
@@ -1925,7 +1929,7 @@
     "description": "Input title for the password allowance label"
   },
   "add": {
-    "message": "Add", 
+    "message": "Add",
     "description" : "add button text"
   },
   "your_contacts": {
@@ -1941,24 +1945,24 @@
     "description": "Error message for invalid ANS"
   },
   "arns_added": {
-    "message": " ar://$ADDRESS$ added", 
+    "message": " ar://$ADDRESS$ added",
     "description": "ArNS recipient added",
     "placeholders": {
       "address": {
         "content": "$1",
         "example": "Address"
       }
-    } 
+    }
   },
   "ans_added": {
-    "message": "$ADDRESS$ added", 
+    "message": "$ADDRESS$ added",
     "description": "ANS recipient added",
     "placeholders": {
       "address": {
         "content": "$1",
         "example": "Address"
       }
-    } 
+    }
   },
   "setting_ao_support": {
     "message": "ao support",
@@ -2110,7 +2114,7 @@
     "description": "Address where payment will be made to"
   },
 
-  
+
   "subscription_recurring_amount": {
     "message": "Recurring payment amount",
     "description": "Recurring payment amount"
@@ -2128,12 +2132,12 @@
     "message": "Confirm Subscription",
     "description": "confirm subscription"
   },
-  
+
   "continue": {
     "message": "Continue",
     "description": "Continue"
   },
-  
+
   "end": {
     "message": "End",
     "description": "end"
@@ -2285,5 +2289,95 @@
   "new_transaction": {
     "message": "New transaction",
     "description": "New transaction description"
+  },
+  "batchSignDataItemRequestLoading": {
+    "message": "Signing...",
+    "description": "Loading message for AuthRequest of type batchSignDataItem"
+  },
+  "connectRequestLoading": {
+    "message": "Connecting...",
+    "description": "Loading message for AuthRequest of type connect"
+  },
+  "allowanceRequestLoading": {
+    "message": "Updating allowance...",
+    "description": "Loading message for AuthRequest of type allowance"
+  },
+  "tokenRequestLoading": {
+    "message": "Adding token...",
+    "description": "Loading message for AuthRequest of type token"
+  },
+  "signRequestLoading": {
+    "message": "Signing...",
+    "description": "Loading message for AuthRequest of type sign"
+  },
+  "subscriptionRequestLoading": {
+    "message": "Subscribing...",
+    "description": "Loading message for AuthRequest of type subscription"
+  },
+  "signKeystoneRequestLoading": {
+    "message": "Signing...",
+    "description": "Loading message for AuthRequest of type signKeystone"
+  },
+  "signatureRequestLoading": {
+    "message": "Signing...",
+    "description": "Loading message for AuthRequest of type signature"
+  },
+  "signDataItemRequestLoading": {
+    "message": "Signing...",
+    "description": "Loading message for AuthRequest of type signDataItem"
+  },
+  "abortingRequestLoading": {
+    "message": "Aborting...",
+    "description": "Loading message for rejected/aborted AuthRequests"
+  },
+  "pendingTransactionStatusAt": {
+    "message": "Requested",
+    "description": "Label to display next to the elapsed time since the AuthRequest was created"
+  },
+  "acceptedTransactionStatusAt": {
+    "message": "Accepted",
+    "description": "Label to display next to the elapsed time since the AuthRequest was accepted"
+  },
+  "rejectedTransactionStatusAt": {
+    "message": "Rejected",
+    "description": "Label to display next to the elapsed time since the AuthRequest was rejected"
+  },
+  "abortedTransactionStatusAt": {
+    "message": "Aborted",
+    "description": "Label to display next to the elapsed time since the AuthRequest was aborted"
+  },
+  "errorTransactionStatusAt": {
+    "message": "Failed",
+    "description": "Label to display next to the elapsed time since the AuthRequest was aborted"
+  },
+  "formattedElapsedSeconds": {
+    "message": "$SECONDS$ seconds ago",
+    "description": "Format elapsed seconds",
+    "placeholders": {
+      "seconds": {
+        "content": "$1",
+        "example": "10"
+      }
+    }
+  },
+  "formattedElapsedMinutes": {
+    "message": "$MINUTES$ minutes ago",
+    "description": "Format elapsed minutes",
+    "placeholders": {
+      "minutes": {
+        "content": "$1",
+        "example": "10"
+      }
+    }
+  },
+  "formattedElapsedHours": {
+    "message": "$HOURS$ hours ago",
+    "description": "Format elapsed hours",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "10"
+      }
+    }
   }
 }

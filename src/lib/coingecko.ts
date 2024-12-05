@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js";
 import { useState, useCallback, useEffect } from "react";
 import redstone from "redstone-api";
-import { retryWithDelay } from "~utils/retry";
+import { retryWithDelay } from "~utils/promises/retry";
 
 /**
  * Compare two currencies

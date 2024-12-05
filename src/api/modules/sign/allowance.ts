@@ -1,11 +1,11 @@
 import {
-  type Allowance,
   type AllowanceBigNumber,
   defaultAllowance
 } from "~applications/allowance";
 import Application from "~applications/application";
-import authenticate from "../connect/auth";
+import { requestUserAuthorization } from "../../../utils/auth/auth.utils";
 import BigNumber from "bignumber.js";
+import type { ModuleAppData } from "~api/background/background-modules";
 
 /**
  * Get allowance for an app
@@ -59,8 +59,8 @@ export async function updateAllowance(
  * @param price Price to check the allowance for (quantity + reward)
  */
 export async function allowanceAuth(
+  appData: ModuleAppData,
   allowance: AllowanceBigNumber,
-  tabURL: string,
   price: number | BigNumber,
   override: boolean = false
 ) {
@@ -74,17 +74,20 @@ export async function allowanceAuth(
   if (hasEnoughAllowance || override) return;
 
   // try to authenticate to raise the allowance amount
-  await authenticate({
-    type: "allowance",
-    url: tabURL,
-    spendingLimitReached: !hasEnoughAllowance
-  });
+  await requestUserAuthorization(
+    {
+      type: "allowance",
+      spendingLimitReached: !hasEnoughAllowance
+    },
+    appData
+  );
 
   // get updated allowance
-  const app = new Application(tabURL);
+  const app = new Application(appData.url);
+
   allowance = await app.getAllowance();
 
   // call this function again, to check if the allowance
   // was reset or updated
-  await allowanceAuth(allowance, tabURL, price);
+  await allowanceAuth(appData, allowance, price);
 }

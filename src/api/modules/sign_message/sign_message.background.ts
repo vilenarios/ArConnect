@@ -1,18 +1,16 @@
 import { freeDecryptedWallet } from "~wallets/encryption";
-import type { ModuleFunction } from "~api/background";
+import type { BackgroundModuleFunction } from "~api/background/background-modules";
 import { getActiveKeyfile } from "~wallets";
-import browser from "webextension-polyfill";
 import {
   isArrayBuffer,
-  isNotCancelError,
   isNumberArray,
   isSignMessageOptions
 } from "~utils/assertions";
 import { signAuthKeystone, type AuthKeystoneData } from "../sign/sign_auth";
 import Arweave from "arweave";
 
-const background: ModuleFunction<number[]> = async (
-  _,
+const background: BackgroundModuleFunction<number[]> = async (
+  appData,
   data: unknown,
   options = { hashAlgorithm: "SHA-256" }
 ) => {
@@ -29,14 +27,7 @@ const background: ModuleFunction<number[]> = async (
   const hash = await crypto.subtle.digest(options.hashAlgorithm, dataToSign);
 
   // get user wallet
-  const activeWallet = await getActiveKeyfile().catch((e) => {
-    isNotCancelError(e);
-
-    // if there are no wallets added, open the welcome page
-    browser.tabs.create({ url: browser.runtime.getURL("tabs/welcome.html") });
-
-    throw new Error("No wallets added");
-  });
+  const activeWallet = await getActiveKeyfile(appData);
 
   // ensure that the currently selected
   // wallet is not a local wallet
@@ -70,7 +61,7 @@ const background: ModuleFunction<number[]> = async (
       type: "Message",
       data: dataToSign
     };
-    const res = await signAuthKeystone(data);
+    const res = await signAuthKeystone(appData, data);
     const sig = Arweave.utils.b64UrlToBuffer(res.data.signature);
     return Array.from(sig);
   }

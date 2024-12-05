@@ -37,6 +37,7 @@ import {
   RecurringPaymentFrequency,
   type SubscriptionData
 } from "~subscriptions/subscription";
+import { ERR_MSG_USER_CANCELLED_AUTH } from "~utils/auth/auth.constants";
 
 export function isGateway(input: unknown): asserts input is Gateway {
   isRecordWithKeys(
@@ -373,7 +374,7 @@ export function isNotCancelError(input: unknown): asserts input is Error {
   else if (input instanceof Error) message = input.message;
 
   assert(
-    !message.includes("User cancelled the auth"),
+    !message.includes(ERR_MSG_USER_CANCELLED_AUTH),
     "User cancelled the operation"
   );
 }

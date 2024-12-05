@@ -1,14 +1,4 @@
-import { replyToAuthRequest, useAuthParams, useAuthUtils } from "~utils/auth";
-import {
-  ButtonV2,
-  InputV2,
-  Loading,
-  Section,
-  Spacer,
-  Text,
-  useInput,
-  useToasts
-} from "@arconnect/components";
+import { Loading, Section, Spacer } from "@arconnect/components";
 import {
   FiatAmount,
   AmountTitle,
@@ -16,32 +6,24 @@ import {
   TransactionProperty,
   PropertyName,
   PropertyValue,
-  TagValue,
-  useAdjustAmountTitleWidth
+  TagValue
 } from "~routes/popup/transaction/[id]";
-import Wrapper from "~components/auth/Wrapper";
 import browser from "webextension-polyfill";
 import { useEffect, useMemo, useRef, useState } from "react";
-import styled from "styled-components";
-import HeadV2 from "~components/popup/HeadV2";
 import { formatAddress } from "~utils/format";
 import { useStorage } from "@plasmohq/storage/hook";
 import { ExtensionStorage } from "~utils/storage";
-import { checkPassword } from "~wallets/auth";
 import { Quantity, Token } from "ao-tokens";
 import prettyBytes from "pretty-bytes";
 import { formatFiatBalance } from "~tokens/currency";
 import useSetting from "~settings/hook";
-import { getPrice } from "~lib/coingecko";
 import type { TokenInfo, TokenInfoWithProcessId } from "~tokens/aoTokens/ao";
 import { ChevronUpIcon, ChevronDownIcon } from "@iconicicons/react";
 import { getUserAvatar } from "~lib/avatar";
-import { LogoWrapper, Logo, WarningIcon } from "~components/popup/Token";
+import { LogoWrapper, Logo } from "~components/popup/Token";
 import arLogoLight from "url:/assets/ar/logo_light.png";
 import arLogoDark from "url:/assets/ar/logo_dark.png";
 import { useTheme } from "~utils/theme";
-import { checkWalletBits, type WalletBitsCheck } from "~utils/analytics";
-import { Degraded, WarningWrapper } from "~routes/popup/send";
 
 export default function SignDataItemDetails({ params }) {
   const [loading, setLoading] = useState<boolean>(false);
@@ -67,7 +49,9 @@ export default function SignDataItemDetails({ params }) {
   useEffect(() => {
     const fetchTokenInfo = async () => {
       if (!process || !transfer) return;
+
       let tokenInfo: TokenInfo;
+
       try {
         setLoading(true);
         const token = await Token(params.target);
@@ -78,6 +62,7 @@ export default function SignDataItemDetails({ params }) {
       } catch (err) {
         // fallback
         console.log("err", err);
+
         try {
           const aoTokens =
             (await ExtensionStorage.get<TokenInfoWithProcessId[]>(
@@ -141,9 +126,11 @@ export default function SignDataItemDetails({ params }) {
     },
     ""
   );
+
   // adjust amount title font sizes
   const parentRef = useRef(null);
   const childRef = useRef(null);
+
   return (
     <>
       {params ? (

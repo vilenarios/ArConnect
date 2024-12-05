@@ -1,7 +1,4 @@
 import type { JWKInterface } from "arweave/node/lib/wallet";
-import { getAnsProfile, type AnsUser } from "~lib/ans";
-import authenticate from "~api/modules/connect/auth";
-import type { Alarms } from "webextension-polyfill";
 import { useStorage } from "@plasmohq/storage/hook";
 import { ExtensionStorage } from "~utils/storage";
 import type { HardwareWallet } from "./hardware";
@@ -13,8 +10,22 @@ import {
   encryptWallet,
   freeDecryptedWallet
 } from "./encryption";
-import { checkPassword, getDecryptionKey, setDecryptionKey } from "./auth";
+import {
+  checkPassword,
+  getDecryptionKey,
+  getDecryptionKeyOrRequestUnlock,
+  setDecryptionKey
+} from "./auth";
 import { ArweaveSigner } from "arbundles";
+import { handleSyncLabelsAlarm } from "~api/background/handlers/alarms/sync-labels/sync-labels-alarm.handler";
+import {
+  DEFAULT_MODULE_APP_DATA,
+  ERR_MSG_NO_ACTIVE_WALLET,
+  ERR_MSG_NO_WALLETS_ADDED
+} from "~utils/auth/auth.constants";
+import type { ModuleAppData } from "~api/background/background-modules";
+import { isNotCancelError } from "~utils/assertions";
+import { log, LOG_GROUP } from "~utils/log/log.utils";
 
 /**
  * Locally stored wallet
@@ -46,7 +57,7 @@ export async function getWallets() {
   return wallets || [];
 }
 
-type InitialScreenType = "cover" | "locked" | "generating" | "default";
+export type InitialScreenType = "cover" | "locked" | "generating" | "default";
 
 /**
  * Hook that opens a new tab if ArConnect has not been set up yet
@@ -73,9 +84,10 @@ export function useSetUp() {
         case undefined:
         case "extension": {
           if (!hasWallets) {
-            await browser.tabs.create({
-              url: browser.runtime.getURL("tabs/welcome.html")
-            });
+            // This should only happen when opening the regular popup, but not for the auth popup, as the
+            // `createAuthPopup` will open the welcome page directly, instead of the popup, if needed:
+
+            openOrSelectWelcomePage(true);
 
             window.top.close();
           } else if (!decryptionKey) {
@@ -118,6 +130,8 @@ export function useSetUp() {
     });
 
     checkWalletState();
+
+    handleSyncLabelsAlarm();
 
     return () => {
       ExtensionStorage.unwatch({
@@ -217,6 +231,39 @@ export async function setActiveWallet(address?: string) {
 
 export type DecryptedWallet = StoredWallet<JWKInterface>;
 
+export async function openOrSelectWelcomePage(force = false) {
+  log(LOG_GROUP.AUTH, `openOrSelectWelcomePage(${force})`);
+
+  // Make sure we clear any stored value from previous installations before
+  // opening the welcome page to onboard the user:
+
+  // get all keys
+  const allStoredKeys = Object.keys(
+    (await browser.storage.local.get(null)) || {}
+  );
+
+  // remove all keys
+  await Promise.allSettled(
+    allStoredKeys.map((key) => ExtensionStorage.remove(key))
+  );
+
+  const url = browser.runtime.getURL("tabs/welcome.html");
+  const welcomePageTabs = await browser.tabs.query({ url });
+  const welcomePageTabID = welcomePageTabs[0]?.id;
+
+  if (welcomePageTabID) {
+    if (force) {
+      // More aggressive version, just select the existing tab:
+      browser.tabs.update(welcomePageTabID, { active: true });
+    } else {
+      // Less aggressive version, just highlight the existing tab but do not select it:
+      browser.tabs.highlight({ tabs: welcomePageTabID });
+    }
+  } else {
+    browser.tabs.create({ url });
+  }
+}
+
 /**
  * Get the active wallet with decrypted JWK
  *
@@ -228,42 +275,47 @@ export type DecryptedWallet = StoredWallet<JWKInterface>;
  *
  * @returns Active wallet with decrypted JWK
  */
-export async function getActiveKeyfile(): Promise<DecryptedWallet> {
-  const activeWallet = await getActiveWallet();
+export async function getActiveKeyfile(
+  appData: ModuleAppData = DEFAULT_MODULE_APP_DATA
+): Promise<DecryptedWallet> {
+  try {
+    const activeWallet = await getActiveWallet();
 
-  // return if hardware wallet
-  if (activeWallet.type === "hardware") {
-    return activeWallet;
+    if (!activeWallet) {
+      throw new Error(ERR_MSG_NO_ACTIVE_WALLET);
+    }
+
+    // return if hardware wallet
+    if (activeWallet.type === "hardware") {
+      return activeWallet;
+    }
+
+    // Get the `decryptionKey` if ArConnect is already unlocked, or unlock ArConnect if needed. This means the auth popup
+    // will be displayed, prompting the user to enter their password:
+    const decryptionKey = await getDecryptionKeyOrRequestUnlock(appData);
+
+    // decrypt keyfile
+    const decryptedKeyfile = await decryptWallet(
+      activeWallet.keyfile,
+      decryptionKey
+    );
+
+    // construct decrypted wallet object
+    const decryptedWallet: DecryptedWallet = {
+      ...activeWallet,
+      keyfile: decryptedKeyfile
+    };
+
+    return decryptedWallet;
+  } catch (err) {
+    isNotCancelError(err);
+
+    // If we ended up here due to an error other than the user closing the auth modal, such as there are no wallets
+    // added, open the welcome page:
+    openOrSelectWelcomePage();
+
+    throw new Error(ERR_MSG_NO_WALLETS_ADDED);
   }
-
-  // get decryption key
-  let decryptionKey = await getDecryptionKey();
-
-  // unlock ArConnect if the decryption key is undefined
-  // this means that the user has to enter their decryption
-  // key so it can be used later
-  if (!decryptionKey && !!activeWallet) {
-    await authenticate({
-      type: "unlock"
-    });
-
-    // re-read the decryption key
-    decryptionKey = await getDecryptionKey();
-  }
-
-  // decrypt keyfile
-  const decryptedKeyfile = await decryptWallet(
-    activeWallet.keyfile,
-    decryptionKey
-  );
-
-  // construct decrypted wallet object
-  const decryptedWallet: DecryptedWallet = {
-    ...activeWallet,
-    keyfile: decryptedKeyfile
-  };
-
-  return decryptedWallet;
 }
 
 /**
@@ -282,25 +334,20 @@ export async function getKeyfile(address: string): Promise<DecryptedWallet> {
   const wallets = await getWallets();
   const wallet = wallets.find((wallet) => wallet.address === address);
 
+  if (!wallet) {
+    throw new Error(`Wallet ${address} not found`);
+  }
+
   // return if hardware wallet
   if (wallet.type === "hardware") {
     return wallet;
   }
 
-  // get decryption key
-  let decryptionKey = await getDecryptionKey();
-
-  // unlock ArConnect if the decryption key is undefined
-  // this means that the user has to enter their decryption
-  // key so it can be used later
-  if (!decryptionKey && !!wallet) {
-    await authenticate({
-      type: "unlock"
-    });
-
-    // re-read the decryption key
-    decryptionKey = await getDecryptionKey();
-  }
+  // Get the `decryptionKey` if ArConnect is already unlocked, or unlock ArConnect if needed. This means the auth popup
+  // will be displayed, prompting the user to enter their password:
+  const decryptionKey = await getDecryptionKeyOrRequestUnlock(
+    DEFAULT_MODULE_APP_DATA
+  );
 
   // decrypt keyfile
   const decryptedKeyfile = await decryptWallet(wallet.keyfile, decryptionKey);
@@ -498,39 +545,6 @@ export const readWalletFromFile = (file: File) =>
 interface WalletWithNickname {
   wallet: JWKInterface;
   nickname?: string;
-}
-
-/**
- * Sync nicknames with ANS labels
- */
-export async function syncLabels(alarmInfo?: Alarms.Alarm) {
-  // check alarm name if called from an alarm
-  if (alarmInfo?.name && alarmInfo.name !== "sync_labels") {
-    return;
-  }
-
-  // get wallets
-  const wallets = await getWallets();
-
-  if (wallets.length === 0) return;
-
-  // get profiles
-  const profiles = (await getAnsProfile(
-    wallets.map((w) => w.address)
-  )) as AnsUser[];
-  const find = (addr: string) =>
-    profiles.find((w) => w.user === addr)?.currentLabel;
-
-  // save updated wallets
-  await ExtensionStorage.set(
-    "wallets",
-    wallets.map((wallet) => ({
-      ...wallet,
-      nickname: find(wallet.address)
-        ? find(wallet.address) + ".ar"
-        : wallet.nickname
-    }))
-  );
 }
 
 export async function getWalletKeyLength(jwk: JWKInterface) {

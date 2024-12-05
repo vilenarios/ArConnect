@@ -31,7 +31,7 @@ import {
   getTransactionDescription
 } from "~lib/transactions";
 import BigNumber from "bignumber.js";
-import { retryWithDelay } from "~utils/retry";
+import { retryWithDelay } from "~utils/promises/retry";
 
 const defaultCursors = ["", "", "", "", ""];
 const defaultHasNextPages = [true, true, true, true, true];

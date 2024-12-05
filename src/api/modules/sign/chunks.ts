@@ -17,6 +17,7 @@ export interface Chunk {
  */
 export const CHUNK_SIZE = 500000;
 
+// TODO: Store these in a map instead...
 // stored chunks
 const chunks: {
   chunkCollectionID: string; // unique ID for this collection
