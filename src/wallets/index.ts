@@ -56,38 +56,6 @@ export async function getWallets() {
 }
 
 /**
- * Hook to get if there are no wallets added
- */
-export const useNoWallets = () => {
-  const [state, setState] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      const activeAddress = await getActiveAddress();
-      const wallets = await getWallets();
-
-      setState(!activeAddress && wallets.length === 0);
-    })();
-  }, []);
-
-  return state;
-};
-
-/**
- * Hook for decryption key
- */
-export function useDecryptionKey(): [string, (val: string) => void] {
-  const [decryptionKey, setDecryptionKey] = useStorage<string>({
-    key: "decryption_key",
-    instance: ExtensionStorage
-  });
-
-  const set = (val: string) => setDecryptionKey(btoa(val));
-
-  return [decryptionKey ? atob(decryptionKey) : undefined, set];
-}
-
-/**
  * Get the active address
  */
 export async function getActiveAddress() {

@@ -1,3 +1,4 @@
+import { LoadingView } from "~components/page/common/loading/loading.view";
 import { HomeView } from "~routes/popup";
 import { CollectibleView } from "~routes/popup/collectible/[id]";
 import { CollectiblesView } from "~routes/popup/collectibles";
@@ -35,6 +36,8 @@ import { AssetView } from "~routes/popup/token/[id]";
 import { TokensView } from "~routes/popup/tokens";
 import { TransactionView } from "~routes/popup/transaction/[id]";
 import { TransactionsView } from "~routes/popup/transaction/transactions";
+import { UnlockView } from "~routes/popup/unlock";
+import { getExtensionOverrides } from "~wallets/router/extension/extension.routes";
 import type { RouteConfig } from "~wallets/router/router.types";
 
 export type PopupRoutePath =
@@ -120,6 +123,10 @@ export const PopupPaths = {
 } as const satisfies Record<string, PopupRoutePath>;
 
 export const POPUP_ROUTES = [
+  ...getExtensionOverrides({
+    unlockView: UnlockView,
+    loadingView: LoadingView
+  }),
   {
     path: PopupPaths.Home,
     component: HomeView

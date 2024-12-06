@@ -10,11 +10,15 @@ export interface CommonRouteProps<T = any>
   params: T;
 }
 
-export type BaseRoutePath = `/${string}`;
+export type RoutePath = `/${string}`;
+
+export type RouteOverride = `/__OVERRIDES/${string}`;
 
 export type RouteAuthType = "auth" | "anon";
 
-export interface RouteConfig<P extends BaseRoutePath = BaseRoutePath> {
+export interface RouteConfig<
+  P extends RoutePath | RouteOverride = RoutePath | RouteOverride
+> {
   key?: string;
   path: P;
   component: React.ComponentType<CommonRouteProps>;

@@ -1,3 +1,4 @@
+import { AnimatePresence } from "framer-motion";
 import React, { useEffect, useMemo, type PropsWithChildren } from "react";
 import { Switch, Route as Woute } from "wouter";
 import { Page } from "~components/page/page.component";
@@ -5,15 +6,13 @@ import type {
   CommonRouteProps,
   RouteConfig
 } from "~wallets/router/router.types";
-import { useLocation } from "~wallets/router/router.utils";
+import { BodyScroller, useLocation } from "~wallets/router/router.utils";
 
 export interface RoutesProps {
   routes: RouteConfig[];
   diffLocation?: boolean;
   pageComponent?: React.ComponentType<PropsWithChildren>;
 }
-
-// TODO: Consider adding `<AnimatePresence>` and `<BodyScroller>` inside here.
 
 // TODO: Consider adding a prop to `RouteConfig.parseParams` to parse
 // params globally inside `PageWithComponent` (e.g. to replace the `Number()`)
@@ -73,5 +72,11 @@ export function Routes({
     );
   }, [routes, diffLocation ? location : undefined]);
 
-  return memoizedRoutes;
+  return (
+    <>
+      <BodyScroller />
+
+      <AnimatePresence initial={false}>{memoizedRoutes}</AnimatePresence>
+    </>
+  );
 }

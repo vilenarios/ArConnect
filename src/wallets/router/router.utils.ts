@@ -5,17 +5,26 @@ import {
 } from "wouter";
 import type {
   RouteConfig,
-  BaseRoutePath,
-  ArConnectRoutePath
+  ArConnectRoutePath,
+  RoutePath,
+  RouteOverride
 } from "~wallets/router/router.types";
+
+export function isRouteOverride(
+  path: RoutePath | RouteOverride
+): path is RouteOverride {
+  return path.startsWith("/__OVERRIDES/");
+}
 
 export function prefixRoutes(
   routes: RouteConfig[],
-  prefix: BaseRoutePath
+  prefix: RoutePath
 ): RouteConfig[] {
   return routes.map((route) => ({
     ...route,
-    path: `${prefix}${route.path}`
+    path: isRouteOverride(route.path)
+      ? (route.path satisfies RouteOverride)
+      : (`${prefix}${route.path}` satisfies RoutePath)
   }));
 }
 
