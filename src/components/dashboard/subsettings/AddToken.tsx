@@ -17,7 +17,7 @@ import { ExtensionStorage } from "~utils/storage";
 import { SubTitle } from "./ContactSettings";
 import type { TokenType } from "~tokens/token";
 import { concatGatewayURL } from "~gateways/utils";
-import { useGateway } from "~gateways/wayfinder";
+import { FULL_HISTORY, useGateway } from "~gateways/wayfinder";
 import { getTokenInfo } from "~tokens/aoTokens/router";
 
 interface AddTokenProps {
@@ -26,7 +26,7 @@ interface AddTokenProps {
 
 export default function AddToken({ isQuickSetting }: AddTokenProps) {
   const targetInput = useInput();
-  const gateway = useGateway({ startBlock: 0 });
+  const gateway = useGateway(FULL_HISTORY);
   const [tokenType, setTokenType] = useState<TokenType>("asset");
   const [token, setToken] = useState<TokenInfo>();
   const [loading, setLoading] = useState<boolean>(false);

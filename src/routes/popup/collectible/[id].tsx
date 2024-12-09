@@ -9,7 +9,7 @@ import Skeleton from "~components/Skeleton";
 import browser from "webextension-polyfill";
 import Title from "~components/popup/Title";
 import styled from "styled-components";
-import { useGateway } from "~gateways/wayfinder";
+import { FULL_HISTORY, useGateway } from "~gateways/wayfinder";
 import HeadV2 from "~components/popup/HeadV2";
 import placeholderUrl from "url:/assets/placeholder.png";
 import { useStorage } from "@plasmohq/storage/hook";
@@ -34,7 +34,7 @@ export default function Collectible({ id }: Props) {
   // price
   const [price, setPrice] = useState<number>();
 
-  const defaultGateway = useGateway({ startBlock: 0 });
+  const defaultGateway = useGateway(FULL_HISTORY);
 
   async function getCollectionDescription() {
     setLoading(true);

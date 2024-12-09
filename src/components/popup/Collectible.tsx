@@ -1,6 +1,6 @@
 import { type MouseEventHandler } from "react";
 import { concatGatewayURL } from "~gateways/utils";
-import { useGateway } from "~gateways/wayfinder";
+import { FULL_HISTORY, useGateway } from "~gateways/wayfinder";
 import { hoverEffect } from "~utils/theme";
 import styled from "styled-components";
 import placeholderUrl from "url:/assets/placeholder.png";
@@ -8,7 +8,7 @@ import placeholderUrl from "url:/assets/placeholder.png";
 import Skeleton from "~components/Skeleton";
 export default function Collectible({ id, onClick, ...props }: Props) {
   // gateway
-  const gateway = useGateway({ startBlock: 0 });
+  const gateway = useGateway(FULL_HISTORY);
 
   return (
     <Wrapper onClick={onClick}>
