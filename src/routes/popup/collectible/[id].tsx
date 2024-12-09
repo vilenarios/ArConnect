@@ -48,7 +48,8 @@ export default function Collectible({ id }: Props) {
             }
           }
         }`,
-        { id }
+        { id },
+        defaultGateway
       );
 
       const description = getTagValue(
