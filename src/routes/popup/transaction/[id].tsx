@@ -74,7 +74,7 @@ export type TransactionViewProps = CommonRouteProps<TransactionViewParams>;
 export function TransactionView({
   params: { id, gateway: gw, message }
 }: TransactionViewProps) {
-  const { navigate } = useLocation();
+  const { navigate, back } = useLocation();
   const { back: backPath } = useSearchParams<{ back?: string }>();
 
   // TODO: Should this be a redirect?
@@ -329,7 +329,16 @@ export function TransactionView({
             message ? "message" : "transaction_complete"
           )}
           back={() => {
-            navigate((backPath as ArConnectRoutePath) || "/");
+            // This is misleading and `backPath` is only used to indicate whether the back button actually navigates
+            // back or goes straight to Home. This is because this page is also accessed from the Home > Transactions
+            // tab items, which set `backPath = "/transactions"`, but pressing the back button would instead (but
+            // correctly) navigate Home. Also, in the `else` block it looks like there are other options, but actually
+            // there aren't; that branch always does `navigate("/")`:
+            if (backPath === "/notifications" || backPath === "/transactions") {
+              back();
+            } else {
+              navigate((backPath as ArConnectRoutePath) || "/");
+            }
           }}
         />
         {(transaction && (

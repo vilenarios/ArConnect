@@ -135,6 +135,7 @@ export function useLocation() {
 
     // Navigate to the previous route (if available):
     if (lastRoute) wavigate(lastRoute.to, lastRoute.options);
+    else wavigate("/");
 
     // Wouter doesn't handle history, so this won't work:
     // history.back();
