@@ -5,6 +5,14 @@ import { getGatewayCache } from "./cache";
 import { getSetting } from "~settings";
 import { EventType, trackEvent } from "~utils/analytics";
 
+export const FULL_HISTORY: Requirements = { startBlock: 0 };
+
+export const STAKED_GQL_FULL_HISTORY: Requirements = {
+  startBlock: 0,
+  graphql: true,
+  ensureStake: true
+};
+
 export async function findGateway(
   requirements: Requirements
 ): Promise<Gateway> {
