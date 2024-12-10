@@ -11,8 +11,9 @@ import {
   useToasts
 } from "@arconnect/components";
 import HeadV2 from "~components/popup/HeadV2";
+import { withPage } from "~components/page/page.utils";
 
-export default function Unlock() {
+export function UnlockView() {
   // password input
   const passwordInput = useInput();
 
@@ -26,6 +27,7 @@ export default function Unlock() {
 
     if (!res) {
       passwordInput.setStatus("error");
+
       return setToast({
         type: "error",
         content: browser.i18n.getMessage("invalidPassword"),
@@ -43,7 +45,9 @@ export default function Unlock() {
           back={() => {}}
           showBack={false}
         />
+
         <Spacer y={0.75} />
+
         <Section style={{ padding: "0 20px 16px 20px" }}>
           <Text noMargin>
             {browser.i18n.getMessage("unlock_wallet_to_use")}
@@ -63,6 +67,7 @@ export default function Unlock() {
           />
         </Section>
       </div>
+
       <Section>
         <ButtonV2 fullWidth onClick={unlockWallet}>
           {browser.i18n.getMessage("unlock")}

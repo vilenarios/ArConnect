@@ -1,4 +1,4 @@
-import { useHistory } from "~utils/hash_router";
+import { useLocation } from "~wallets/router/router.utils";
 import { Section } from "@arconnect/components";
 import { useMemo } from "react";
 import Collectible from "~components/popup/Collectible";
@@ -7,7 +7,9 @@ import styled from "styled-components";
 import HeadV2 from "~components/popup/HeadV2";
 import { useAoTokens } from "~tokens/aoTokens/ao";
 
-export default function Collectibles() {
+export function CollectiblesView() {
+  const { navigate } = useLocation();
+
   // all tokens
   const [aoTokens] = useAoTokens({ type: "collectible" });
 
@@ -16,9 +18,6 @@ export default function Collectibles() {
     () => aoTokens.filter((token) => token.type === "collectible"),
     [aoTokens]
   );
-
-  // router push
-  const [push] = useHistory();
 
   return (
     <>
@@ -30,7 +29,7 @@ export default function Collectibles() {
             name={collectible.Name || collectible.Ticker}
             balance={collectible.balance}
             divisibility={collectible.Denomination}
-            onClick={() => push(`/collectible/${collectible.id}`)}
+            onClick={() => navigate(`/collectible/${collectible.id}`)}
             key={i}
           />
         ))}

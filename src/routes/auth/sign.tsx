@@ -18,13 +18,7 @@ import {
   TagValue,
   TransactionProperty
 } from "~routes/popup/transaction/[id]";
-import {
-  ButtonV2,
-  Section,
-  Spacer,
-  Text,
-  useToasts
-} from "@arconnect/components";
+import { Section, Spacer, Text, useToasts } from "@arconnect/components";
 import AnimatedQRScanner from "~components/hardware/AnimatedQRScanner";
 import AnimatedQRPlayer from "~components/hardware/AnimatedQRPlayer";
 import Wrapper from "~components/auth/Wrapper";
@@ -39,7 +33,7 @@ import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { HeadAuth } from "~components/HeadAuth";
 import { AuthButtons } from "~components/auth/AuthButtons";
 
-export default function Sign() {
+export function SignAuthRequestView() {
   const { authRequest, acceptRequest, rejectRequest } =
     useCurrentAuthRequest("sign");
 

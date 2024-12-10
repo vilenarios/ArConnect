@@ -12,12 +12,10 @@ import {
 } from "./encryption";
 import {
   checkPassword,
-  getDecryptionKey,
   getDecryptionKeyOrRequestUnlock,
   setDecryptionKey
 } from "./auth";
 import { ArweaveSigner } from "arbundles";
-import { handleSyncLabelsAlarm } from "~api/background/handlers/alarms/sync-labels/sync-labels-alarm.handler";
 import {
   DEFAULT_MODULE_APP_DATA,
   ERR_MSG_NO_ACTIVE_WALLET,
@@ -55,134 +53,6 @@ export async function getWallets() {
   let wallets: StoredWallet[] = await ExtensionStorage.get("wallets");
 
   return wallets || [];
-}
-
-export type InitialScreenType = "cover" | "locked" | "generating" | "default";
-
-/**
- * Hook that opens a new tab if ArConnect has not been set up yet
- */
-export function useSetUp() {
-  const [initialScreenType, setInitialScreenType] =
-    useState<InitialScreenType>("cover");
-
-  useEffect(() => {
-    async function checkWalletState() {
-      const [activeAddress, wallets, decryptionKey] = await Promise.all([
-        getActiveAddress(),
-        getWallets(),
-        getDecryptionKey()
-      ]);
-
-      const hasWallets = activeAddress && wallets.length > 0;
-
-      let nextInitialScreenType: InitialScreenType = "cover";
-
-      switch (process.env.PLASMO_PUBLIC_APP_TYPE) {
-        // `undefined` has been added here just in case, so that the default behavior if nothing is specific is
-        // building the browser extension, just like it was before adding support for the embedded wallet:
-        case undefined:
-        case "extension": {
-          if (!hasWallets) {
-            // This should only happen when opening the regular popup, but not for the auth popup, as the
-            // `createAuthPopup` will open the welcome page directly, instead of the popup, if needed:
-
-            openOrSelectWelcomePage(true);
-
-            window.top.close();
-          } else if (!decryptionKey) {
-            nextInitialScreenType = "locked";
-          } else {
-            nextInitialScreenType = "default";
-          }
-
-          break;
-        }
-
-        case "embedded": {
-          nextInitialScreenType = !hasWallets ? "generating" : "default";
-
-          break;
-        }
-
-        default: {
-          throw new Error(
-            `Unknown APP_TYPE = ${process.env.PLASMO_PUBLIC_APP_TYPE}`
-          );
-        }
-      }
-
-      setInitialScreenType(nextInitialScreenType);
-
-      const coverElement = document.getElementById("cover");
-
-      if (coverElement) {
-        if (nextInitialScreenType === "cover") {
-          coverElement.removeAttribute("aria-hidden");
-        } else {
-          coverElement.setAttribute("aria-hidden", "true");
-        }
-      }
-    }
-
-    ExtensionStorage.watch({
-      decryption_key: checkWalletState
-    });
-
-    checkWalletState();
-
-    handleSyncLabelsAlarm();
-
-    return () => {
-      ExtensionStorage.unwatch({
-        decryption_key: checkWalletState
-      });
-    };
-  }, []);
-
-  return initialScreenType;
-}
-
-export function useRemoveCover() {
-  useEffect(() => {
-    const coverElement = document.getElementById("cover");
-
-    if (coverElement) {
-      coverElement.setAttribute("aria-hidden", "true");
-    }
-  }, []);
-}
-
-/**
- * Hook to get if there are no wallets added
- */
-export const useNoWallets = () => {
-  const [state, setState] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      const activeAddress = await getActiveAddress();
-      const wallets = await getWallets();
-
-      setState(!activeAddress && wallets.length === 0);
-    })();
-  }, []);
-
-  return state;
-};
-
-/**
- * Hook for decryption key
- */
-export function useDecryptionKey(): [string, (val: string) => void] {
-  const [decryptionKey, setDecryptionKey] = useStorage<string>({
-    key: "decryption_key",
-    instance: ExtensionStorage
-  });
-
-  const set = (val: string) => setDecryptionKey(btoa(val));
-
-  return [decryptionKey ? atob(decryptionKey) : undefined, set];
 }
 
 /**
@@ -232,6 +102,12 @@ export async function setActiveWallet(address?: string) {
 export type DecryptedWallet = StoredWallet<JWKInterface>;
 
 export async function openOrSelectWelcomePage(force = false) {
+  if (process.env.PLASMO_PUBLIC_APP_TYPE !== "extension") {
+    log(LOG_GROUP.AUTH, `PREVENTED openOrSelectWelcomePage(${force})`);
+
+    return;
+  }
+
   log(LOG_GROUP.AUTH, `openOrSelectWelcomePage(${force})`);
 
   // Make sure we clear any stored value from previous installations before

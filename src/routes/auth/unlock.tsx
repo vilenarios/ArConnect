@@ -11,8 +11,9 @@ import Wrapper from "~components/auth/Wrapper";
 import browser from "webextension-polyfill";
 import { HeadAuth } from "~components/HeadAuth";
 import { AuthButtons } from "~components/auth/AuthButtons";
+import { withPage } from "~components/page/page.utils";
 
-export default function Unlock() {
+export function UnlockAuthRequestView() {
   // password input
   const passwordInput = useInput();
 

@@ -78,7 +78,7 @@ export function useActiveWallet() {
 
   // active wallet
   const wallet = useMemo(
-    () => wallets.find(({ address }) => address === activeAddress),
+    () => wallets?.find(({ address }) => address === activeAddress),
     [activeAddress, wallets]
   );
 

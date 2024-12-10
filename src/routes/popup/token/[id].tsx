@@ -13,7 +13,7 @@ import { getDreForToken, useTokens } from "~tokens";
 import { useStorage } from "@plasmohq/storage/hook";
 import { ExtensionStorage } from "~utils/storage";
 import { getCommunityUrl } from "~utils/format";
-import { useHistory } from "~utils/hash_router";
+import { useLocation } from "~wallets/router/router.utils";
 import { useTheme } from "~utils/theme";
 import {
   ArrowDownLeftIcon,
@@ -45,8 +45,17 @@ import useSetting from "~settings/hook";
 import styled from "styled-components";
 import { STAKED_GQL_FULL_HISTORY, useGateway } from "~gateways/wayfinder";
 import HeadV2 from "~components/popup/HeadV2";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-export default function Asset({ id }: Props) {
+export interface AssetViewParams {
+  id: string;
+}
+
+export type AssetViewProps = CommonRouteProps<AssetViewParams>;
+
+export function AssetView({ params: { id } }: AssetViewProps) {
+  const { navigate } = useLocation();
+
   // load state
   const [state, setState] = useState<TokenState>();
   const [validity, setValidity] = useState<{ [id: string]: boolean }>();
@@ -107,9 +116,6 @@ export default function Asset({ id }: Props) {
 
     return formatTokenBalance(val);
   }, [id, state, activeAddress]);
-
-  // router push
-  const [push] = useHistory();
 
   // token gateway
   const tokens = useTokens();
@@ -279,11 +285,13 @@ export default function Asset({ id }: Props) {
                 exit="hidden"
               >
                 <TokenActions>
-                  <TokenAction onClick={() => push(`/send/transfer/${id}`)} />
+                  <TokenAction
+                    onClick={() => navigate(`/send/transfer/${id}`)}
+                  />
                   <ActionSeparator />
                   <TokenAction
                     as={ArrowDownLeftIcon}
-                    onClick={() => push("/receive")}
+                    onClick={() => navigate("/receive")}
                   />
                 </TokenActions>
               </motion.div>
@@ -410,13 +418,13 @@ export default function Asset({ id }: Props) {
                     {...interaction}
                     onClick={() => {
                       if (gateway.host !== "arweave.net") {
-                        push(
+                        navigate(
                           `/transaction/${interaction.id}/${encodeURIComponent(
                             concatGatewayURL(gateway)
                           )}`
                         );
                       } else {
-                        push(`/transaction/${interaction.id}`);
+                        navigate(`/transaction/${interaction.id}`);
                       }
                     }}
                   />
@@ -433,10 +441,6 @@ export default function Asset({ id }: Props) {
       <AnimatePresence>{loading && <TokenLoading />}</AnimatePresence>
     </>
   );
-}
-
-interface Props {
-  id: string;
 }
 
 const opacityAnimation: Variants = {

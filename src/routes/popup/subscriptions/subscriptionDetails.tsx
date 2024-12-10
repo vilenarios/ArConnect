@@ -20,11 +20,13 @@ import {
   ButtonV2,
   type DisplayTheme,
   useToasts,
-  TooltipV2,
-  InputV2,
-  useInput
+  TooltipV2
 } from "@arconnect/components";
-import { AppIcon, Content, Title, getColorByStatus } from "./subscriptions";
+import {
+  Content,
+  Title,
+  getColorByStatus
+} from "~components/popup/list/SubscriptionListItem";
 import { CreditCardUpload } from "@untitled-ui/icons-react";
 import {
   SettingIconWrapper,
@@ -32,23 +34,28 @@ import {
 } from "~components/dashboard/list/BaseElement";
 import { formatAddress } from "~utils/format";
 import { useTheme } from "~utils/theme";
-import { useHistory } from "~utils/hash_router";
+import { useLocation } from "~wallets/router/router.utils";
 import { getPrice } from "~lib/coingecko";
 import useSetting from "~settings/hook";
 import { PageType, trackPage } from "~utils/analytics";
 import BigNumber from "bignumber.js";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-interface Props {
+export interface SubscriptionDetailsViewParams {
   id?: string;
 }
 
-export default function SubscriptionDetails({ id }: Props) {
+export type SubscriptionDetailsViewProps =
+  CommonRouteProps<SubscriptionDetailsViewParams>;
+
+export function SubscriptionDetailsView({
+  params: { id }
+}: SubscriptionDetailsViewProps) {
+  const { navigate, back } = useLocation();
   const theme = useTheme();
   const [subData, setSubData] = useState<SubscriptionData | null>(null);
   const [checked, setChecked] = useState(false);
   const [autopayChecked, setAutopayChecked] = useState(false);
-
-  const [push, goBack] = useHistory();
   const { setToast } = useToasts();
   const [price, setPrice] = useState<BigNumber | null>();
   const [currency] = useSetting<string>("currency");
@@ -96,7 +103,7 @@ export default function SubscriptionDetails({ id }: Props) {
     }
 
     browser.alarms.clear(`subscription-alarm-${subData.arweaveAccountAddress}`);
-    goBack();
+    back();
     // redirect to subscription page
   };
 
@@ -201,7 +208,7 @@ export default function SubscriptionDetails({ id }: Props) {
                         SubscriptionStatus.AWAITING_PAYMENT && (
                         <PayNowButton
                           onClick={() =>
-                            push(
+                            navigate(
                               `/subscriptions/${subData.arweaveAccountAddress}/payment`
                             )
                           }
@@ -318,7 +325,7 @@ export default function SubscriptionDetails({ id }: Props) {
             <ButtonV2
               fullWidth
               style={{ fontWeight: "500" }}
-              onClick={() => push(`/subscriptions/${id}/manage`)}
+              onClick={() => navigate(`/subscriptions/${id}/manage`)}
             >
               Manage Subscription
             </ButtonV2>

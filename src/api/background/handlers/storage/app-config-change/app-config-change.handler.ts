@@ -48,7 +48,7 @@ export async function handleAppConfigChange(
       storedNewValue as unknown as string
     ) as InitAppParams;
 
-    // check if permission event emiting is needed
+    // check if permission event emitting is needed
     // get missing permissions
     const missingPermissions = getMissingPermissions(
       oldValue?.permissions || [],

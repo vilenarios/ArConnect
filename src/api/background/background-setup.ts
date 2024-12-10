@@ -26,8 +26,14 @@ import {
   handleTabClosed,
   handleTabUpdate
 } from "~api/background/handlers/browser/tabs/tabs.handler";
+import { log, LOG_GROUP } from "~utils/log/log.utils";
 
 export function setupBackgroundService() {
+  log(
+    LOG_GROUP.SETUP,
+    `background-setup.ts > setupBackgroundService(PLASMO_PUBLIC_APP_TYPE = "${process.env.PLASMO_PUBLIC_APP_TYPE}")`
+  );
+
   // MESSAGES:
   // Watch for API call and chunk messages:
   onMessage("api_call", handleApiCallMessage);
@@ -36,12 +42,9 @@ export function setupBackgroundService() {
   // LIFECYCLE:
 
   // Open welcome page on extension install.
-  // TODO: This needs to be adapted to work with the embedded wallet (it cannot just be removed / skipped):
   browser.runtime.onInstalled.addListener(handleInstall);
 
   // ALARMS:
-  // TODO: Mock/polyfill alarms to work with setTimeout/clearTimeout and also a lazy version that just checks the last update time on start.
-
   browser.alarms.onAlarm.addListener(handleNotificationsAlarm);
   browser.alarms.onAlarm.addListener(handleSubscriptionsAlarm);
   browser.alarms.onAlarm.addListener(handleTrackBalanceAlarm);
@@ -74,19 +77,24 @@ export function setupBackgroundService() {
   });
 
   // listen for app config updates
+  // `ExtensionStorage.watch` requires a callbackMap param, so this cannot be done using `ExtensionStorage` directly.
   browser.storage.onChanged.addListener(handleAppConfigChange);
 
-  // ONLY EXTENSION:
+  if (process.env.PLASMO_PUBLIC_APP_TYPE !== "extension") return;
+
+  // ONLY BROWSER EXTENSION BELOW THIS LINE:
 
   // When the last window connected to the extension is closed, the decryption key will be removed from memory. This is no needed in the embedded wallet because
   // each wallet instance will be removed automatically when its tab/window is closed.
   browser.windows.onRemoved.addListener(handleWindowClose);
 
   // handle tab change (icon, context menus)
-  browser.tabs.onUpdated.addListener((tabId, changeInfo) =>
-    handleTabUpdate(tabId, changeInfo)
-  );
-  browser.tabs.onActivated.addListener(({ tabId }) => handleTabUpdate(tabId));
+  browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
+    handleTabUpdate(tabId, changeInfo);
+  });
+  browser.tabs.onActivated.addListener(({ tabId }) => {
+    handleTabUpdate(tabId);
+  });
   browser.tabs.onRemoved.addListener(handleTabClosed);
 
   // handle ar:// protocol

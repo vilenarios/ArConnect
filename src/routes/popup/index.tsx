@@ -6,7 +6,6 @@ import NoBalance from "~components/popup/home/NoBalance";
 import Balance from "~components/popup/home/Balance";
 import { AnnouncementPopup } from "./announcement";
 import { getDecryptionKey } from "~wallets/auth";
-import { useHistory } from "~utils/hash_router";
 import {
   trackEvent,
   EventType,
@@ -24,12 +23,11 @@ import AoBanner from "~components/popup/home/AoBanner";
 import { scheduleImportAoTokens } from "~tokens/aoTokens/sync";
 import BigNumber from "bignumber.js";
 
-export default function Home() {
+export function HomeView() {
   // get if the user has no balance
   const [noBalance, setNoBalance] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
   const [isOpen, setOpen] = useState(false);
-  const [push] = useHistory();
   const [activeAddress] = useStorage<string>({
     key: "active_address",
     instance: ExtensionStorage

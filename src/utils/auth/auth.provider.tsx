@@ -32,45 +32,45 @@ import {
 } from "~api/modules/sign/transaction_builder";
 import { isomorphicOnMessage } from "~utils/messaging/messaging.utils";
 import type { IBridgeMessage } from "@arconnect/webext-bridge";
-import type { InitialScreenType } from "~wallets";
 import { log, LOG_GROUP } from "~utils/log/log.utils";
 import { isError } from "~utils/error/error.utils";
+import type { RouteOverride } from "~wallets/router/router.types";
 
-interface AuthRequestContextState {
+interface AuthRequestsContextState {
   authRequests: AuthRequest[];
   currentAuthRequestIndex: number;
   lastCompletedAuthRequest: null | AuthRequest;
 }
 
-interface AuthRequestContextData extends AuthRequestContextState {
+interface AuthRequestsContextData extends AuthRequestsContextState {
   setCurrentAuthRequestIndex: (currentAuthRequestIndex: number) => void;
   completeAuthRequest: (authID: string, data: any) => Promise<void>;
 }
 
-export const AuthRequestsContext = createContext<AuthRequestContextData>({
+const AUTH_REQUESTS_CONTEXT_INITIAL_STATE: AuthRequestsContextState = {
   authRequests: [],
   currentAuthRequestIndex: 0,
-  lastCompletedAuthRequest: null,
+  lastCompletedAuthRequest: null
+};
+
+export const AuthRequestsContext = createContext<AuthRequestsContextData>({
+  ...AUTH_REQUESTS_CONTEXT_INITIAL_STATE,
   setCurrentAuthRequestIndex: () => {},
   completeAuthRequest: async () => {}
 });
 
-interface AuthRequestProviderPRops extends PropsWithChildren {
-  initialScreenType: InitialScreenType;
+interface AuthRequestProviderProps extends PropsWithChildren {
+  useStatusOverride: () => RouteOverride;
 }
 
 export function AuthRequestsProvider({
   children,
-  initialScreenType
-}: AuthRequestProviderPRops) {
+  useStatusOverride
+}: AuthRequestProviderProps) {
   const [
     { authRequests, currentAuthRequestIndex, lastCompletedAuthRequest },
     setAuthRequestContextState
-  ] = useState<AuthRequestContextState>({
-    authRequests: [],
-    currentAuthRequestIndex: 0,
-    lastCompletedAuthRequest: null
-  });
+  ] = useState<AuthRequestsContextState>(AUTH_REQUESTS_CONTEXT_INITIAL_STATE);
 
   const setCurrentAuthRequestIndex = useCallback(
     (currentAuthRequestIndex: number) => {
@@ -83,6 +83,30 @@ export function AuthRequestsProvider({
     },
     []
   );
+
+  const closeAuthPopup = useCallback((delay: number = 0) => {
+    // TODO: In the embedded wallet, maybe we need to store (but not show) unlock requests so that this doesn't
+    // clear automatically.
+
+    function closeOrClear() {
+      if (process.env.PLASMO_PUBLIC_APP_TYPE !== "extension") {
+        // TODO: This might cause an infinite loop in the embedded wallet:
+        setAuthRequestContextState(AUTH_REQUESTS_CONTEXT_INITIAL_STATE);
+      } else {
+        window.top.close();
+      }
+    }
+
+    if (delay > 0) {
+      const timeoutID = setTimeout(closeOrClear, delay);
+
+      return () => clearTimeout(timeoutID);
+    }
+
+    closeOrClear();
+
+    return () => {};
+  }, []);
 
   const completeAuthRequest = useCallback(
     async (authID: string, data: any) => {
@@ -295,7 +319,7 @@ export function AuthRequestsProvider({
 
         if (pendingRequestsCount === 0 && authRequests.length > 0) {
           // All tabs that sent AuthRequest also got closed/reloaded/disconnected, so close the popup immediately:
-          window.top.close();
+          closeAuthPopup();
         }
 
         // TODO: Consider automatically selecting the next pending AuthRequest.
@@ -312,7 +336,7 @@ export function AuthRequestsProvider({
     isomorphicOnMessage("auth_tab_closed", handleTabReloadedOrClosed);
     isomorphicOnMessage("auth_active_wallet_change", handleTabReloadedOrClosed);
     isomorphicOnMessage("auth_app_disconnected", handleTabReloadedOrClosed);
-  }, []);
+  }, [closeAuthPopup]);
 
   useEffect(() => {
     const chunksByCollectionID: Record<string, Chunk[]> = {};
@@ -409,45 +433,40 @@ export function AuthRequestsProvider({
     });
   }, []);
 
+  const statusOverride = useStatusOverride();
+
   useEffect(() => {
-    let timeoutID = 0;
+    let clearCloseAuthPopupTimeout = () => {};
 
     const isDone =
       authRequests.length > 0 &&
       authRequests.every((authRequest) => authRequest.status !== "pending");
 
-    if (initialScreenType === "default" && authRequests.length === 0) {
+    if (statusOverride === null && authRequests.length === 0) {
+      // TODO: Maybe move to the app entry point?
       // Close the popup if an AuthRequest doesn't arrive in less than `AUTH_POPUP_REQUEST_WAIT_MS` (1s), unless the
       // wallet is locked (no timeout in that case):
-      timeoutID = setTimeout(() => {
-        window.top.close();
-      }, AUTH_POPUP_REQUEST_WAIT_MS);
-    } else if (initialScreenType !== "default") {
+      clearCloseAuthPopupTimeout = closeAuthPopup(AUTH_POPUP_REQUEST_WAIT_MS);
+    } else if (statusOverride) {
       // If the user doesn't unlock the wallet in 15 minutes, or somehow the popup gets stuck into any other state for
       // more than that, we close it:
-      timeoutID = setTimeout(() => {
-        window.top.close();
-      }, AUTH_POPUP_UNLOCK_REQUEST_TTL_MS);
+      clearCloseAuthPopupTimeout = closeAuthPopup(
+        AUTH_POPUP_UNLOCK_REQUEST_TTL_MS
+      );
     } else if (isDone) {
       // Close the window if the last request has been handled:
 
       // TODO: Add setting to decide whether this closes automatically or stays open in a "done" state.
 
-      if (AUTH_POPUP_CLOSING_DELAY_MS > 0) {
-        timeoutID = setTimeout(() => {
-          window.top.close();
-        }, AUTH_POPUP_CLOSING_DELAY_MS);
-      } else {
-        window.top.close();
-      }
+      clearCloseAuthPopupTimeout = closeAuthPopup(AUTH_POPUP_CLOSING_DELAY_MS);
     }
 
+    // Not needed in the embedded wallet, but can be left alone. It won't do anything:
     function handleBeforeUnload() {
-      // Send cancel event for all pending requests if the popup is closed by the user:
-
       authRequests.forEach((authRequest) => {
         if (authRequest.status !== "pending") return;
 
+        // Send cancel event for all pending requests if the popup is closed by the user:
         replyToAuthRequest(
           authRequest.type,
           authRequest.authID,
@@ -459,11 +478,11 @@ export function AuthRequestsProvider({
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
-      clearTimeout(timeoutID);
+      clearCloseAuthPopupTimeout();
 
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [initialScreenType, authRequests, currentAuthRequestIndex]);
+  }, [statusOverride, authRequests, currentAuthRequestIndex, closeAuthPopup]);
 
   return (
     <AuthRequestsContext.Provider

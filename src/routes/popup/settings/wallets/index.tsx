@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useStorage } from "@plasmohq/storage/hook";
 import { type AnsUser, getAnsProfile } from "~lib/ans";
 import { ExtensionStorage } from "~utils/storage";
-import { useLocation } from "wouter";
 import type { StoredWallet } from "~wallets";
 import { Reorder } from "framer-motion";
 import browser from "webextension-polyfill";
@@ -13,8 +12,11 @@ import { FULL_HISTORY, useGateway } from "~gateways/wayfinder";
 import WalletListItem from "~components/dashboard/list/WalletListItem";
 import SearchInput from "~components/dashboard/SearchInput";
 import HeadV2 from "~components/popup/HeadV2";
+import { useLocation } from "~wallets/router/router.utils";
 
-export default function Wallets() {
+export function WalletsView() {
+  const { navigate } = useLocation();
+
   // wallets
   const [wallets, setWallets] = useStorage<StoredWallet[]>(
     {
@@ -23,8 +25,6 @@ export default function Wallets() {
     },
     []
   );
-
-  const [, setLocation] = useLocation();
 
   // ans data
   const [ansProfiles, setAnsProfiles] = useState<AnsUser[]>([]);
@@ -83,7 +83,7 @@ export default function Wallets() {
     <>
       <HeadV2
         title={browser.i18n.getMessage("setting_wallets")}
-        back={() => setLocation("/quick-settings")}
+        back={() => navigate("/quick-settings")}
       />
       <Wrapper>
         <div style={{ height: "100%" }}>
@@ -115,7 +115,7 @@ export default function Wallets() {
                     avatar={findAvatar(wallet.address)}
                     active={false}
                     onClick={() =>
-                      setLocation("/quick-settings/wallets/" + wallet.address)
+                      navigate(`/quick-settings/wallets/${wallet.address}`)
                     }
                     key={wallet.address}
                   />

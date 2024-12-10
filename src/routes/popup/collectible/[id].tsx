@@ -11,13 +11,21 @@ import Title from "~components/popup/Title";
 import styled from "styled-components";
 import { FULL_HISTORY, useGateway } from "~gateways/wayfinder";
 import HeadV2 from "~components/popup/HeadV2";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 import placeholderUrl from "url:/assets/placeholder.png";
 import { useStorage } from "@plasmohq/storage/hook";
 import { getTagValue, type TokenInfoWithBalance } from "~tokens/aoTokens/ao";
 import { ExtensionStorage } from "~utils/storage";
 import { gql } from "~gateways/api";
 
-export default function Collectible({ id }: Props) {
+export interface CollectibleViewParams {
+  id: string;
+}
+
+export type CollectibleViewProps = CommonRouteProps<CollectibleViewParams>;
+
+export function CollectibleView({ params: { id } }: CollectibleViewProps) {
+  // load state
   const [loading, setLoading] = useState(false);
   const [description, setDescription] = useState<string>("");
   const [aoTokens] = useStorage<TokenInfoWithBalance[]>(
@@ -133,10 +141,6 @@ export default function Collectible({ id }: Props) {
       <AnimatePresence>{loading && <TokenLoading />}</AnimatePresence>
     </>
   );
-}
-
-interface Props {
-  id: string;
 }
 
 const Price = styled(Text)`

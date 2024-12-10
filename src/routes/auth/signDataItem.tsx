@@ -22,7 +22,6 @@ import Wrapper from "~components/auth/Wrapper";
 import browser from "webextension-polyfill";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
-import HeadV2 from "~components/popup/HeadV2";
 import { formatAddress } from "~utils/format";
 import { useStorage } from "@plasmohq/storage/hook";
 import { ExtensionStorage } from "~utils/storage";
@@ -45,7 +44,7 @@ import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { HeadAuth } from "~components/HeadAuth";
 import { AuthButtons } from "~components/auth/AuthButtons";
 
-export default function SignDataItem() {
+export function SignDataItemAuthRequestView() {
   const { authRequest, acceptRequest, rejectRequest } =
     useCurrentAuthRequest("signDataItem");
 

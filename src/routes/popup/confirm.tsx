@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useHistory } from "~utils/hash_router";
+import { useLocation } from "~wallets/router/router.utils";
 import browser from "webextension-polyfill";
 import styled from "styled-components";
 import { ExtensionStorage } from "~utils/storage";
@@ -10,9 +10,19 @@ import HeadV2 from "~components/popup/HeadV2";
 import { Line } from "./purchase";
 import { useStorage } from "@plasmohq/storage/hook";
 import { formatAddress } from "~utils/format";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-export default function ConfirmPurchase({ id }: { id: string }) {
-  const [push] = useHistory();
+export interface ConfirmPurchaseViewParams {
+  quoteId: string;
+}
+
+export type ConfirmPurchaseViewProps =
+  CommonRouteProps<ConfirmPurchaseViewParams>;
+
+export function ConfirmPurchaseView({
+  params: { quoteId: id }
+}: ConfirmPurchaseViewProps) {
+  const { navigate } = useLocation();
 
   const [activeAddress] = useStorage<string>({
     key: "active_address",
@@ -44,7 +54,7 @@ export default function ConfirmPurchase({ id }: { id: string }) {
       browser.tabs.create({
         url: url
       });
-      push("/purchase-pending");
+      navigate("/purchase-pending");
     } catch (error) {
       console.error("Error buying AR:", error);
     }

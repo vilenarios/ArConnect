@@ -16,14 +16,15 @@ import HeadV2 from "~components/popup/HeadV2";
 import { useEffect, useMemo, useState } from "react";
 import { PageType, trackPage } from "~utils/analytics";
 import type { PaymentType, Quote } from "~lib/onramper";
-import { useHistory } from "~utils/hash_router";
+import { useLocation } from "~wallets/router/router.utils";
 import { ExtensionStorage } from "~utils/storage";
 import { useDebounce } from "~wallets/hooks";
 import { retryWithDelay } from "~utils/promises/retry";
 import SliderMenu from "~components/SliderMenu";
 
-export default function Purchase() {
-  const [push] = useHistory();
+export function PurchaseView() {
+  const { navigate } = useLocation();
+
   const youPayInput = useInput();
   const debouncedYouPayInput = useDebounce(youPayInput.state, 300);
   const [arConversion, setArConversion] = useState<boolean>(false);
@@ -281,7 +282,7 @@ export default function Purchase() {
           fullWidth
           onClick={async () => {
             await ExtensionStorage.set("transak_quote", quote);
-            push(`/confirm-purchase/${quote.quoteId}`);
+            navigate(`/confirm-purchase/${quote.quoteId}`);
           }}
         >
           Next
