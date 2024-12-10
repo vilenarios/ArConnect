@@ -208,6 +208,8 @@ export const POPUP_ROUTES = [
     component: TransactionView
   },
   {
+    // TODO: This route is incorrect/misleading as a lot of its params are actually ignored and loaded from a temp tx
+    // stored in the temp storage:
     path: PopupPaths.Confirm,
     component: ConfirmView
   },

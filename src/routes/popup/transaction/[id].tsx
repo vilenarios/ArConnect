@@ -62,14 +62,14 @@ interface ao {
 export interface TransactionViewParams {
   id: string;
   // encodeURIComponent transformed gateway url
-  gw?: string;
+  gateway?: string;
   message?: boolean;
 }
 
 export type TransactionViewProps = CommonRouteProps<TransactionViewParams>;
 
 export function TransactionView({
-  params: { id: rawId, gw, message }
+  params: { id: rawId, gateway: gw, message }
 }: TransactionViewProps) {
   const { navigate, back } = useLocation();
 

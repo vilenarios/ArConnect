@@ -26,7 +26,7 @@ import Arweave from "arweave";
 import type { CommonRouteProps } from "~wallets/router/router.types";
 
 export interface RecipientViewParams {
-  tokenID: string;
+  token: string;
   qty: string;
   message?: string;
 }
@@ -34,7 +34,7 @@ export interface RecipientViewParams {
 export type RecipientViewProps = CommonRouteProps<RecipientViewParams>;
 
 export function RecipientView({
-  params: { tokenID, qty, message }
+  params: { token: tokenID, qty, message }
 }: RecipientViewProps) {
   const { navigate } = useLocation();
 
