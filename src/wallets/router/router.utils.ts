@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   useSearch as useWearch,
   useLocation as useWouterLocation
@@ -37,6 +37,23 @@ export function BodyScroller() {
 
   return null;
 }
+
+// This is just a temporary fix until either:
+// - Wouter adds support for `history`.
+// - We replace Wouter with a more capable routing library.
+// - We implement a proper HistoryProvider that listens for location/history changes and updates its state accordingly.
+
+interface CustomHistoryEntry<S = any> {
+  to: ArConnectRoutePath;
+  options?: {
+    replace?: boolean;
+    state?: S;
+  };
+}
+
+const customHistory: CustomHistoryEntry[] = [];
+
+const HISTORY_SIZE_LIMIT = 32;
 
 export type NavigateAction = "prev" | "next" | "up" | number;
 
@@ -101,14 +118,27 @@ export function useLocation() {
         }
       }
 
+      customHistory.push({ to: toPath, options });
+      customHistory.splice(0, customHistory.length - HISTORY_SIZE_LIMIT);
+
       return wavigate(toPath, options);
     },
     [wocation, wavigate]
   );
 
   const back = useCallback(() => {
-    history.back();
-  }, []);
+    // Remove current route...:
+    customHistory.pop();
+
+    // ...and read the last one where we want to navigate to:
+    const lastRoute = customHistory[customHistory.length - 1];
+
+    // Navigate to the previous route (if available):
+    if (lastRoute) wavigate(lastRoute.to, lastRoute.options);
+
+    // Wouter doesn't handle history, so this won't work:
+    // history.back();
+  }, [wocation, wavigate]);
 
   return {
     location: wocation,

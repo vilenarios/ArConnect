@@ -15,7 +15,7 @@ import {
   type MutableRefObject
 } from "react";
 import { useGateway } from "~gateways/wayfinder";
-import { useLocation } from "~wallets/router/router.utils";
+import { useLocation, useSearchParams } from "~wallets/router/router.utils";
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -49,7 +49,10 @@ import BigNumber from "bignumber.js";
 import { fetchTokenByProcessId } from "~lib/transactions";
 import { useStorage } from "@plasmohq/storage/hook";
 import type { StoredWallet } from "~wallets";
-import type { CommonRouteProps } from "~wallets/router/router.types";
+import type {
+  ArConnectRoutePath,
+  CommonRouteProps
+} from "~wallets/router/router.types";
 
 // pull contacts and check if to address is in contacts
 
@@ -69,12 +72,10 @@ export interface TransactionViewParams {
 export type TransactionViewProps = CommonRouteProps<TransactionViewParams>;
 
 export function TransactionView({
-  params: { id: rawId, gateway: gw, message }
+  params: { id, gateway: gw, message }
 }: TransactionViewProps) {
-  const { navigate, back } = useLocation();
-
-  // fixup id
-  const id = useMemo(() => rawId.split("?")[0], [rawId]);
+  const { navigate } = useLocation();
+  const { back: backPath } = useSearchParams<{ back?: string }>();
 
   // TODO: Should this be a redirect?
   if (!id) return <></>;
@@ -304,19 +305,6 @@ export function TransactionView({
     })();
   }, [id, transaction, gateway, isBinary, isPrintTx]);
 
-  // get custom back params
-  const [backPath, setBackPath] = useState<string>();
-
-  useEffect(() => {
-    const search = window.location.href.split("?");
-    const params = new URLSearchParams(search[search.length - 1]);
-    const back = params.get("back");
-
-    if (!back) return;
-
-    setBackPath(back);
-  }, []);
-
   // Clears out current transaction
   useEffect(() => {
     (async () => {
@@ -341,11 +329,7 @@ export function TransactionView({
             message ? "message" : "transaction_complete"
           )}
           back={() => {
-            if (backPath === "/notifications" || backPath === "/transactions") {
-              back();
-            } else {
-              navigate("/");
-            }
+            navigate((backPath as ArConnectRoutePath) || "/");
           }}
         />
         {(transaction && (
