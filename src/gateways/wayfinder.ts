@@ -103,7 +103,12 @@ export function useGateway(requirements: Requirements) {
         setActiveGateway(recommended);
       } catch {}
     })();
-  }, [requirements]);
+  }, [
+    requirements.graphql,
+    requirements.arns,
+    requirements.startBlock,
+    requirements.ensureStake
+  ]);
 
   return activeGateway;
 }
