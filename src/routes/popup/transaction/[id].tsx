@@ -14,7 +14,7 @@ import {
   useState,
   type MutableRefObject
 } from "react";
-import { useGateway } from "~gateways/wayfinder";
+import { STAKED_GQL_FULL_HISTORY, useGateway } from "~gateways/wayfinder";
 import { useHistory } from "~utils/hash_router";
 import {
   ChevronDownIcon,
@@ -97,11 +97,7 @@ export default function Transaction({ id: rawId, gw, message }: Props) {
   const [showTags, setShowTags] = useState<boolean>(false);
 
   // arweave gateway
-  const defaultGateway = useGateway({
-    ensureStake: true,
-    startBlock: 0,
-    graphql: true
-  });
+  const defaultGateway = useGateway(STAKED_GQL_FULL_HISTORY);
   const gateway = useMemo(() => {
     if (!gw) {
       return defaultGateway;
@@ -183,7 +179,11 @@ export default function Transaction({ id: rawId, gw, message }: Props) {
                 id: data.transaction.recipient,
                 decimals: Number(tokenInfo.Denomination)
               });
-              setTicker(tokenInfo.Ticker);
+              setTicker(
+                tokenInfo?.type === "collectible"
+                  ? tokenInfo.Name!
+                  : tokenInfo.Ticker!
+              );
               data.transaction.quantity = { ar: amount.toFixed(), winston: "" };
               data.transaction.recipient = aoRecipient.value;
             }
