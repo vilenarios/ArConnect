@@ -17,6 +17,7 @@ import type { KeystoneSigner } from "~wallets/hardware/keystone";
 import browser from "webextension-polyfill";
 import { fetchTokenByProcessId } from "~lib/transactions";
 import { timeoutPromise } from "~utils/promises/timeout";
+import type { DecodedTag } from "~api/modules/sign/tags";
 
 export type AoInstance = ReturnType<typeof connect>;
 
@@ -413,7 +414,7 @@ export function useAoTokensCache(): [TokenInfoWithBalance[], boolean] {
 /**
  * Find the value for a tag name
  */
-export const getTagValue = (tagName: string, tags: Tag[]) =>
+export const getTagValue = (tagName: string, tags: (Tag | DecodedTag)[]) =>
   tags.find((t) => t.name === tagName)?.value;
 
 export const sendAoTransfer = async (
