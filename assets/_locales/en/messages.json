@@ -1333,6 +1333,10 @@
     "message": "Click to view your last signed transaction",
     "description": "View last tx prompt content"
   },
+  "view_transaction_details": {
+    "message": "View transaction details",
+    "description": "View transaction details link text"
+  },
   "sign_item": {
     "message": "Sign item",
     "description": "Sign message popup title"
