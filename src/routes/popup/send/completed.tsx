@@ -42,18 +42,7 @@ export function TransactionCompletedView({
       <MainWrapper>
         <HeadV2
           title={browser.i18n.getMessage("transaction_complete")}
-          back={() => {
-            // This is misleading and `backPath` is only used to indicate whether the back button actually navigates
-            // back or goes straight to Home. This is because this page is also accessed from the Home > Transactions
-            // tab items, which set `backPath = "/transactions"`, but pressing the back button would instead (but
-            // correctly) navigate Home. Also, in the `else` block it looks like there are other options, but actually
-            // there aren't; that branch always does `navigate("/")`:
-            if (backPath === "/notifications" || backPath === "/transactions") {
-              back();
-            } else {
-              navigate((backPath as ArConnectRoutePath) || "/");
-            }
-          }}
+          back={() => navigate((backPath as ArConnectRoutePath) || "/")}
         />
         <BodyWrapper>
           <Circle>
