@@ -1,46 +1,40 @@
-interface IGetAppIconProps {
-  name?: string;
-  url?: string;
-}
-
+import type { AppLogoInfo } from "~applications/application";
+import { isGateway } from "./isGateway";
 /**
- * Generates a placeholder text based on the app name or URL.
- *
- * - If `appInfo.name` is available, it returns the first two uppercase letters of the name.
- * - If `url` is used as a fallback:
- *   - Extracts the first two letters from the subdomain if it is a gateway.
- *   - Extracts the first two letters from the domain if it is a regular site.
- * - Defaults to a lock icon (🔒) if neither `appInfo.name` nor a valid `url` is available.
- *
- * @param {Object} appInfo - Application information containing the name.
- * @param {string} [appInfo.name] - The name of the application.
- * @param {string} [url] - A fallback URL to determine placeholder text.
- * @returns {string} - The generated placeholder text or default icon.
+ * Generates a logo placeholder based on the base domain.
+ * If the URL is a gateway (determined by a GET call), it uses the first two letters of the subdomain.
+ * Otherwise, it defaults to the first two letters of the base domain.
+ * @param url - The URL to parse.
+ * @returns - A promise resolving to the logo placeholder.
  */
-const getAppIconPlaceholder = (appInfo: IGetAppIconProps): string => {
-  const appName = appInfo?.name;
+export async function generateLogoPlaceholder(
+  url: string
+): Promise<AppLogoInfo | undefined> {
+  try {
+    const { hostname } = new URL(url);
 
-  if (appName) {
-    return appName.slice(0, 2).toUpperCase();
-  }
+    const parts = hostname.split(".");
 
-  if (appInfo.url) {
-    try {
-      const parsedUrl = new URL(appInfo.url);
-      const hostnameParts = parsedUrl.hostname.split(".");
+    const baseDomain = parts.length > 2 ? parts.slice(-2).join(".") : hostname;
 
-      if (hostnameParts.length > 2) {
-        return hostnameParts[0].slice(0, 2).toUpperCase();
-      } else {
-        const domain = hostnameParts[hostnameParts.length - 2];
-        return domain.slice(0, 2).toUpperCase();
-      }
-    } catch {
-      /* We're using a string based icon to avoid refactoring SquircleImg component
-       * since it also receives an img prop coming from appInfo.
-       **/
-      return "🔒";
+    const isGatewayUrl = await isGateway(url);
+
+    if (isGatewayUrl) {
+      // For gateways, take the first two letters of the first subdomain
+      const subdomain = parts[0];
+      return {
+        type: "gateway",
+        placeholder: subdomain.slice(0, 2).toUpperCase()
+      };
+    } else {
+      // For non-gateways, take the first two letters of the base domain
+      return {
+        type: "default",
+        placeholder: baseDomain.slice(0, 2).toUpperCase()
+      };
     }
+  } catch (error) {
+    console.error(`Error generating logo placeholder for URL: ${url}`, error);
+    return undefined;
   }
-  return "🔒";
-};
+}
