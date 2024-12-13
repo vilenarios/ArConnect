@@ -164,15 +164,17 @@ async function trackSigned(
   amount: string,
   isTransferTx: boolean
 ) {
-  if (isTransferTx && amount !== "0") {
-    const appInfo = await app.getAppData();
-    await trackDirect(EventType.SIGNED, {
-      appName: appInfo.name,
-      appUrl,
-      tokenId,
-      amount
-    }).catch(() => {});
-  }
+  try {
+    if (isTransferTx && amount !== "0") {
+      const appInfo = await app.getAppData();
+      await trackDirect(EventType.SIGNED, {
+        appName: appInfo.name,
+        appUrl,
+        tokenId,
+        amount
+      });
+    }
+  } catch {}
 }
 
 export default background;
