@@ -72,10 +72,6 @@ export default class Application {
   async getAppData(): Promise<AppInfo> {
     const settings = await this.#getSettings();
 
-    if (!settings.logo) {
-      return {};
-    }
-
     return {
       name: settings.name,
       logo: settings.logo
