@@ -3,47 +3,47 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   Compass03,
-  Home01,
   Home02
 } from "@untitled-ui/icons-react";
 import browser from "webextension-polyfill";
 import styled from "styled-components";
-import { useLocation } from "wouter";
-import { useHistory } from "~utils/hash_router";
 import { useTheme } from "~utils/theme";
+import { useLocation } from "~wallets/router/router.utils";
 
 const buttons = [
   {
     title: "Home",
+    dictionaryKey: "home",
     icon: <Home02 />,
     size: "24px",
     route: "/"
   },
   {
     title: "Send",
+    dictionaryKey: "send",
     icon: <ArrowUpRight />,
     size: "24px",
     route: "/send/transfer"
   },
   {
     title: "Receive",
+    dictionaryKey: "receive",
     icon: <ArrowDownLeft />,
     size: "24px",
     route: "/receive"
   },
   {
     title: "Explore",
+    dictionaryKey: "explore",
     icon: <Compass03 />,
     size: "24px",
-
     route: "/explore"
   }
-];
+] as const;
 
 export const NavigationBar = () => {
   const theme = useTheme();
-  const [push] = useHistory();
-  const [location] = useLocation();
+  const { location, navigate } = useLocation();
 
   const shouldShowNavigationBar = buttons.some((button) => {
     if (button.title === "Send") {
@@ -66,12 +66,12 @@ export const NavigationBar = () => {
             displayTheme={theme}
             active={active}
             key={index}
-            onClick={() => push(button.route)}
+            onClick={() => navigate(button.route)}
           >
             <IconWrapper displayTheme={theme} size={button.size}>
               {button.icon}
             </IconWrapper>
-            <div>{browser.i18n.getMessage(button.title)}</div>
+            <div>{browser.i18n.getMessage(button.dictionaryKey)}</div>
           </NavigationButton>
         );
       })}

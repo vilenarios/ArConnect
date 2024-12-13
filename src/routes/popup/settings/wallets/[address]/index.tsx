@@ -24,9 +24,18 @@ import styled from "styled-components";
 import copy from "copy-to-clipboard";
 import { formatAddress } from "~utils/format";
 import HeadV2 from "~components/popup/HeadV2";
-import { useLocation } from "wouter";
+import type { CommonRouteProps } from "~wallets/router/router.types";
+import { useLocation } from "~wallets/router/router.utils";
 
-export default function Wallet({ address }: Props) {
+export interface WalletViewParams {
+  address: string;
+}
+
+export type WalletViewProps = CommonRouteProps<WalletViewParams>;
+
+export function WalletView({ params: { address } }: WalletViewProps) {
+  const { navigate } = useLocation();
+
   // wallets
   const [wallets, setWallets] = useStorage<StoredWallet[]>(
     {
@@ -44,9 +53,6 @@ export default function Wallet({ address }: Props) {
 
   // toasts
   const { setToast } = useToasts();
-
-  // location
-  const [, setLocation] = useLocation();
 
   // ans
   const [ansLabel, setAnsLabel] = useState<string>();
@@ -120,13 +126,14 @@ export default function Wallet({ address }: Props) {
   // wallet remove modal
   const removeModal = useModal();
 
+  // TODO: Should this be a redirect?
   if (!wallet) return <></>;
 
   return (
     <>
       <HeadV2
         title={browser.i18n.getMessage("edit_wallet")}
-        back={() => setLocation("/quick-settings/wallets")}
+        back={() => navigate("/quick-settings/wallets")}
       />
       <Wrapper>
         <div>
@@ -196,7 +203,7 @@ export default function Wallet({ address }: Props) {
         <div>
           <ButtonV2
             fullWidth
-            onClick={() => setLocation(`/quick-settings/wallets/${address}/qr`)}
+            onClick={() => navigate(`/quick-settings/wallets/${address}/qr`)}
           >
             {browser.i18n.getMessage("generate_qr_code")}
             <QrCode02 style={{ marginLeft: "2px" }} />
@@ -206,7 +213,7 @@ export default function Wallet({ address }: Props) {
             fullWidth
             secondary
             onClick={() =>
-              setLocation(`/quick-settings/wallets/${address}/export`)
+              navigate(`/quick-settings/wallets/${address}/export`)
             }
             disabled={wallet.type === "hardware"}
           >
@@ -247,7 +254,7 @@ export default function Wallet({ address }: Props) {
                       ),
                       duration: 2000
                     });
-                    setLocation("/quick-settings/wallets");
+                    navigate("/quick-settings/wallets");
                   } catch (e) {
                     console.log("Error removing wallet", e);
                     setToast({

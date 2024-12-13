@@ -1,4 +1,4 @@
-import { useHistory } from "~utils/hash_router";
+import { useLocation } from "~wallets/router/router.utils";
 import { ButtonV2, Section, useToasts, Loading } from "@arconnect/components";
 import { EditIcon } from "@iconicicons/react";
 import {
@@ -20,7 +20,9 @@ import { ExtensionStorage } from "~utils/storage";
 import { syncAoTokens } from "~tokens/aoTokens/sync";
 import { useStorage } from "@plasmohq/storage/hook";
 
-export default function Tokens() {
+export function TokensView() {
+  const { navigate } = useLocation();
+
   const [isLoading, setIsLoading] = useState(false);
   const [hasNextPage, setHasNextPage] = useState<boolean | undefined>(
     undefined
@@ -50,11 +52,8 @@ export default function Tokens() {
   );
 
   function handleTokenClick(tokenId: string) {
-    push(`/send/transfer/${tokenId}`);
+    navigate(`/send/transfer/${tokenId}`);
   }
-
-  // router push
-  const [push] = useHistory();
 
   const addAoToken = async (token: TokenInfoWithBalance) => {
     try {
@@ -74,7 +73,8 @@ export default function Tokens() {
         Ticker: token.Ticker,
         Denomination: token.Denomination,
         Logo: token.Logo,
-        processId: token.id
+        processId: token.id,
+        type: token.type || "asset"
       });
       await ExtensionStorage.set("ao_tokens", aoTokens);
       setToast({
@@ -150,7 +150,7 @@ export default function Tokens() {
             type={"asset"}
             defaultLogo={token?.Logo}
             id={token.id}
-            ticker={token.Ticker}
+            ticker={token.type === "collectible" ? token.Name : token.Ticker}
             balance={token.balance || "0"}
             onClick={(e) => {
               e.preventDefault();
@@ -165,10 +165,10 @@ export default function Tokens() {
         {assets.map((token, i) => (
           <Token
             {...token}
-            onClick={() => push(`/token/${token.id}`)}
+            onClick={() => navigate(`/token/${token.id}`)}
             onSettingsClick={(e) => {
               e.preventDefault();
-              push(`/quick-settings/tokens/${token.id}`);
+              navigate(`/quick-settings/tokens/${token.id}`);
             }}
             key={i}
           />
@@ -214,7 +214,7 @@ export default function Tokens() {
           href="#/quick-settings/tokens"
           onClick={(e) => {
             e.preventDefault();
-            push("/quick-settings/tokens");
+            navigate("/quick-settings/tokens");
           }}
         >
           <EditIcon />

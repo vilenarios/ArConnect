@@ -44,13 +44,12 @@ import { useTheme } from "~utils/theme";
 import arLogoLight from "url:/assets/ar/logo_light.png";
 import arLogoDark from "url:/assets/ar/logo_dark.png";
 import Arweave from "arweave";
-import { useActiveWallet, useBalance } from "~wallets/hooks";
+import { useBalance } from "~wallets/hooks";
 import { getArPrice, getPrice } from "~lib/coingecko";
 import redstone from "redstone-api";
-import { AnimatePresence, motion, type Variants } from "framer-motion";
 import Collectible from "~components/popup/Collectible";
 import { findGateway } from "~gateways/wayfinder";
-import { useHistory } from "~utils/hash_router";
+import { useLocation } from "~wallets/router/router.utils";
 import { DREContract, DRENode } from "@arconnect/warp-dre";
 import { isUToken } from "~utils/send";
 import HeadV2 from "~components/popup/HeadV2";
@@ -68,6 +67,7 @@ import { useAoTokens } from "~tokens/aoTokens/ao";
 import BigNumber from "bignumber.js";
 import { AO_NATIVE_TOKEN } from "~utils/ao_import";
 import { AnnouncementPopup } from "./announcement";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
 // default size for the qty text
 const defaulQtytSize = 3.7;
@@ -97,7 +97,16 @@ export interface TransactionData {
   isAo?: boolean;
 }
 
-export default function Send({ id }: Props) {
+export interface SendViewParams {
+  id?: string;
+}
+
+export type SendViewProps = CommonRouteProps<SendViewParams>;
+
+export function SendView({ params: { id } }: SendViewProps) {
+  const { navigate, back } = useLocation();
+  const theme = useTheme();
+
   // Segment
   useEffect(() => {
     trackPage(PageType.SEND);
@@ -124,7 +133,7 @@ export default function Send({ id }: Props) {
   const [currency] = useSetting<string>("currency");
 
   // aoTokens
-  const [aoTokens, loading] = useAoTokens(true);
+  const [aoTokens, loading] = useAoTokens({ refresh: true });
 
   // set ao for following page
   const [isAo, setIsAo] = useState<boolean>(false);
@@ -161,8 +170,9 @@ export default function Send({ id }: Props) {
       return {
         decimals: matchingTokenInAoTokens.Denomination,
         id: matchingTokenInAoTokens.id,
+        name: matchingTokenInAoTokens.Name,
         ticker: matchingTokenInAoTokens.Ticker,
-        type: "asset",
+        type: matchingTokenInAoTokens.type || "asset",
         balance: matchingTokenInAoTokens.balance,
         defaultLogo: matchingTokenInAoTokens.Logo
       };
@@ -201,7 +211,6 @@ export default function Send({ id }: Props) {
 
   // token logo
   const [logo, setLogo] = useState<string>();
-  const theme = useTheme();
 
   useEffect(() => {
     (async () => {
@@ -306,7 +315,6 @@ export default function Send({ id }: Props) {
 
   // network fee
   const [networkFee, setNetworkFee] = useState<string>("0");
-  const [, goBack] = useHistory();
 
   useEffect(() => {
     (async () => {
@@ -395,9 +403,6 @@ export default function Send({ id }: Props) {
     return defaulQtytSize / (qtyLengthWithSymbol / maxLengthDef);
   }, [qty, qtyMode, currency, token]);
 
-  // router push
-  const [push] = useHistory();
-
   // prepare tx to send
   async function send() {
     // check qty
@@ -426,7 +431,7 @@ export default function Send({ id }: Props) {
     });
 
     // continue to confirmation page
-    push(`/send/confirm/${tokenID}/${finalQty}/${recipient.address}`);
+    navigate(`/send/confirm/${tokenID}/${finalQty}/${recipient.address}`);
   }
 
   return (
@@ -435,7 +440,7 @@ export default function Send({ id }: Props) {
         back={() => {
           TempTransactionStorage.removeItem("send");
           setQty("");
-          goBack();
+          back();
         }}
         title={browser.i18n.getMessage("send")}
       />
@@ -570,7 +575,11 @@ export default function Send({ id }: Props) {
               <LogoWrapper small>
                 <Logo src={logo || arweaveLogo} />
               </LogoWrapper>
-              <TokenName>{token.name || token.ticker}</TokenName>
+              <TokenName>
+                {token.type === "collectible"
+                  ? token.name || token.ticker
+                  : token.ticker}
+              </TokenName>
               {isAo && <Image src={aoLogo} alt="ao logo" />}
             </LogoAndDetails>
             <TokenSelectorRightSide>
@@ -608,19 +617,21 @@ export default function Send({ id }: Props) {
           <TokensList>
             <ArToken onClick={() => updateSelectedToken("AR")} />
 
-            {aoTokens.map((token, i) => (
-              <Token
-                key={token.id}
-                ao={true}
-                type={"asset"}
-                defaultLogo={token?.Logo}
-                id={token.id}
-                ticker={token.Ticker}
-                divisibility={token.Denomination}
-                balance={token.balance || "0"}
-                onClick={() => updateSelectedToken(token.id)}
-              />
-            ))}
+            {aoTokens
+              .filter((token) => token.type !== "collectible")
+              .map((token, i) => (
+                <Token
+                  key={token.id}
+                  ao={true}
+                  type={"asset"}
+                  defaultLogo={token?.Logo}
+                  id={token.id}
+                  ticker={token.Ticker}
+                  divisibility={token.Denomination}
+                  balance={token.balance || "0"}
+                  onClick={() => updateSelectedToken(token.id)}
+                />
+              ))}
 
             {tokens
               .filter((token) => token.type === "asset")
@@ -634,15 +645,14 @@ export default function Send({ id }: Props) {
           </TokensList>
 
           <CollectiblesList>
-            {tokens
+            {aoTokens
               .filter((token) => token.type === "collectible")
               .map((token, i) => (
                 <Collectible
                   id={token.id}
-                  name={token.name || token.ticker}
+                  name={token.Name || token.Ticker}
                   balance={token.balance}
-                  divisibility={token.divisibility}
-                  decimals={token.decimals}
+                  divisibility={token.Denomination}
                   onClick={() => updateSelectedToken(token.id)}
                   key={i}
                 />
@@ -753,10 +763,6 @@ const SendForm = styled.div`
   gap: 15px;
   justify-content: space-between;
 `;
-
-interface Props {
-  id?: string;
-}
 
 type QtyMode = "fiat" | "token";
 

@@ -1,20 +1,20 @@
 import HeadV2 from "~components/popup/HeadV2";
 import browser from "webextension-polyfill";
-import AddContact from "~components/dashboard/subsettings/AddContact";
+import { AddContactDashboardView } from "~components/dashboard/subsettings/AddContact";
 import styled from "styled-components";
-import { useLocation } from "wouter";
+import { useLocation } from "~wallets/router/router.utils";
 
-export default function NewContact() {
-  const [, setLocation] = useLocation();
+export function NewContactView() {
+  const { navigate } = useLocation();
 
   return (
     <>
       <HeadV2
         title={browser.i18n.getMessage("new_contact")}
-        back={() => setLocation("/quick-settings/contacts")}
+        back={() => navigate("/quick-settings/contacts")}
       />
       <Wrapper>
-        <AddContact isQuickSetting={true} />
+        <AddContactDashboardView isQuickSetting params={{}} />
       </Wrapper>
     </>
   );

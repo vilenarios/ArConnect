@@ -1,5 +1,4 @@
-import { useContext, useEffect } from "react";
-import type { BaseLocationHook } from "wouter";
+import { useContext } from "react";
 import { ERR_MSG_USER_CANCELLED_AUTH } from "~utils/auth/auth.constants";
 import { AuthRequestsContext } from "~utils/auth/auth.provider";
 import type { AuthRequestByType, AuthType } from "~utils/auth/auth.types";
@@ -64,15 +63,3 @@ export function useCurrentAuthRequest<T extends AuthType>(
     rejectRequest
   };
 }
-
-export const useAuthRequestsLocation: BaseLocationHook = () => {
-  const { authRequest: currentAuthRequest } = useCurrentAuthRequest("any");
-  const currentAuthRequestType = `/${currentAuthRequest.type}`;
-  const currentAuthRequestID = currentAuthRequest.authID || "";
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [currentAuthRequestID]);
-
-  return [currentAuthRequestType, (path: string) => ""];
-};

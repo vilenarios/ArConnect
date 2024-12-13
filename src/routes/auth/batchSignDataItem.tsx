@@ -22,7 +22,7 @@ import { timeoutPromise } from "~utils/promises/timeout";
 import { HeadAuth } from "~components/HeadAuth";
 import { AuthButtons } from "~components/auth/AuthButtons";
 
-export default function BatchSignDataItem() {
+export function BatchSignDataItemAuthRequestView() {
   const { authRequest, acceptRequest, rejectRequest } =
     useCurrentAuthRequest("batchSignDataItem");
   const { data, url } = authRequest;

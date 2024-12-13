@@ -21,7 +21,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { findGateway } from "~gateways/wayfinder";
 import Arweave from "arweave";
-import { useHistory } from "~utils/hash_router";
+import { useLocation } from "~wallets/router/router.utils";
 import { fallbackGateway, type Gateway } from "~gateways/gateway";
 import AnimatedQRScanner from "~components/hardware/AnimatedQRScanner";
 import AnimatedQRPlayer from "~components/hardware/AnimatedQRPlayer";
@@ -65,19 +65,29 @@ import { SubscriptionStatus } from "~subscriptions/subscription";
 import { checkPassword } from "~wallets/auth";
 import BigNumber from "bignumber.js";
 import { SignType } from "@keystonehq/bc-ur-registry-arweave";
-
-interface Props {
-  tokenID: string;
-  qty?: number;
-  recipient?: string;
-  subscription?: boolean;
-}
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
 function formatNumber(amount: string, decimalPlaces: number = 2): string {
   return BigNumber(amount).toFixed(decimalPlaces);
 }
 
-export default function Confirm({ tokenID, qty, subscription }: Props) {
+export interface ConfirmViewParams {
+  token: string;
+  qty?: number;
+  recipient?: string;
+  message?: string;
+  subscription?: boolean;
+}
+
+export type ConfirmViewProps = CommonRouteProps<ConfirmViewParams>;
+
+export function ConfirmView({
+  params: { token: tokenID, qty: qtyParam, subscription }
+}: ConfirmViewProps) {
+  const { navigate } = useLocation();
+  // TODO: Add generic utils to parse params:
+  const qty = Number(qtyParam || "0");
+
   // TODO: Need to get Token information
   const [token, setToken] = useState<Token | undefined>();
   const [amount, setAmount] = useState<string>("");
@@ -114,8 +124,6 @@ export default function Confirm({ tokenID, qty, subscription }: Props) {
     10
   );
 
-  const [push] = useHistory();
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -144,7 +152,7 @@ export default function Confirm({ tokenID, qty, subscription }: Props) {
             setMessage(data.message);
           }
         } else {
-          push("/send/transfer");
+          navigate("/send/transfer");
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -358,7 +366,7 @@ export default function Confirm({ tokenID, qty, subscription }: Props) {
             content: browser.i18n.getMessage("sent_tx"),
             duration: 2000
           });
-          push(`/transaction/${res}`);
+          navigate(`/transaction/${res}`);
           setIsLoading(false);
         }
         return res;
@@ -418,8 +426,8 @@ export default function Confirm({ tokenID, qty, subscription }: Props) {
           });
           // Redirect
           uToken
-            ? push("/")
-            : push(
+            ? navigate("/")
+            : navigate(
                 `/transaction/${
                   convertedTransaction.id
                 }?back=${encodeURIComponent("/")}`
@@ -486,8 +494,8 @@ export default function Confirm({ tokenID, qty, subscription }: Props) {
             fee: networkFee
           });
           uToken
-            ? push("/")
-            : push(
+            ? navigate("/")
+            : navigate(
                 `/transaction/${
                   convertedTransaction.id
                 }?back=${encodeURIComponent("/")}`
@@ -552,7 +560,7 @@ export default function Confirm({ tokenID, qty, subscription }: Props) {
       // redirect to transfer if the
       // transaction was not found
       if (!prepared || !prepared.transaction) {
-        return push("/send/transfer");
+        return navigate("/send/transfer");
       }
 
       // check if the current wallet
@@ -578,7 +586,7 @@ export default function Confirm({ tokenID, qty, subscription }: Props) {
               content: browser.i18n.getMessage("sent_tx"),
               duration: 2000
             });
-            push(`/transaction/${res}`);
+            navigate(`/transaction/${res}`);
             setIsLoading(false);
           }
           return res;
@@ -610,7 +618,7 @@ export default function Confirm({ tokenID, qty, subscription }: Props) {
           duration: 2300,
           content: browser.i18n.getMessage("transaction_auth_ur_fail")
         });
-        push("/send/transfer");
+        navigate("/send/transfer");
       }
     })();
   }, [wallet, recipient, keystoneSigner, setIsLoading]);
@@ -677,8 +685,8 @@ export default function Confirm({ tokenID, qty, subscription }: Props) {
           fee: networkFee
         });
         uToken
-          ? push("/")
-          : push(
+          ? navigate("/")
+          : navigate(
               `/transaction/${transaction.id}?back=${encodeURIComponent("/")}`
             );
       } catch (e) {

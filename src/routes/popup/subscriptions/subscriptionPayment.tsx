@@ -20,16 +20,26 @@ import { ArrowRightIcon } from "@iconicicons/react";
 import { useStorage } from "@plasmohq/storage/hook";
 import { ExtensionStorage } from "~utils/storage";
 import { ButtonV2, useToasts } from "@arconnect/components";
-import { useHistory } from "~utils/hash_router";
+import { useLocation } from "~wallets/router/router.utils";
 import { getPrice } from "~lib/coingecko";
 import useSetting from "~settings/hook";
 import BigNumber from "bignumber.js";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-export default function SubscriptionPayment({ id }: { id: string }) {
+export interface SubscriptionPaymentViewParams {
+  id?: string;
+}
+
+export type SubscriptionPaymentViewProps =
+  CommonRouteProps<SubscriptionPaymentViewParams>;
+
+export function SubscriptionPaymentView({
+  params: { id }
+}: SubscriptionPaymentViewProps) {
+  const { back } = useLocation();
   const [subData, setSubData] = useState<SubscriptionData | null>(null);
   const [price, setPrice] = useState<string>("--");
   const [currency] = useSetting<string>("currency");
-  const [push, goBack] = useHistory();
   const { setToast } = useToasts();
   const [activeAddress] = useStorage<string>({
     key: "active_address",
@@ -49,7 +59,7 @@ export default function SubscriptionPayment({ id }: { id: string }) {
         content: browser.i18n.getMessage("subscription_cancelled"),
         duration: 5000
       });
-      goBack();
+      back();
     } catch {
       setToast({
         type: "error",
@@ -88,7 +98,7 @@ export default function SubscriptionPayment({ id }: { id: string }) {
           content: "Subscription paid",
           duration: 5000
         });
-        goBack();
+        back();
       } catch (e) {
         console.log("e", e);
         setToast({

@@ -1,4 +1,4 @@
-import { ButtonV2, Section, Spacer, Text } from "@arconnect/components";
+import { Section, Text } from "@arconnect/components";
 import Message from "~components/auth/Message";
 import Wrapper from "~components/auth/Wrapper";
 import browser from "webextension-polyfill";
@@ -7,7 +7,7 @@ import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { HeadAuth } from "~components/HeadAuth";
 import { AuthButtons } from "~components/auth/AuthButtons";
 
-export default function Signature() {
+export function SignatureAuthRequestView() {
   const { authRequest, acceptRequest, rejectRequest } =
     useCurrentAuthRequest("signature");
 

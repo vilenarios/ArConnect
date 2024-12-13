@@ -12,7 +12,7 @@ import type { JWKInterface } from "arweave/web/lib/wallet";
 import type { Tag } from "arweave/web/lib/transaction";
 import { useScanner } from "@arconnect/keystone-sdk";
 import { useActiveWallet } from "~wallets/hooks";
-import { useHistory } from "~utils/hash_router";
+import { useLocation } from "~wallets/router/router.utils";
 import { useEffect, useState } from "react";
 import { getActiveKeyfile, getActiveWallet } from "~wallets";
 import type { UR } from "@ngraveio/bc-ur";
@@ -47,10 +47,17 @@ import {
 } from "~utils/send";
 import { EventType, trackEvent } from "~utils/analytics";
 import BigNumber from "bignumber.js";
-interface Props {
+import type { CommonRouteProps } from "~wallets/router/router.types";
+
+export interface SendAuthViewParams {
   tokenID?: string;
 }
-export default function SendAuth({ tokenID }: Props) {
+
+export type SendAuthViewProps = CommonRouteProps<SendAuthViewParams>;
+
+export function SendAuthView({ params: { tokenID } }: SendAuthViewProps) {
+  const { navigate } = useLocation();
+
   // loading
   const [loading, setLoading] = useState(false);
 
@@ -173,9 +180,6 @@ export default function SendAuth({ tokenID }: Props) {
   // toasts
   const { setToast } = useToasts();
 
-  // router push
-  const [push] = useHistory();
-
   /**
    * Local wallet functionalities
    */
@@ -251,8 +255,8 @@ export default function SendAuth({ tokenID }: Props) {
 
         // Redirect
         uToken
-          ? push("/")
-          : push(
+          ? navigate("/")
+          : navigate(
               `/transaction/${transaction.id}?back=${encodeURIComponent("/")}`
             );
 
@@ -317,8 +321,8 @@ export default function SendAuth({ tokenID }: Props) {
           duration: 2000
         });
         uToken
-          ? push("/")
-          : push(
+          ? navigate("/")
+          : navigate(
               `/transaction/${transaction.id}?back=${encodeURIComponent("/")}`
             );
 
@@ -355,7 +359,7 @@ export default function SendAuth({ tokenID }: Props) {
       // redirect to transfer if the
       // transaction was not found
       if (!transaction) {
-        return push("/send/transfer");
+        return navigate("/send/transfer");
       }
 
       // check if the current wallet
@@ -373,7 +377,7 @@ export default function SendAuth({ tokenID }: Props) {
           duration: 2300,
           content: browser.i18n.getMessage("transaction_auth_ur_fail")
         });
-        push("/send/transfer");
+        navigate("/send/transfer");
       }
     })();
   }, [wallet]);
@@ -420,8 +424,8 @@ export default function SendAuth({ tokenID }: Props) {
           duration: 2000
         });
         uToken
-          ? push("/")
-          : push(
+          ? navigate("/")
+          : navigate(
               `/transaction/${transaction.id}?back=${encodeURIComponent("/")}`
             );
       } catch (e) {
