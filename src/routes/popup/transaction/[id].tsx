@@ -14,7 +14,11 @@ import {
   useState,
   type MutableRefObject
 } from "react";
-import { STAKED_GQL_FULL_HISTORY, useGateway } from "~gateways/wayfinder";
+import {
+  STAKED_GQL_FULL_HISTORY,
+  useGateway,
+  useGraphqlGateways
+} from "~gateways/wayfinder";
 import { useLocation, useSearchParams } from "~wallets/router/router.utils";
 import {
   ChevronDownIcon,
@@ -122,19 +126,24 @@ export function TransactionView({
     return urlToGateway(decodeURIComponent(gw));
   }, [gw, defaultGateway]);
 
+  const graphqlGateways = useGraphqlGateways(5);
+
   // arweave client
   const arweave = useMemo(() => new Arweave(gateway), [gateway]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !graphqlGateways.length) return;
 
     let timeoutID: number | undefined;
+    let fetchCount = 0;
 
     const fetchTx = async () => {
       const cachedTx = JSON.parse(localStorage.getItem("latest_tx") || "{}");
 
       // load cached tx
       if (cachedTx?.id === id) setTransaction(cachedTx);
+
+      const gateway = graphqlGateways[fetchCount % graphqlGateways.length];
 
       const { data } = await gql(
         `
@@ -170,6 +179,7 @@ export function TransactionView({
       );
 
       if (!data.transaction) {
+        fetchCount++;
         timeoutID = setTimeout(fetchTx, 5000);
       } else {
         timeoutID = undefined;
@@ -217,7 +227,7 @@ export function TransactionView({
     return () => {
       if (timeoutID) clearTimeout(timeoutID);
     };
-  }, [id, gateway]);
+  }, [id, graphqlGateways]);
 
   // transaction confirmations
   const [confirmations, setConfirmations] = useState(0);

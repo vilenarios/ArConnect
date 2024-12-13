@@ -1321,6 +1321,10 @@
       "message": "点击查看您最近签署的交易",
       "description": "View last tx prompt content"
   },
+  "view_transaction_details": {
+    "message": "查看交易详情",
+    "description": "View transaction details link text"
+  },
   "sign_item": {
       "message": "签署项目",
       "description": "Sign message popup title"
