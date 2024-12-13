@@ -15,9 +15,13 @@ export async function generateLogoPlaceholder(
 
     const parts = hostname.split(".");
 
-    const baseDomain = parts.length > 2 ? parts.slice(-2).join(".") : hostname;
+    const baseDomain = parts.slice(-2).join(".");
 
-    const isGatewayUrl = await isGateway(url);
+    const candidateGatewayUrl =
+      parts.length > 1 ? parts.slice(1).join(".") : null;
+
+    const isGatewayUrl =
+      !!candidateGatewayUrl && (await isGateway(candidateGatewayUrl));
 
     if (isGatewayUrl) {
       // For gateways, take the first two letters of the first subdomain
