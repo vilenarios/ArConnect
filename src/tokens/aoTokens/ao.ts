@@ -34,6 +34,13 @@ export const defaultAoTokens: TokenInfo[] = [
     Denomination: 12,
     Logo: "26yDr08SuwvNQ4VnhAfV4IjJcOOlQ4tAQLc1ggrCPu0",
     processId: "NG-0lVX882MG5nhARrSzyprEK6ejonHpdUmaaMPsHE8"
+  },
+  {
+    Name: "Wrapped AR",
+    Ticker: "wAR",
+    Denomination: 12,
+    Logo: "L99jaxRKQKJt9CqoJtPaieGPEhJD3wNhR4iGqc8amXs",
+    processId: "xU9zFkq3X2ZQ6olwNVvr1vUWIjc3kXTWr7xKQD6dh10"
   }
 ];
 
