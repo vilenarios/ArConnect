@@ -33,7 +33,6 @@ export const HeadAuth: React.FC<HeadAuthProps> = ({
     authRequests[currentAuthRequestIndex] || {};
   const [appLogoInfo, setAppLogoInfo] = useState<AppLogoInfo>(appInfoProp);
 
-
   useEffect(() => {
     async function loadAppInfo() {
       if (!url) return;
@@ -42,16 +41,12 @@ export const HeadAuth: React.FC<HeadAuthProps> = ({
       const appInfo = await app.getAppData();
       const appLogoPlaceholder = await generateLogoPlaceholder(url);
 
-      // TODO: The fallback to get the name from the URL might not work properly as it might be the name of a gateway.
-      // It might be better to just show a lock icon as fallback. Also, this logic might be better placed inside the
-      // `Application` class.
-
       setAppLogoInfo({
         name:
           appInfo.name ||
           fallbackName ||
           new URL(url).hostname.split(".").slice(-2).join("."),
-        logo: appInfo.logo || fallbackLogo
+        logo: appInfo.logo || fallbackLogo,
         type: appLogoPlaceholder.type,
         placeholder: appLogoPlaceholder.placeholder
       });
