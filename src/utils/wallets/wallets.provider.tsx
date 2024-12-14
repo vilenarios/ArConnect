@@ -67,7 +67,7 @@ export function WalletsProvider({
 
       if (hasWallets && decryptionKey) {
         walletStatus = "unlocked";
-      } else if (!decryptionKey) {
+      } else if (!decryptionKey && hasWallets) {
         walletStatus = "locked";
       } else if (redirectToWelcome) {
         // This should only happen when opening the regular popup, but not for the auth popup, as the
@@ -75,7 +75,7 @@ export function WalletsProvider({
 
         openOrSelectWelcomePage(true);
 
-        window.top.close();
+        return;
       }
 
       setWalletsContextState({

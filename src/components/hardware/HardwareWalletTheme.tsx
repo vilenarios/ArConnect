@@ -34,6 +34,14 @@ export function ArConnectThemeProvider({ children }: PropsWithChildren<{}>) {
   const hardwareApi = useHardwareApi();
   const theme = useTheme();
   const themeModifier = hardwareApi ? hardwareThemeModifier : noThemeModifier;
+  const isWelcomePage = window.location.pathname.includes("welcome");
+
+  useEffect(() => {
+    if (isWelcomePage) {
+      document.documentElement.style.removeProperty("--backgroundColor");
+      document.documentElement.style.removeProperty("--textColor");
+    }
+  }, [isWelcomePage]);
 
   useEffect(() => {
     const reducedMotionPreference = window.matchMedia(
