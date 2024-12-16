@@ -1,6 +1,7 @@
 import { AllowanceAuthRequestView } from "~routes/auth/allowance";
 import { BatchSignDataItemAuthRequestView } from "~routes/auth/batchSignDataItem";
 import { ConnectAuthRequestView } from "~routes/auth/connect";
+import { DecryptAuthRequestView } from "~routes/auth/decrypt";
 import { LoadingAuthRequestView } from "~routes/auth/loading";
 import { SignAuthRequestView } from "~routes/auth/sign";
 import { SignatureAuthRequestView } from "~routes/auth/signature";
