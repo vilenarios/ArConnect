@@ -13,9 +13,9 @@ name: 👮‍♂️ GitHub CodeQL Analysis
 
 on:
   push:
-    branches: ["production"]
+    branches: ["production", "development", "staging"]
   pull_request:
-    branches: ["production"]
+    branches: ["production", "development", "staging"]
   schedule:
     - cron: "00 08 * * 1"
 
