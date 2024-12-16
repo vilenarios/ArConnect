@@ -17,23 +17,25 @@ export type AuthRoutePath =
   | `/connect/${string}`
   | `/allowance/${string}`
   | `/token/${string}`
+  | `/decrypt/${string}`
   | `/sign/${string}`
   | `/signKeystone/${string}`
   | `/signature/${string}`
-  | `/subscription/${string}`
   | `/signDataItem/${string}`
-  | `/batchSignDataItem/${string}`;
+  | `/batchSignDataItem/${string}`
+  | `/subscription/${string}`;
 
 export const AuthPaths = {
   Connect: "/connect/:authID",
   Allowance: "/allowance/:authID",
   Token: "/token/:authID",
+  Decrypt: "/decrypt/:authID",
   Sign: "/sign/:authID",
   SignKeystone: "/signKeystone/:authID",
   Signature: "/signature/:authID",
-  Subscription: "/subscription/:authID",
   SignDataItem: "/signDataItem/:authID",
-  BatchSignDataItem: "/batchSignDataItem/:authID"
+  BatchSignDataItem: "/batchSignDataItem/:authID",
+  Subscription: "/subscription/:authID"
 } as const satisfies Record<string, AuthRoutePath>;
 
 export const AUTH_ROUTES = [
@@ -54,6 +56,10 @@ export const AUTH_ROUTES = [
     component: TokenAuthRequestView
   },
   {
+    path: AuthPaths.Decrypt,
+    component: DecryptAuthRequestView
+  },
+  {
     path: AuthPaths.Sign,
     component: SignAuthRequestView
   },
@@ -66,15 +72,15 @@ export const AUTH_ROUTES = [
     component: SignatureAuthRequestView
   },
   {
-    path: AuthPaths.Subscription,
-    component: SubscriptionAuthRequestView
-  },
-  {
     path: AuthPaths.SignDataItem,
     component: SignDataItemAuthRequestView
   },
   {
     path: AuthPaths.BatchSignDataItem,
     component: BatchSignDataItemAuthRequestView
+  },
+  {
+    path: AuthPaths.Subscription,
+    component: SubscriptionAuthRequestView
   }
 ] as const satisfies RouteConfig[];

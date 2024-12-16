@@ -10,6 +10,7 @@ import {
   isLocalWallet,
   isRawArrayBuffer
 } from "~utils/assertions";
+import { requestUserAuthorization } from "~utils/auth/auth.utils";
 
 const background: BackgroundModuleFunction<string | Uint8Array> = async (
   appData,
@@ -18,6 +19,8 @@ const background: BackgroundModuleFunction<string | Uint8Array> = async (
 ) => {
   // validate data
   isRawArrayBuffer(data);
+
+  const message = Object.values(data);
 
   // override with byte array
   data = new Uint8Array(Object.values(data));
@@ -40,6 +43,22 @@ const background: BackgroundModuleFunction<string | Uint8Array> = async (
 
   // remove wallet from memory
   freeDecryptedWallet(decryptedWallet.keyfile);
+
+  // TODO: Some functions just decrypt the keyfile just to get the public key (keyfile.n)
+
+  // TODO: Some functions unlock the wallet before requesting permissions. It looks like the private key might not be
+  // needed to request permissions, so it would be better to combine both "user requests" in a single one to avoid
+  // unlocking the wallet unnecessarily. Also, if the wallet has been unlocked from an auth popup but the request(s) is
+  // finally rejected, it might be worth re-locking the wallet.
+
+  // request "decrypt" popup
+  await requestUserAuthorization(
+    {
+      type: "decrypt",
+      message
+    },
+    appData
+  );
 
   if (options.algorithm) {
     // validate
