@@ -25,9 +25,14 @@ export function ResetDashboardView() {
   // reset ArConnect
   async function reset() {
     try {
-      // get all keys
+      // get all keys except gateways
       const allStoredKeys = Object.keys(
         (await browser.storage.local.get(null)) || {}
+      ).filter((key) => key !== "gateways");
+
+      // remove all keys except gateways
+      await Promise.allSettled(
+        allStoredKeys.map((key) => ExtensionStorage.remove(key))
       );
 
       // remove all keys

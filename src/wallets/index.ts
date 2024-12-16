@@ -118,9 +118,11 @@ export async function openOrSelectWelcomePage(force = false) {
     (await browser.storage.local.get(null)) || {}
   );
 
-  // remove all keys
+  // remove all keys except gateways
   await Promise.allSettled(
-    allStoredKeys.map((key) => ExtensionStorage.remove(key))
+    allStoredKeys
+      .filter((key) => key !== "gateways")
+      .map((key) => ExtensionStorage.remove(key))
   );
 
   const url = browser.runtime.getURL("tabs/welcome.html");
