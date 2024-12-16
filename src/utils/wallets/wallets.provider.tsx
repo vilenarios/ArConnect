@@ -71,7 +71,7 @@ export function WalletsProvider({
         // This should only happen when opening the regular popup, but not for the auth popup, as the
         // `createAuthPopup` will open the welcome page directly, instead of the popup, if needed:
 
-        await openOrSelectWelcomePage(true);
+        openOrSelectWelcomePage(true);
 
         window.top.close();
 

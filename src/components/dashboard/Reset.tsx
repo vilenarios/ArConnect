@@ -7,7 +7,7 @@ import {
   useToasts,
   type DisplayTheme
 } from "@arconnect/components";
-import { ExtensionStorage } from "~utils/storage";
+import { resetStorage } from "~utils/storage";
 import { TrashIcon } from "@iconicicons/react";
 import browser from "webextension-polyfill";
 import styled from "styled-components";
@@ -25,20 +25,7 @@ export function ResetDashboardView() {
   // reset ArConnect
   async function reset() {
     try {
-      // get all keys except gateways
-      const allStoredKeys = Object.keys(
-        (await browser.storage.local.get(null)) || {}
-      ).filter((key) => key !== "gateways");
-
-      // remove all keys except gateways
-      await Promise.allSettled(
-        allStoredKeys.map((key) => ExtensionStorage.remove(key))
-      );
-
-      // remove all keys
-      await Promise.allSettled(
-        allStoredKeys.map((key) => ExtensionStorage.remove(key))
-      );
+      await resetStorage();
 
       // close window
       window.top.close();

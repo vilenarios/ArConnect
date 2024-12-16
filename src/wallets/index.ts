@@ -1,8 +1,6 @@
 import type { JWKInterface } from "arweave/node/lib/wallet";
-import { useStorage } from "@plasmohq/storage/hook";
-import { ExtensionStorage } from "~utils/storage";
+import { ExtensionStorage, resetStorage } from "~utils/storage";
 import type { HardwareWallet } from "./hardware";
-import { useEffect, useState } from "react";
 import browser from "webextension-polyfill";
 import Arweave from "arweave/web/common";
 import {
@@ -112,18 +110,7 @@ export async function openOrSelectWelcomePage(force = false) {
 
   // Make sure we clear any stored value from previous installations before
   // opening the welcome page to onboard the user:
-
-  // get all keys
-  const allStoredKeys = Object.keys(
-    (await browser.storage.local.get(null)) || {}
-  );
-
-  // remove all keys except gateways
-  await Promise.allSettled(
-    allStoredKeys
-      .filter((key) => key !== "gateways")
-      .map((key) => ExtensionStorage.remove(key))
-  );
+  await resetStorage();
 
   const url = browser.runtime.getURL("tabs/welcome.html");
   const welcomePageTabs = await browser.tabs.query({ url });
