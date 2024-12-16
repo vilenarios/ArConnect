@@ -20,8 +20,6 @@ const background: BackgroundModuleFunction<string | Uint8Array> = async (
   // validate data
   isRawArrayBuffer(data);
 
-  const message = Object.values(data);
-
   // override with byte array
   data = new Uint8Array(Object.values(data));
 
@@ -44,21 +42,7 @@ const background: BackgroundModuleFunction<string | Uint8Array> = async (
   // remove wallet from memory
   freeDecryptedWallet(decryptedWallet.keyfile);
 
-  // TODO: Some functions just decrypt the keyfile just to get the public key (keyfile.n)
-
-  // TODO: Some functions unlock the wallet before requesting permissions. It looks like the private key might not be
-  // needed to request permissions, so it would be better to combine both "user requests" in a single one to avoid
-  // unlocking the wallet unnecessarily. Also, if the wallet has been unlocked from an auth popup but the request(s) is
-  // finally rejected, it might be worth re-locking the wallet.
-
-  // request "decrypt" popup
-  await requestUserAuthorization(
-    {
-      type: "decrypt",
-      message
-    },
-    appData
-  );
+  let decryptedData: Uint8Array<ArrayBufferLike>;
 
   if (options.algorithm) {
     // validate
@@ -97,7 +81,7 @@ const background: BackgroundModuleFunction<string | Uint8Array> = async (
     );
 
     // decrypt data
-    const res = await arweave.crypto.decrypt(
+    decryptedData = await arweave.crypto.decrypt(
       encryptedData,
       new Uint8Array(decryptedKey),
       options.salt
@@ -110,10 +94,11 @@ const background: BackgroundModuleFunction<string | Uint8Array> = async (
     if (options.salt) {
       const rawSalt = new TextEncoder().encode(options.salt);
 
-      return res.slice(0, res.length - rawSalt.length);
+      decryptedData = decryptedData.slice(
+        0,
+        decryptedData.length - rawSalt.length
+      );
     }
-
-    return res;
   } else if (options.name) {
     // validate
     isEncryptionAlgorithm(options);
@@ -129,18 +114,30 @@ const background: BackgroundModuleFunction<string | Uint8Array> = async (
       false,
       ["decrypt"]
     );
+
     const decrypted = await crypto.subtle.decrypt(options, key, data);
 
     // remove wallet from memory
     freeDecryptedWallet(privateKey);
 
-    return new Uint8Array(decrypted);
+    decryptedData = new Uint8Array(decrypted);
   } else {
     // remove wallet from memory
     freeDecryptedWallet(privateKey);
 
     throw new Error("Invalid options passed", options);
   }
+
+  // request "decrypt" popup
+  await requestUserAuthorization(
+    {
+      type: "decrypt",
+      message: Object.values(decryptedData)
+    },
+    appData
+  );
+
+  return decryptedData;
 };
 
 export default background;
