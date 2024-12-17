@@ -52,8 +52,10 @@ export const ARCONNECT_THEME_TEXT_COLOR = "ARCONNECT_THEME_TEXT_COLOR";
  * Clear all storage keys except for gateways.
  */
 export async function resetStorage() {
-  localStorage.removeItem(ARCONNECT_THEME_BACKGROUND_COLOR);
-  localStorage.removeItem(ARCONNECT_THEME_TEXT_COLOR);
+  if (typeof localStorage !== "undefined") {
+    localStorage.removeItem(ARCONNECT_THEME_BACKGROUND_COLOR);
+    localStorage.removeItem(ARCONNECT_THEME_TEXT_COLOR);
+  }
 
   // get all keys except gateways
   const allStoredKeys = Object.keys(
