@@ -100,7 +100,7 @@ export default function HeadV2({
   const hardwareApi = useHardwareApi();
 
   const appName = appInfo?.name;
-  const appIconPlaceholderText = appInfo.placeholder;
+  const appIconPlaceholderText = appInfo?.placeholder;
 
   const SquircleWrapper = onAppInfoClick ? ButtonSquircle : React.Fragment;
 
