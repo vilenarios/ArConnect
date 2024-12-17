@@ -1,6 +1,7 @@
 import { Button, Spacer, Text } from "@arconnect/components";
 import browser from "webextension-polyfill";
 import styled from "styled-components";
+import { openOrSelectWelcomePage } from "~wallets";
 
 export default function NoWallets() {
   return (
@@ -13,13 +14,7 @@ export default function NoWallets() {
           {browser.i18n.getMessage("no_wallets_added_paragraph")}
         </NoWalletText>
         <Spacer y={0.85} />
-        <SetupButton
-          onClick={() =>
-            browser.tabs.create({
-              url: browser.runtime.getURL("tabs/welcome.html")
-            })
-          }
-        >
+        <SetupButton onClick={() => openOrSelectWelcomePage(true)}>
           {browser.i18n.getMessage("setup")}
         </SetupButton>
       </Container>

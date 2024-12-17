@@ -1,19 +1,10 @@
 import { freeDecryptedWallet } from "~wallets/encryption";
-import type { ModuleFunction } from "~api/background";
-import { isNotCancelError } from "~utils/assertions";
+import type { BackgroundModuleFunction } from "~api/background/background-modules";
 import { getActiveKeyfile } from "~wallets";
-import browser from "webextension-polyfill";
 
-const background: ModuleFunction<string> = async () => {
+const background: BackgroundModuleFunction<string> = async (appData) => {
   // grab the user's keyfile
-  const decryptedWallet = await getActiveKeyfile().catch((e) => {
-    isNotCancelError(e);
-
-    // if there are no wallets added, open the welcome page
-    browser.tabs.create({ url: browser.runtime.getURL("tabs/welcome.html") });
-
-    throw new Error("No wallets added");
-  });
+  const decryptedWallet = await getActiveKeyfile(appData);
 
   // hardware wallet
   if (decryptedWallet.type === "hardware") {

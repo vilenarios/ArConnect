@@ -15,10 +15,19 @@ import { downloadFile } from "~utils/file";
 import browser from "webextension-polyfill";
 import styled from "styled-components";
 import HeadV2 from "~components/popup/HeadV2";
-import { useLocation } from "wouter";
+import type { CommonRouteProps } from "~wallets/router/router.types";
+import { useLocation } from "~wallets/router/router.utils";
 
-export default function ExportWallet({ address }: Props) {
-  const [, setLocation] = useLocation();
+export interface ExportWalletViewParams {
+  address: string;
+}
+
+export type ExportWalletViewProps = CommonRouteProps<ExportWalletViewParams>;
+
+export function ExportWalletView({
+  params: { address }
+}: ExportWalletViewProps) {
+  const { navigate } = useLocation();
 
   // wallets
   const [wallets] = useStorage<StoredWallet[]>(
@@ -78,13 +87,14 @@ export default function ExportWallet({ address }: Props) {
     }
   }
 
+  // TODO: Should this be a redirect?
   if (!wallet) return <></>;
 
   return (
     <>
       <HeadV2
         title={browser.i18n.getMessage("export_keyfile")}
-        back={() => setLocation(`/quick-settings/wallets/${address}`)}
+        back={() => navigate(`/quick-settings/wallets/${address}`)}
       />
       <Wrapper>
         <Text style={{ fontSize: "0.98rem" }}>
@@ -111,7 +121,3 @@ const Wrapper = styled.div`
   flex-direction: column;
   padding: 0 1rem;
 `;
-
-interface Props {
-  address: string;
-}

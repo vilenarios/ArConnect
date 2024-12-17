@@ -1,4 +1,3 @@
-import { replyToAuthRequest, useAuthParams, useAuthUtils } from "~utils/auth";
 import {
   type Allowance,
   type AllowanceBigNumber,
@@ -17,24 +16,22 @@ import {
 } from "@arconnect/components";
 import Wrapper from "~components/auth/Wrapper";
 import browser from "webextension-polyfill";
-import Head from "~components/popup/Head";
 import App from "~components/auth/App";
 import Arweave from "arweave";
 import styled from "styled-components";
 import { defaultGateway } from "~gateways/gateway";
 import BigNumber from "bignumber.js";
+import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
+import { HeadAuth } from "~components/HeadAuth";
+import { AuthButtons } from "~components/auth/AuthButtons";
 
-export default function Allowance() {
+export function AllowanceAuthRequestView() {
   const arweave = new Arweave(defaultGateway);
 
-  // connect params
-  const params = useAuthParams<{
-    url: string;
-    spendingLimitReached: boolean;
-  }>();
+  const { authRequest, acceptRequest, rejectRequest } =
+    useCurrentAuthRequest("allowance");
 
-  // get auth utils
-  const { closeWindow, cancel } = useAuthUtils("allowance", params?.authID);
+  const { url } = authRequest;
 
   // limit input
   const limitInput = useInput();
@@ -65,15 +62,15 @@ export default function Allowance() {
 
   useEffect(() => {
     (async () => {
-      if (!params?.url) return;
+      if (!url) return;
 
       // construct app
-      const app = new Application(params.url);
+      const app = new Application(url);
 
       setAllowance(await app.getAllowance());
       setAppData(await app.getAppData());
     })();
-  }, [params?.url]);
+  }, [url]);
 
   // password input
   const passwordInput = useInput();
@@ -94,7 +91,7 @@ export default function Allowance() {
     }
 
     // construct app
-    const app = new Application(params.url);
+    const app = new Application(url);
 
     // update allowance
     await app.updateSettings(() => {
@@ -127,25 +124,17 @@ export default function Allowance() {
       };
     });
 
-    // send success message
-    await replyToAuthRequest("allowance", params.authID);
-
-    // close the window
-    closeWindow();
+    acceptRequest();
   }
 
   return (
     <Wrapper>
       <div>
-        <Head
-          title={browser.i18n.getMessage("reset_allowance")}
-          showOptions={false}
-          back={cancel}
-        />
+        <HeadAuth title={browser.i18n.getMessage("reset_allowance")} />
         <Spacer y={0.75} />
         <App
-          appName={appData?.name || params?.url}
-          appUrl={params?.url}
+          appName={appData?.name || url}
+          appUrl={url}
           appIcon={appData?.logo}
           allowance={
             allowance && {
@@ -181,13 +170,16 @@ export default function Allowance() {
         </Section>
       </div>
       <Section>
-        <ButtonV2 fullWidth onClick={reset}>
-          {browser.i18n.getMessage("reset_spent")}
-        </ButtonV2>
-        <Spacer y={0.75} />
-        <ButtonV2 fullWidth secondary onClick={cancel}>
-          {browser.i18n.getMessage("cancel")}
-        </ButtonV2>
+        <AuthButtons
+          authRequest={authRequest}
+          primaryButtonProps={{
+            label: browser.i18n.getMessage("reset_spent"),
+            onClick: reset
+          }}
+          secondaryButtonProps={{
+            onClick: () => rejectRequest()
+          }}
+        />
       </Section>
     </Wrapper>
   );

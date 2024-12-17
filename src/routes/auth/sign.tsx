@@ -1,12 +1,9 @@
-import { replyToAuthRequest, useAuthParams, useAuthUtils } from "~utils/auth";
 import { decodeSignature, transactionToUR } from "~wallets/hardware/keystone";
-import { constructTransaction } from "~api/modules/sign/transaction_builder";
+import { isSplitTransaction } from "~api/modules/sign/transaction_builder";
 import { formatFiatBalance, formatTokenBalance } from "~tokens/currency";
-import { onMessage, sendMessage } from "@arconnect/webext-bridge";
 import type { DecodedTag } from "~api/modules/sign/tags";
 import type { Tag } from "arweave/web/lib/transaction";
-import type { Chunk } from "~api/modules/sign/chunks";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useScanner } from "@arconnect/keystone-sdk";
 import { useActiveWallet } from "~wallets/hooks";
 import { formatAddress } from "~utils/format";
@@ -21,91 +18,40 @@ import {
   TagValue,
   TransactionProperty
 } from "~routes/popup/transaction/[id]";
-import {
-  ButtonV2,
-  Section,
-  Spacer,
-  Text,
-  useToasts
-} from "@arconnect/components";
+import { Section, Spacer, Text, useToasts } from "@arconnect/components";
 import AnimatedQRScanner from "~components/hardware/AnimatedQRScanner";
 import AnimatedQRPlayer from "~components/hardware/AnimatedQRPlayer";
-import type Transaction from "arweave/web/lib/transaction";
 import Wrapper from "~components/auth/Wrapper";
 import Progress from "~components/Progress";
 import browser from "webextension-polyfill";
-import Head from "~components/popup/Head";
 import useSetting from "~settings/hook";
 import prettyBytes from "pretty-bytes";
 import Arweave from "arweave";
 import { defaultGateway } from "~gateways/gateway";
 import BigNumber from "bignumber.js";
+import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
+import { HeadAuth } from "~components/HeadAuth";
+import { AuthButtons } from "~components/auth/AuthButtons";
+import { getTagValue } from "~tokens/aoTokens/ao";
+import { humanizeTimestampTags } from "~utils/timestamp";
 
-export default function Sign() {
-  // sign params
-  const params = useAuthParams<{
-    url: string;
-    address: string;
-    transaction: StrippedTx;
-    collectionID: string;
-  }>();
+export function SignAuthRequestView() {
+  const { authRequest, acceptRequest, rejectRequest } =
+    useCurrentAuthRequest("sign");
 
-  // reconstructed transaction
-  const [transaction, setTransaction] = useState<Transaction>();
-
-  useEffect(() => {
-    (async () => {
-      if (!params?.transaction) return;
-
-      // reset tx
-      setTransaction(undefined);
-
-      // request chunks
-      sendMessage("auth_listening", null, "background");
-
-      const chunks: Chunk[] = [];
-      const arweave = new Arweave(defaultGateway);
-
-      // listen for chunks
-      onMessage("auth_chunk", ({ sender, data }) => {
-        // check data type
-        if (
-          data.collectionID !== params.collectionID ||
-          sender.context !== "background" ||
-          data.type === "start"
-        ) {
-          return;
-        }
-
-        // end chunk stream
-        if (data.type === "end") {
-          setTransaction(
-            arweave.transactions.fromRaw(
-              constructTransaction(params.transaction, chunks)
-            )
-          );
-        } else {
-          // add chunk
-          chunks.push(data);
-        }
-      });
-    })();
-  }, [params]);
-
-  // get auth utils
-  const { closeWindow, cancel } = useAuthUtils("sign", params?.authID);
+  const { address, transaction, requestedAt } = authRequest;
 
   // quantity
   const quantity = useMemo(() => {
-    if (!params?.transaction?.quantity) {
+    if (!transaction?.quantity) {
       return BigNumber("0");
     }
 
     const arweave = new Arweave(defaultGateway);
-    const ar = arweave.ar.winstonToAr(params.transaction.quantity);
+    const ar = arweave.ar.winstonToAr(transaction.quantity);
 
     return BigNumber(ar);
-  }, [params]);
+  }, [transaction]);
 
   // currency setting
   const [currency] = useSetting<string>("currency");
@@ -127,43 +73,50 @@ export default function Sign() {
 
   // transaction fee
   const fee = useMemo(() => {
-    if (!params?.transaction?.reward) {
+    if (!transaction?.reward) {
       return "0";
     }
 
     const arweave = new Arweave(defaultGateway);
 
-    return arweave.ar.winstonToAr(params.transaction.reward);
-  }, [params]);
+    return arweave.ar.winstonToAr(transaction.reward);
+  }, [transaction]);
 
   // transaction size
   const size = useMemo(() => {
-    if (!transaction) return 0;
+    if (!transaction || isSplitTransaction(transaction)) return 0;
 
-    return transaction?.sizeInBytes ?? transaction.data.length;
+    return transaction?.sizeInBytes ?? transaction?.data?.length ?? 0;
   }, [transaction]);
-
-  // authorize
-  async function authorize(data?: any) {
-    // reply to request
-    await replyToAuthRequest("sign", params.authID, undefined, data);
-
-    // close the window
-    closeWindow();
-  }
 
   // tags
   const tags = useMemo<DecodedTag[]>(() => {
-    if (!transaction) return [];
+    if (!transaction || isSplitTransaction(transaction)) return [];
 
     // @ts-expect-error
     const tags = transaction.get("tags") as Tag[];
-
-    return tags.map((tag) => ({
+    const decodedTags = tags.map((tag) => ({
       name: tag.get("name", { decode: true, string: true }),
       value: tag.get("value", { decode: true, string: true })
     }));
+
+    return humanizeTimestampTags(decodedTags);
   }, [transaction]);
+
+  const headerTitle = useMemo(() => {
+    if (!tags.length) return browser.i18n.getMessage("titles_sign");
+
+    const actionValue = getTagValue("Action", tags);
+    const isAOTransaction = tags.some(
+      (tag) => tag.name === "Data-Protocol" && tag.value === "ao"
+    );
+
+    if (isAOTransaction && actionValue) {
+      return actionValue.replace(/-/g, " ");
+    }
+
+    return browser.i18n.getMessage("titles_sign");
+  }, [tags]);
 
   // Check if it's a printTx
   const isPrintTx = useMemo(() => {
@@ -219,9 +172,15 @@ export default function Sign() {
   const [transactionUR, setTransactionUR] = useState<UR>();
 
   async function loadTransactionUR() {
-    if (wallet.type !== "hardware" || !transaction) return;
+    if (
+      wallet.type !== "hardware" ||
+      !transaction ||
+      isSplitTransaction(transaction)
+    )
+      return;
 
     // load the ur data
+    // TODO: This function is actually mutating the transaction!
     const ur = await transactionToUR(transaction, wallet.xfp, wallet.publicKey);
 
     setTransactionUR(ur);
@@ -248,22 +207,14 @@ export default function Sign() {
       const data = await decodeSignature(res);
 
       // reply
-      await authorize(data);
+      await acceptRequest(data);
     } catch (e) {
       // log error
       console.error(
         `[ArConnect] Error decoding signature from keystone\n${e?.message || e}`
       );
 
-      // reply to request
-      await replyToAuthRequest(
-        "sign",
-        params.authID,
-        "Failed to decode signature from keystone"
-      );
-
-      // close the window
-      closeWindow();
+      await rejectRequest("Failed to decode signature from keystone");
     }
 
     setLoading(false);
@@ -272,17 +223,10 @@ export default function Sign() {
   // toast
   const { setToast } = useToasts();
 
-  if (!params) return <></>;
-
   return (
     <Wrapper>
       <div>
-        <Head
-          title={browser.i18n.getMessage("titles_sign")}
-          showOptions={false}
-          back={cancel}
-          allowOpen={false}
-        />
+        <HeadAuth title={headerTitle} />
         <Spacer y={0.75} />
         {(!page && (
           <Section>
@@ -299,7 +243,11 @@ export default function Sign() {
                 </PropertyName>
               </div>
             ) : (
-              <FiatAmount>{formatFiatBalance(fiatPrice, currency)}</FiatAmount>
+              +fiatPrice > 0 && (
+                <FiatAmount>
+                  {formatFiatBalance(fiatPrice, currency)}
+                </FiatAmount>
+              )
             )}
             <AmountTitle>
               {isPrintTx
@@ -317,10 +265,9 @@ export default function Sign() {
                 <PropertyName>
                   {browser.i18n.getMessage("transaction_from")}
                 </PropertyName>
-                <PropertyValue>
-                  {formatAddress(params.address, 6)}
-                </PropertyValue>
+                <PropertyValue>{formatAddress(address, 6)}</PropertyValue>
               </TransactionProperty>
+
               {transaction?.target && (
                 <TransactionProperty>
                   <PropertyName>
@@ -329,6 +276,7 @@ export default function Sign() {
                   <PropertyValue>{formatAddress(recipient, 6)}</PropertyValue>
                 </TransactionProperty>
               )}
+
               {!isPrintTx && (
                 <TransactionProperty>
                   <PropertyName>
@@ -340,17 +288,22 @@ export default function Sign() {
                   </PropertyValue>
                 </TransactionProperty>
               )}
+
               <TransactionProperty>
                 <PropertyName>
                   {browser.i18n.getMessage("transaction_size")}
                 </PropertyName>
                 <PropertyValue>{prettyBytes(size)}</PropertyValue>
               </TransactionProperty>
+
               <Spacer y={0.1} />
+
               <PropertyName>
                 {browser.i18n.getMessage("transaction_tags")}
               </PropertyName>
+
               <Spacer y={0.05} />
+
               {tags.map((tag, i) => (
                 <TransactionProperty key={i}>
                   <PropertyName>{tag.name}</PropertyName>
@@ -388,40 +341,37 @@ export default function Sign() {
           </Section>
         )}
       </div>
-      <Section>
-        {page !== "scanner" && (
-          <>
-            <ButtonV2
-              fullWidth
-              disabled={!transaction || loading}
-              loading={!transaction || loading}
-              onClick={async () => {
-                if (!transaction) return;
-                if (wallet.type === "hardware") {
-                  // load tx ur
-                  if (!page) await loadTransactionUR();
 
-                  // update page
-                  setPage((val) => (!val ? "qr" : "scanner"));
-                } else await authorize();
-              }}
-            >
-              {!page
-                ? browser.i18n.getMessage("sign_authorize")
-                : browser.i18n.getMessage("keystone_scan")}
-            </ButtonV2>
-            <Spacer y={0.75} />
-          </>
-        )}
-        <ButtonV2 fullWidth secondary onClick={cancel}>
-          {browser.i18n.getMessage("cancel")}
-        </ButtonV2>
+      <Section>
+        <AuthButtons
+          authRequest={authRequest}
+          primaryButtonProps={
+            page === "scanner"
+              ? undefined
+              : {
+                  label: !page
+                    ? browser.i18n.getMessage("sign_authorize")
+                    : browser.i18n.getMessage("keystone_scan"),
+                  disabled:
+                    !transaction || loading || authRequest.status !== "pending",
+                  loading: !transaction || loading,
+                  onClick: async () => {
+                    if (!transaction) return;
+                    if (wallet.type === "hardware") {
+                      // load tx ur
+                      if (!page) await loadTransactionUR();
+
+                      // update page
+                      setPage((val) => (!val ? "qr" : "scanner"));
+                    } else await acceptRequest();
+                  }
+                }
+          }
+          secondaryButtonProps={{
+            onClick: () => rejectRequest()
+          }}
+        />
       </Section>
     </Wrapper>
   );
-}
-
-interface StrippedTx extends Transaction {
-  data: undefined;
-  tags: undefined;
 }

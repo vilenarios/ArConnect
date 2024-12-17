@@ -1,14 +1,11 @@
-import { replyToAuthRequest, useAuthParams, useAuthUtils } from "~utils/auth";
 import {
   ButtonV2,
-  InputV2,
   TooltipV2,
   useInput,
   useToasts
 } from "@arconnect/components";
 import browser from "webextension-polyfill";
 import styled from "styled-components";
-import HeadV2 from "~components/popup/HeadV2";
 import {
   Body,
   InfoCircle,
@@ -17,10 +14,9 @@ import {
   PaymentDetails,
   SubscriptionListItem,
   SubscriptionText,
-  Threshold,
   ToggleSwitch
 } from "~routes/popup/subscriptions/subscriptionDetails";
-import { Content, Title } from "~routes/popup/subscriptions/subscriptions";
+import { Content, Title } from "~components/popup/list/SubscriptionListItem";
 import dayjs from "dayjs";
 import { addSubscription } from "~subscriptions";
 import { getActiveAddress } from "~wallets";
@@ -41,19 +37,20 @@ import useSetting from "~settings/hook";
 import { EventType, trackEvent } from "~utils/analytics";
 import { handleSubscriptionPayment } from "~subscriptions/payments";
 import BigNumber from "bignumber.js";
+import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
+import { HeadAuth } from "~components/HeadAuth";
+import { AuthButtons } from "~components/auth/AuthButtons";
 
-export default function Subscription() {
-  //   connect params
-  const params = useAuthParams();
+export function SubscriptionAuthRequestView() {
+  const { authRequest, acceptRequest, rejectRequest } =
+    useCurrentAuthRequest("subscription");
+
+  const { url, subscriptionFeeAmount } = authRequest;
+
   const { setToast } = useToasts();
-  const allowanceInput = useInput();
   const [currency] = useSetting<string>("currency");
-
   const [checked, setChecked] = useState<boolean>(false);
   const [autopayChecked, setAutopayChecked] = useState<boolean>(false);
-
-  // get auth utils
-  const { closeWindow, cancel } = useAuthUtils("subscription", params?.authID);
   const theme = useTheme();
   const [price, setPrice] = useState<BigNumber | null>();
 
@@ -61,19 +58,19 @@ export default function Subscription() {
     async function fetchArPrice() {
       const arPrice = await getPrice("arweave", currency);
       if (arPrice) {
-        setPrice(BigNumber(arPrice).multipliedBy(params.subscriptionFeeAmount));
+        setPrice(BigNumber(arPrice).multipliedBy(subscriptionFeeAmount));
       }
     }
 
     fetchArPrice();
-  }, [currency, params]);
+  }, [currency, subscriptionFeeAmount]);
 
   // TODO TRIGGER PAYMENT WHEN ADDING NEW SUBSCRIPTION
 
   async function done() {
     // add subscription to storage
     try {
-      const { authID, ...subscriptionParams } = params;
+      const { authID, ...subscriptionParams } = authRequest;
       const activeAddress = await getActiveAddress();
 
       // process payment
@@ -93,7 +90,9 @@ export default function Subscription() {
         //   ? Number(allowanceInput.state)
         //   : params.subscriptionFeeAmount,
 
-        applicationAllowance: autopayChecked ? params.subscriptionFeeAmount : 0,
+        applicationAllowance: autopayChecked
+          ? subscriptionParams.subscriptionFeeAmount
+          : 0,
 
         nextPaymentDue: new Date(),
 
@@ -105,6 +104,7 @@ export default function Subscription() {
       };
 
       const updated = await handleSubscriptionPayment(subscriptionData, true);
+
       if (updated) {
         await addSubscription(activeAddress, updated);
       } else {
@@ -117,16 +117,12 @@ export default function Subscription() {
         arweaveAccountAddress: subscriptionData.arweaveAccountAddress,
         recurringPaymentFrequency: subscriptionData.recurringPaymentFrequency,
         subscriptionFeeAmount: subscriptionData.subscriptionFeeAmount,
-        applicationUrl:
-          params?.url || subscriptionParams.subscriptionManagementUrl,
+        applicationUrl: url || subscriptionParams.subscriptionManagementUrl,
         autoPay: autopayChecked,
         autoRenewal: checked
       });
 
-      // reply to request
-      await replyToAuthRequest("subscription", params.authID);
-
-      closeWindow();
+      await acceptRequest();
     } catch (e) {
       console.log(e, "Failed to subscribe");
       setToast({
@@ -139,106 +135,101 @@ export default function Subscription() {
 
   return (
     <>
-      <HeadV2 title={browser.i18n.getMessage("subscriptions")} back={cancel} />
-      {params && (
-        <Wrapper>
-          <Main>
-            <SubscriptionListItem>
-              <Content>
-                <SettingIconWrapper
-                  bg={theme === "light" ? "235,235,235" : "255, 255, 255"}
-                  customSize="2.625rem"
-                >
-                  {params.applicationIcon && (
-                    <SettingImage src={params.applicationIcon} />
-                  )}
-                </SettingIconWrapper>
-                <Title>
-                  <h2>{params.applicationName}</h2>
-                  <h3 style={{ fontSize: "12px" }}>
-                    Status: <span style={{ color: "#CFB111" }}>Pending</span>
-                  </h3>
-                </Title>
-              </Content>
-            </SubscriptionListItem>
+      <HeadAuth title={browser.i18n.getMessage("subscriptions")} />
+      <Wrapper>
+        <Main>
+          <SubscriptionListItem>
+            <Content>
+              <SettingIconWrapper
+                bg={theme === "light" ? "235,235,235" : "255, 255, 255"}
+                customSize="2.625rem"
+              >
+                {authRequest.applicationIcon && (
+                  <SettingImage src={authRequest.applicationIcon} />
+                )}
+              </SettingIconWrapper>
+              <Title>
+                <h2>{authRequest.applicationName}</h2>
+                <h3 style={{ fontSize: "12px" }}>
+                  Status: <span style={{ color: "#CFB111" }}>Pending</span>
+                </h3>
+              </Title>
+            </Content>
+          </SubscriptionListItem>
+          <SubscriptionText color={theme === "light" ? "#191919" : "#ffffff"}>
+            {browser.i18n.getMessage("subscription_application_address")}:{" "}
+            <span>{formatAddress(authRequest.arweaveAccountAddress, 8)}</span>
+          </SubscriptionText>
+          <PaymentDetails>
+            <h6>Recurring payment amount</h6>
+            <Body>
+              <h3>{authRequest.subscriptionFeeAmount} AR</h3>
+              <SubscriptionText
+                fontSize="14px"
+                color={theme === "light" ? "#191919" : "#ffffff"}
+              >
+                {browser.i18n.getMessage("subscriptions")}:{" "}
+                {browser.i18n.getMessage(authRequest.recurringPaymentFrequency)}
+              </SubscriptionText>
+            </Body>
+            <Body>
+              <SubscriptionText fontSize="14px">
+                ${price ? price.toFixed(2) : "--.--"} {currency}
+              </SubscriptionText>
+              <SubscriptionText
+                fontSize="14px"
+                color={theme === "light" ? "#191919" : "#ffffff"}
+              >
+                {browser.i18n.getMessage("next_payment")}:{" "}
+                {dayjs(authRequest.nextPaymentDue).format("MMM DD, YYYY")}
+              </SubscriptionText>
+            </Body>
+          </PaymentDetails>
+          <div />
+          <div>
+            <Body>
+              <SubscriptionText
+                fontSize="14px"
+                color={theme === "light" ? "#191919" : "#ffffff"}
+              >
+                {browser.i18n.getMessage("start")}
+              </SubscriptionText>
+              <SubscriptionText
+                fontSize="14px"
+                color={theme === "light" ? "#191919" : "#ffffff"}
+              >
+                {browser.i18n.getMessage("end")}
+              </SubscriptionText>
+            </Body>
+            <Body>
+              <SubscriptionText>
+                {dayjs().format("MMM D, YYYY")}
+              </SubscriptionText>
+              <SubscriptionText>
+                {dayjs(authRequest.subscriptionEndDate).format("MMM D, YYYY")}
+              </SubscriptionText>
+            </Body>
+          </div>
+          {/* Toggle */}
+          <Body>
             <SubscriptionText color={theme === "light" ? "#191919" : "#ffffff"}>
-              {browser.i18n.getMessage("subscription_application_address")}:{" "}
-              <span>{formatAddress(params.arweaveAccountAddress, 8)}</span>
+              {browser.i18n.getMessage("auto_renewal")}
             </SubscriptionText>
-            <PaymentDetails>
-              <h6>Recurring payment amount</h6>
-              <Body>
-                <h3>{params.subscriptionFeeAmount} AR</h3>
-                <SubscriptionText
-                  fontSize="14px"
-                  color={theme === "light" ? "#191919" : "#ffffff"}
-                >
-                  {browser.i18n.getMessage("subscriptions")}:{" "}
-                  {browser.i18n.getMessage(params.recurringPaymentFrequency)}
-                </SubscriptionText>
-              </Body>
-              <Body>
-                <SubscriptionText fontSize="14px">
-                  ${price ? price.toFixed(2) : "--.--"} {currency}
-                </SubscriptionText>
-                <SubscriptionText
-                  fontSize="14px"
-                  color={theme === "light" ? "#191919" : "#ffffff"}
-                >
-                  {browser.i18n.getMessage("next_payment")}:{" "}
-                  {dayjs(params.nextPaymentDue).format("MMM DD, YYYY")}
-                </SubscriptionText>
-              </Body>
-            </PaymentDetails>
-            <div />
-            <div>
-              <Body>
-                <SubscriptionText
-                  fontSize="14px"
-                  color={theme === "light" ? "#191919" : "#ffffff"}
-                >
-                  {browser.i18n.getMessage("start")}
-                </SubscriptionText>
-                <SubscriptionText
-                  fontSize="14px"
-                  color={theme === "light" ? "#191919" : "#ffffff"}
-                >
-                  {browser.i18n.getMessage("end")}
-                </SubscriptionText>
-              </Body>
-              <Body>
-                <SubscriptionText>
-                  {dayjs().format("MMM D, YYYY")}
-                </SubscriptionText>
-                <SubscriptionText>
-                  {dayjs(params.subscriptionEndDate).format("MMM D, YYYY")}
-                </SubscriptionText>
-              </Body>
-            </div>
-            {/* Toggle */}
-            <Body>
-              <SubscriptionText
-                color={theme === "light" ? "#191919" : "#ffffff"}
-              >
-                {browser.i18n.getMessage("auto_renewal")}
-              </SubscriptionText>
-              <ToggleSwitch checked={checked} setChecked={setChecked} />
-            </Body>
-            <Body>
-              <SubscriptionText
-                color={theme === "light" ? "#191919" : "#ffffff"}
-              >
-                {browser.i18n.getMessage("auto_pay")}
-                <TooltipV2 content={InfoText} position="bottom">
-                  <InfoCircle />
-                </TooltipV2>
-              </SubscriptionText>
-              <ToggleSwitch
-                checked={autopayChecked}
-                setChecked={setAutopayChecked}
-              />
-            </Body>
-            {/* <Threshold>
+            <ToggleSwitch checked={checked} setChecked={setChecked} />
+          </Body>
+          <Body>
+            <SubscriptionText color={theme === "light" ? "#191919" : "#ffffff"}>
+              {browser.i18n.getMessage("auto_pay")}
+              <TooltipV2 content={InfoText} position="bottom">
+                <InfoCircle />
+              </TooltipV2>
+            </SubscriptionText>
+            <ToggleSwitch
+              checked={autopayChecked}
+              setChecked={setAutopayChecked}
+            />
+          </Body>
+          {/* <Threshold>
               <Body>
                 <SubscriptionText
                   color={theme === "light" ? "#191919" : "#ffffff"}
@@ -251,27 +242,29 @@ export default function Subscription() {
               </Body>
               <InputV2 {...allowanceInput.bindings} fullWidth />
             </Threshold> */}
-          </Main>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "8px"
+        </Main>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px"
+          }}
+        >
+          <AuthButtons
+            authRequest={authRequest}
+            primaryButtonProps={{
+              label: browser.i18n.getMessage("confirm_subscription"),
+              onClick: done,
+              style: { fontWeight: "500" }
             }}
-          >
-            <ButtonV2 fullWidth style={{ fontWeight: "500" }} onClick={done}>
-              {browser.i18n.getMessage("confirm_subscription")}
-            </ButtonV2>
-            <ButtonV2
-              fullWidth
-              style={{ fontWeight: "500", backgroundColor: "#8C1A1A" }}
-              onClick={cancel}
-            >
-              {browser.i18n.getMessage("cancel")}
-            </ButtonV2>
-          </div>
-        </Wrapper>
-      )}
+            secondaryButtonProps={{
+              label: browser.i18n.getMessage("cancel"),
+              onClick: () => rejectRequest(),
+              style: { fontWeight: "500", backgroundColor: "#8C1A1A" }
+            }}
+          />
+        </div>
+      </Wrapper>
     </>
   );
 }

@@ -9,12 +9,18 @@ import { ButtonV2, ListItem } from "@arconnect/components";
 import { Degraded, WarningWrapper } from "../send";
 import { WarningIcon } from "~components/popup/Token";
 import Title from "~components/popup/Title";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-interface Props {
+export interface SubscriptionManagementViewParams {
   id?: string;
 }
 
-export default function SubscriptionManagement({ id }: Props) {
+export type SubscriptionManagementViewProps =
+  CommonRouteProps<SubscriptionManagementViewParams>;
+
+export function SubscriptionManagementView({
+  params: { id }
+}: SubscriptionManagementViewProps) {
   const [subData, setSubData] = useState<SubscriptionData | null>(null);
   const [nextPayment, setNextPayment] = useState<Date | null>(null);
 

@@ -1,7 +1,6 @@
 import type GQLResultInterface from "ar-gql/dist/faces";
 import type { GQLEdgeInterface } from "ar-gql/dist/faces";
-import type { RawTransaction, Transaction } from "~notifications/api";
-import { timeoutPromise, type TokenInfo } from "~tokens/aoTokens/ao";
+import { type TokenInfo } from "~tokens/aoTokens/ao";
 import { formatAddress } from "~utils/format";
 import { ExtensionStorage } from "~utils/storage";
 import { getTokenInfo } from "~tokens/aoTokens/router";
@@ -9,10 +8,15 @@ import type { Token } from "~tokens/token";
 import BigNumber from "bignumber.js";
 import browser from "webextension-polyfill";
 import { balanceToFractioned, formatFiatBalance } from "~tokens/currency";
+import { timeoutPromise } from "~utils/promises/timeout";
 import { AF_ERROR_QUERY } from "~notifications/utils";
 import { gql } from "~gateways/api";
 import { txHistoryGateways } from "~gateways/gateway";
-import { retryWithDelay } from "~utils/retry";
+import { retryWithDelay } from "~utils/promises/retry";
+import type {
+  RawTransaction,
+  Transaction
+} from "~api/background/handlers/alarms/notifications/notifications-alarm.utils";
 
 let tokens: TokenInfo[] = null;
 export let tokenInfoMap = new Map<string, TokenInfo | Token>();
@@ -131,6 +135,8 @@ const processAoTransaction = async (
   const quantityTag = transaction.node.tags.find(
     (tag) => tag.name === "Quantity"
   );
+  const isCollectible = tokenData?.type === "collectible";
+
   return {
     ...transaction,
     transactionType: type,
@@ -141,7 +147,10 @@ const processAoTransaction = async (
     aoInfo: {
       quantity: quantityTag ? quantityTag.value : undefined,
       tickerName:
-        tokenData?.Ticker || formatAddress(transaction.node.recipient, 4),
+        (isCollectible
+          ? tokenData?.Name! || tokenData?.Ticker!
+          : tokenData?.Ticker! || tokenData?.Name!) ||
+        formatAddress(transaction.node.recipient, 4),
       denomination: tokenData?.Denomination || 0
     }
   };

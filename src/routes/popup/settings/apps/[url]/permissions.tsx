@@ -5,21 +5,33 @@ import styled from "styled-components";
 import HeadV2 from "~components/popup/HeadV2";
 import { permissionData, type PermissionType } from "~applications/permissions";
 import Checkbox from "~components/Checkbox";
-import { useLocation } from "wouter";
+import type { CommonRouteProps } from "~wallets/router/router.types";
+import { useLocation } from "~wallets/router/router.utils";
 
-export default function AppPermissions({ url }: Props) {
+export interface AppPermissionsViewParams {
+  url: string;
+}
+
+export type AppPermissionsViewProps =
+  CommonRouteProps<AppPermissionsViewParams>;
+
+export function AppPermissionsView({
+  params: { url }
+}: AppPermissionsViewProps) {
+  const { navigate } = useLocation();
+
   // app settings
   const app = new Application(decodeURIComponent(url));
   const [settings, updateSettings] = app.hook();
-  const [, setLocation] = useLocation();
 
+  // TODO: Should this be a redirect?
   if (!settings) return <></>;
 
   return (
     <>
       <HeadV2
         title={settings?.name || settings?.url}
-        back={() => setLocation(`/quick-settings/apps/${url}`)}
+        back={() => navigate(`/quick-settings/apps/${url}`)}
       />
       <Wrapper>
         <Title noMargin>{browser.i18n.getMessage("permissions")}</Title>
@@ -76,10 +88,6 @@ export default function AppPermissions({ url }: Props) {
       </Wrapper>
     </>
   );
-}
-
-interface Props {
-  url: string;
 }
 
 const Wrapper = styled.div`

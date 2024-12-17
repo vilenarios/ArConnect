@@ -1,18 +1,16 @@
 import { freeDecryptedWallet } from "~wallets/encryption";
-import type { ModuleFunction } from "~api/background";
+import type { BackgroundModuleFunction } from "~api/background/background-modules";
 import { getActiveKeyfile } from "~wallets";
-import browser from "webextension-polyfill";
 import Arweave from "arweave";
 import {
   isArrayBuffer,
   isLocalWallet,
-  isNotCancelError,
   isNumberArray,
   isSignMessageOptions
 } from "~utils/assertions";
 
-const background: ModuleFunction<number[]> = async (
-  _,
+const background: BackgroundModuleFunction<number[]> = async (
+  appData,
   data: unknown,
   options: unknown
 ) => {
@@ -26,14 +24,7 @@ const background: ModuleFunction<number[]> = async (
   isArrayBuffer(dataToHash);
 
   // get user wallet
-  const activeWallet = await getActiveKeyfile().catch((e) => {
-    isNotCancelError(e);
-
-    // if there are no wallets added, open the welcome page
-    browser.tabs.create({ url: browser.runtime.getURL("tabs/welcome.html") });
-
-    throw new Error("No wallets added");
-  });
+  const activeWallet = await getActiveKeyfile(appData);
 
   // ensure that the currently selected
   // wallet is not a local wallet

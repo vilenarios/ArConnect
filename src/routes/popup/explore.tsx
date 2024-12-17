@@ -10,7 +10,7 @@ import { ShareIcon } from "@iconicicons/react";
 import { apps, type App } from "~utils/apps";
 import { useTheme } from "~utils/theme";
 
-export default function Explore() {
+export function ExploreView() {
   const [filteredApps, setFilteredApps] = useState(apps);
   const searchInput = useInput();
   const theme = useTheme();

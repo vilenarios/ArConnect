@@ -55,17 +55,21 @@
 
 :root {
     --defaultBackgroundColor: white;
+    --defaultTextColor: black;
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
         --defaultBackgroundColor: black;
+        --defaultTextColor: white;
     }
 }
 
 body {
     margin: 0;
     padding: 0;
+    background-color: var(--backgroundColor, var(--defaultBackgroundColor, white));
+    color: var(--textColor, var(--defaultTextColor, black));
 }
 
 body#popup {
@@ -97,6 +101,7 @@ input,
 select,
 textarea {
     font-family: "ManropeLocal", "Manrope VF", "Manrope", sans-serif !important;
+    letter-spacing: .5px;
 }
 
 button {

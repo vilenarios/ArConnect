@@ -1,10 +1,12 @@
 import type { PermissionType } from "~applications/permissions";
-import type { ModuleFunction } from "~api/background";
+import type { BackgroundModuleFunction } from "~api/background/background-modules";
 import Application from "~applications/application";
 
-const background: ModuleFunction<PermissionType[]> = async (appData) => {
+const background: BackgroundModuleFunction<PermissionType[]> = async (
+  appData
+) => {
   // construct app
-  const app = new Application(appData.appURL);
+  const app = new Application(appData.url);
 
   // grab permissions for this app
   const permissions = await app.getPermissions();

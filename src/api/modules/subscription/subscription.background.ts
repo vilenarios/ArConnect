@@ -3,16 +3,16 @@ import {
   isLocalWallet,
   isSubscriptionType
 } from "~utils/assertions";
-import { getActiveAddress, getActiveKeyfile, getWallets } from "~wallets";
-import type { ModuleFunction } from "~api/background";
-import authenticate from "../connect/auth";
+import { getActiveAddress, getActiveKeyfile } from "~wallets";
+import type { BackgroundModuleFunction } from "~api/background/background-modules";
+import { requestUserAuthorization } from "../../../utils/auth/auth.utils";
 import { getSubscriptionData } from "~subscriptions";
 import {
   RecurringPaymentFrequency,
   type SubscriptionData
 } from "~subscriptions/subscription";
 
-const background: ModuleFunction<SubscriptionData> = async (
+const background: BackgroundModuleFunction<SubscriptionData> = async (
   appData,
   subscriptionData: SubscriptionData
 ) => {
@@ -27,7 +27,7 @@ const background: ModuleFunction<SubscriptionData> = async (
   }
 
   // if is hardware wallet
-  const decryptedWallet = await getActiveKeyfile();
+  const decryptedWallet = await getActiveKeyfile(appData);
   isLocalWallet(decryptedWallet);
 
   // check if subsciption exists
@@ -44,20 +44,22 @@ const background: ModuleFunction<SubscriptionData> = async (
     throw new Error("Account is already subscribed");
   }
 
-  await authenticate({
-    type: "subscription",
-    url: appData.appURL,
-    arweaveAccountAddress: subscriptionData.arweaveAccountAddress,
-    applicationName: subscriptionData.applicationName,
-    subscriptionName: subscriptionData.subscriptionName,
-    subscriptionManagementUrl: subscriptionData.subscriptionManagementUrl,
-    subscriptionFeeAmount: subscriptionData.subscriptionFeeAmount,
-    recurringPaymentFrequency: subscriptionData.recurringPaymentFrequency,
-    nextPaymentDue: subscriptionData.nextPaymentDue,
-    subscriptionStartDate: subscriptionData.subscriptionStartDate,
-    subscriptionEndDate: subscriptionData.subscriptionEndDate,
-    applicationIcon: subscriptionData?.applicationIcon
-  });
+  await requestUserAuthorization(
+    {
+      type: "subscription",
+      arweaveAccountAddress: subscriptionData.arweaveAccountAddress,
+      applicationName: subscriptionData.applicationName,
+      subscriptionName: subscriptionData.subscriptionName,
+      subscriptionManagementUrl: subscriptionData.subscriptionManagementUrl,
+      subscriptionFeeAmount: subscriptionData.subscriptionFeeAmount,
+      recurringPaymentFrequency: subscriptionData.recurringPaymentFrequency,
+      nextPaymentDue: subscriptionData.nextPaymentDue,
+      subscriptionStartDate: subscriptionData.subscriptionStartDate,
+      subscriptionEndDate: subscriptionData.subscriptionEndDate,
+      applicationIcon: subscriptionData?.applicationIcon
+    },
+    appData
+  );
 
   subscriptions = await getSubscriptionData(address);
   const subscription = subscriptions.find(

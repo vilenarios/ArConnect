@@ -1,5 +1,4 @@
 import { unlock } from "~wallets/auth";
-import { useHistory } from "~utils/hash_router";
 import Wrapper from "~components/auth/Wrapper";
 import browser from "webextension-polyfill";
 import {
@@ -12,16 +11,14 @@ import {
   useToasts
 } from "@arconnect/components";
 import HeadV2 from "~components/popup/HeadV2";
+import { withPage } from "~components/page/page.utils";
 
-export default function Unlock() {
+export function UnlockView() {
   // password input
   const passwordInput = useInput();
 
   // toasts
   const { setToast } = useToasts();
-
-  // router push
-  const [push] = useHistory();
 
   // unlock ArConnect
   async function unlockWallet() {
@@ -30,14 +27,13 @@ export default function Unlock() {
 
     if (!res) {
       passwordInput.setStatus("error");
+
       return setToast({
         type: "error",
         content: browser.i18n.getMessage("invalidPassword"),
         duration: 2200
       });
     }
-
-    push("/");
   }
 
   return (
@@ -49,7 +45,9 @@ export default function Unlock() {
           back={() => {}}
           showBack={false}
         />
+
         <Spacer y={0.75} />
+
         <Section style={{ padding: "0 20px 16px 20px" }}>
           <Text noMargin>
             {browser.i18n.getMessage("unlock_wallet_to_use")}
@@ -69,6 +67,7 @@ export default function Unlock() {
           />
         </Section>
       </div>
+
       <Section>
         <ButtonV2 fullWidth onClick={unlockWallet}>
           {browser.i18n.getMessage("unlock")}

@@ -6,7 +6,7 @@ import {
   mergeAndSortNotifications
 } from "~utils/notifications";
 import aoLogo from "url:/assets/ecosystem/ao-logo.svg";
-import { useHistory } from "~utils/hash_router";
+import { useLocation } from "~wallets/router/router.utils";
 import { Loading } from "@arconnect/components";
 import { formatAddress } from "~utils/format";
 import HeadV2 from "~components/popup/HeadV2";
@@ -15,7 +15,6 @@ import { useEffect, useState } from "react";
 import { useAo } from "~tokens/aoTokens/ao";
 import styled from "styled-components";
 import { balanceToFractioned, formatTokenBalance } from "~tokens/currency";
-import type { Transaction } from "~notifications/api";
 import { ExtensionStorage } from "~utils/storage";
 import { getActiveAddress } from "~wallets";
 import {
@@ -23,8 +22,11 @@ import {
   type SubscriptionData
 } from "~subscriptions/subscription";
 import { checkTransactionError } from "~lib/transactions";
+import type { Transaction } from "~api/background/handlers/alarms/notifications/notifications-alarm.utils";
 
-export default function Notifications() {
+export function NotificationsView() {
+  const { navigate } = useLocation();
+
   const [notifications, setNotifications] = useState<Transaction[]>([]);
   const [formattedTxMsgs, setFormattedTxMsgs] = useState<string[]>([]);
   const [subscriptions, setSubscriptions] = useState<SubscriptionData[]>([]);
@@ -33,7 +35,6 @@ export default function Notifications() {
   const [empty, setEmpty] = useState(false);
 
   const ao = useAo();
-  const [push] = useHistory();
 
   useEffect(() => {
     (async () => {
@@ -109,7 +110,10 @@ export default function Notifications() {
                 ticker = formatAddress(notification.tokenId, 4);
                 quantityTransfered = notification.quantity;
               } else {
-                ticker = token.Ticker;
+                ticker =
+                  token?.type === "collectible"
+                    ? token.Name! || token.Ticker!
+                    : token.Ticker! || token.Name!;
                 quantityTransfered = balanceToFractioned(
                   notification.quantity,
                   {
@@ -225,17 +229,16 @@ export default function Notifications() {
   };
 
   const handleLink = (n) => {
-    n.transactionType === "Message"
-      ? push(
-          `/notification/${n.node.id}?back=${encodeURIComponent(
-            "/notifications"
-          )}`
-        )
-      : push(
-          `/transaction/${n.node.id}?back=${encodeURIComponent(
-            "/notifications"
-          )}`
-        );
+    navigate(
+      `/${n.transactionType === "Message" ? "notification" : "transaction"}/${
+        n.node.id
+      }`,
+      {
+        search: {
+          back: "/notifications"
+        }
+      }
+    );
   };
 
   return (
@@ -263,7 +266,7 @@ export default function Notifications() {
             <TitleMessage>{`${subscription.applicationName} Awaiting Payment`}</TitleMessage>
             <Link
               onClick={() =>
-                push(`/subscriptions/${subscription.arweaveAccountAddress}`)
+                navigate(`/subscriptions/${subscription.arweaveAccountAddress}`)
               }
             >
               Pay Subscription

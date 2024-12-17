@@ -7,13 +7,13 @@ import {
   useToasts,
   type DisplayTheme
 } from "@arconnect/components";
-import { ExtensionStorage } from "~utils/storage";
 import { TrashIcon } from "@iconicicons/react";
 import browser from "webextension-polyfill";
 import styled from "styled-components";
 import { useTheme } from "~utils/theme";
+import { resetStorage } from "~utils/storage.utils";
 
-export default function Reset() {
+export function ResetDashboardView() {
   // reset modal
   const resetModal = useModal();
 
@@ -25,15 +25,7 @@ export default function Reset() {
   // reset ArConnect
   async function reset() {
     try {
-      // get all keys
-      const allStoredKeys = Object.keys(
-        (await browser.storage.local.get(null)) || {}
-      );
-
-      // remove all keys
-      for (const key of allStoredKeys) {
-        await ExtensionStorage.remove(key);
-      }
+      await resetStorage();
 
       // close window
       window.top.close();
