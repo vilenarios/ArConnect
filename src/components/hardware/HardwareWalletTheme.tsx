@@ -92,6 +92,11 @@ export function ThemeBackgroundObserver({
         ARCONNECT_THEME_BACKGROUND_COLOR,
         formattedBackgroundColor
       );
+
+      document.documentElement.style.setProperty(
+        "--backgroundColor",
+        formattedBackgroundColor
+      );
     }
   }, [theme, backgroundColor]);
 
@@ -110,6 +115,11 @@ export function ThemeBackgroundObserver({
 
     if (formattedTextColor) {
       localStorage.setItem(ARCONNECT_THEME_TEXT_COLOR, formattedTextColor);
+
+      document.documentElement.style.setProperty(
+        "--textColor",
+        formattedTextColor
+      );
     }
   }, [theme, textColor]);
 
