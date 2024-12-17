@@ -5,7 +5,6 @@ import {
   type TokenState,
   type TokenType
 } from "~tokens/token";
-import { replyToAuthRequest, useAuthParams, useAuthUtils } from "~utils/auth";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { usePrice, usePriceHistory } from "~lib/redstone";
 import { useEffect, useMemo, useState } from "react";
@@ -28,21 +27,22 @@ import browser from "webextension-polyfill";
 import Title from "~components/popup/Title";
 import Head from "~components/popup/Head";
 import styled from "styled-components";
-import { type Gateway } from "~gateways/gateway";
 import { concatGatewayURL } from "~gateways/utils";
-import { findGateway, useGateway } from "~gateways/wayfinder";
+import { findGateway, FULL_HISTORY, useGateway } from "~gateways/wayfinder";
+import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
+import { HeadAuth } from "~components/HeadAuth";
+import { AuthButtons } from "~components/auth/AuthButtons";
 
-export default function Token() {
-  // connect params
-  const params = useAuthParams<{
-    url: string;
-    tokenID: string;
-    tokenType?: TokenType;
-    dre?: string;
-  }>();
+export function TokenAuthRequestView() {
+  const { authRequest, acceptRequest, rejectRequest } =
+    useCurrentAuthRequest("token");
 
-  // get auth utils
-  const { closeWindow, cancel } = useAuthUtils("token", params?.authID);
+  const {
+    url,
+    tokenID,
+    dre: dreRequestParam,
+    tokenType: tokenTypeParam
+  } = authRequest;
 
   // price period
   const [period, setPeriod] = useState("Day");
@@ -52,17 +52,18 @@ export default function Token() {
 
   useEffect(() => {
     (async () => {
-      if (!params?.tokenID) return;
+      if (!tokenID) return;
 
-      let dre = params.dre;
+      let dre = dreRequestParam;
 
-      if (!dre) dre = await getDreForToken(params.tokenID);
-      const contract = new DREContract(params.tokenID, new DRENode(dre));
+      if (!dre) dre = await getDreForToken(tokenID);
+
+      const contract = new DREContract(tokenID, new DRENode(dre));
       const { state } = await contract.getState<TokenState>();
 
       setState(state);
     })();
-  }, [params]);
+  }, [tokenID, dreRequestParam]);
 
   // token settings
   const settings = useMemo(() => getSettings(state), [state]);
@@ -78,19 +79,19 @@ export default function Token() {
 
   useEffect(() => {
     (async () => {
-      if (!params?.tokenID) return;
+      if (!tokenID) return;
 
       const gw = await findGateway({ startBlock: 0 });
-      // get token type
-      let type = params.tokenType;
+
+      let type = tokenTypeParam;
 
       if (!type) {
-        if (tokenTypeRegistry[params.tokenID]) {
+        if (tokenTypeRegistry[tokenID]) {
           // manual override
-          type = tokenTypeRegistry[params.tokenID];
+          type = tokenTypeRegistry[tokenID];
         } else {
           // fetch data
-          const data = await fetch(`${concatGatewayURL(gw)}/${params.tokenID}`);
+          const data = await fetch(`${concatGatewayURL(gw)}/${tokenID}`);
 
           type = data.headers.get("content-type").includes("application/json")
             ? "asset"
@@ -100,11 +101,11 @@ export default function Token() {
 
       setTokenType(type);
     })();
-  }, [params?.tokenID]);
+  }, [tokenID, tokenTypeParam]);
 
   // add the token
   async function done() {
-    if (!params?.tokenID || !tokenType || !state || !params) {
+    if (!tokenID || !tokenType || !state) {
       return;
     }
 
@@ -112,15 +113,12 @@ export default function Token() {
 
     try {
       // add the token
-      await addToken(params.tokenID, tokenType, params.dre);
+      await addToken(tokenID, tokenType, dreRequestParam);
 
-      // reply to request
-      await replyToAuthRequest("token", params.authID);
-
-      // close the window
-      closeWindow();
+      acceptRequest();
     } catch (e) {
       console.log("Failed to add token", e);
+
       setToast({
         type: "error",
         content: browser.i18n.getMessage("token_add_failure"),
@@ -146,48 +144,43 @@ export default function Token() {
 
   useEffect(() => {
     (async () => {
-      if (!params?.tokenID) return;
-      setLogo(viewblock.getTokenLogo(params.tokenID));
+      if (!tokenID) return;
+
+      setLogo(viewblock.getTokenLogo(tokenID));
 
       if (!state) return;
+
       const settings = getSettings(state);
 
       setLogo(
-        await loadTokenLogo(
-          params.tokenID,
-          settings.get("communityLogo"),
-          theme
-        )
+        await loadTokenLogo(tokenID, settings.get("communityLogo"), theme)
       );
     })();
-  }, [params?.tokenID, state, theme]);
+  }, [tokenID, state, theme]);
 
   // listen for enter to add
   useEffect(() => {
     const listener = async (e: KeyboardEvent) => {
       if (e.key !== "Enter") return;
+
       await done();
     };
 
     window.addEventListener("keydown", listener);
 
     return () => window.removeEventListener("keydown", listener);
-  }, [params, done]);
+  }, [done]);
 
-  const gateway = useGateway({ startBlock: 0 });
+  const gateway = useGateway(FULL_HISTORY);
 
   return (
     <Wrapper>
       <div>
-        <Head
-          title={browser.i18n.getMessage("addToken")}
-          showOptions={false}
-          back={cancel}
-        />
+        <HeadAuth title={browser.i18n.getMessage("addToken")} />
         <Spacer y={0.75} />
         <Section>
           <Text noMargin>
-            {browser.i18n.getMessage("addTokenParagraph", params?.url)}
+            {browser.i18n.getMessage("addTokenParagraph", url)}
           </Text>
         </Section>
         <AnimatePresence>
@@ -216,9 +209,7 @@ export default function Token() {
                 </PriceChart>
               )) || (
                 <>
-                  <Thumbnail
-                    src={`${concatGatewayURL(gateway)}/${params?.tokenID}`}
-                  />
+                  <Thumbnail src={`${concatGatewayURL(gateway)}/${tokenID}`} />
                   <Section>
                     <TokenName noMargin>
                       {state.name || state.ticker}{" "}
@@ -240,13 +231,18 @@ export default function Token() {
         </AnimatePresence>
       </div>
       <Section>
-        <ButtonV2 fullWidth onClick={done} loading={loading}>
-          {browser.i18n.getMessage("addToken")}
-        </ButtonV2>
-        <Spacer y={0.75} />
-        <ButtonV2 fullWidth secondary onClick={cancel}>
-          {browser.i18n.getMessage("cancel")}
-        </ButtonV2>
+        <AuthButtons
+          authRequest={authRequest}
+          primaryButtonProps={{
+            label: browser.i18n.getMessage("addToken"),
+            loading,
+            onClick: done
+          }}
+          secondaryButtonProps={{
+            label: browser.i18n.getMessage("cancel"),
+            onClick: () => rejectRequest()
+          }}
+        />
       </Section>
     </Wrapper>
   );

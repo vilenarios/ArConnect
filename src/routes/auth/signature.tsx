@@ -1,67 +1,57 @@
-import { replyToAuthRequest, useAuthParams, useAuthUtils } from "~utils/auth";
-import { ButtonV2, Section, Spacer, Text } from "@arconnect/components";
+import { Section, Text } from "@arconnect/components";
 import Message from "~components/auth/Message";
 import Wrapper from "~components/auth/Wrapper";
 import browser from "webextension-polyfill";
-import Head from "~components/popup/Head";
 import { useEffect } from "react";
+import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
+import { HeadAuth } from "~components/HeadAuth";
+import { AuthButtons } from "~components/auth/AuthButtons";
 
-export default function Signature() {
-  // connect params
-  const params = useAuthParams<{
-    url: string;
-    message: number[];
-  }>();
+export function SignatureAuthRequestView() {
+  const { authRequest, acceptRequest, rejectRequest } =
+    useCurrentAuthRequest("signature");
 
-  // get auth utils
-  const { closeWindow, cancel } = useAuthUtils("signature", params?.authID);
+  const { authID, url, message } = authRequest;
 
   // listen for enter to reset
   useEffect(() => {
     const listener = async (e: KeyboardEvent) => {
       if (e.key !== "Enter") return;
-      await sign();
+      await acceptRequest();
     };
 
     window.addEventListener("keydown", listener);
 
     return () => window.removeEventListener("keydown", listener);
-  }, [params?.authID]);
-
-  // sign message
-  async function sign() {
-    // send response
-    await replyToAuthRequest("signature", params?.authID);
-
-    // close the window
-    closeWindow();
-  }
+  }, [authID]);
 
   return (
     <Wrapper>
       <div>
-        <Head
-          title={browser.i18n.getMessage("titles_signature")}
-          showOptions={false}
-          back={cancel}
-        />
-        <Spacer y={0.75} />
+        <HeadAuth title={browser.i18n.getMessage("titles_signature")} />
+
         <Section>
           <Text noMargin>
-            {browser.i18n.getMessage("signature_description", params?.url)}
+            {browser.i18n.getMessage("signature_description", url)}
           </Text>
+
+          <div style={{ marginTop: "16px" }}>
+            <Message message={message} />
+          </div>
         </Section>
       </div>
+
       <Section>
-        <Message message={params?.message} />
-        <Spacer y={1.25} />
-        <ButtonV2 fullWidth onClick={sign}>
-          {browser.i18n.getMessage("signature_authorize")}
-        </ButtonV2>
-        <Spacer y={0.75} />
-        <ButtonV2 fullWidth secondary onClick={cancel}>
-          {browser.i18n.getMessage("cancel")}
-        </ButtonV2>
+        <AuthButtons
+          authRequest={authRequest}
+          primaryButtonProps={{
+            label: browser.i18n.getMessage("signature_authorize"),
+            onClick: () => acceptRequest()
+          }}
+          secondaryButtonProps={{
+            onClick: () => rejectRequest()
+          }}
+        />
       </Section>
     </Wrapper>
   );

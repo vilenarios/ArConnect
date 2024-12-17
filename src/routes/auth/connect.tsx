@@ -1,7 +1,5 @@
 import {
-  ButtonV2,
   Card,
-  Checkbox,
   InputV2,
   LabelV2,
   Section,
@@ -12,9 +10,8 @@ import {
   useToasts
 } from "@arconnect/components";
 import { permissionData, type PermissionType } from "~applications/permissions";
-import { replyToAuthRequest, useAuthParams, useAuthUtils } from "~utils/auth";
+import { useCurrentAuthRequest } from "~utils/auth/auth.hooks";
 import { CloseLayer } from "~components/popup/WalletHeader";
-import type { AppInfo } from "~applications/application";
 import { AnimatePresence, motion } from "framer-motion";
 import { unlock as globalUnlock } from "~wallets/auth";
 import { useEffect, useMemo, useState } from "react";
@@ -31,8 +28,7 @@ import App from "~components/auth/App";
 import styled from "styled-components";
 import { EventType, trackEvent } from "~utils/analytics";
 import Application from "~applications/application";
-import { defaultGateway, type Gateway } from "~gateways/gateway";
-import HeadV2 from "~components/popup/HeadV2";
+import { defaultGateway } from "~gateways/gateway";
 import { CheckIcon, CloseIcon } from "@iconicicons/react";
 import {
   InfoCircle,
@@ -42,8 +38,11 @@ import { defaultAllowance } from "~applications/allowance";
 import Arweave from "arweave";
 import Permissions from "../../components/auth/Permissions";
 import { Flex } from "~routes/popup/settings/apps/[url]";
+import { HeadAuth } from "~components/HeadAuth";
+import { AuthButtons } from "~components/auth/AuthButtons";
+import type { CommonRouteProps } from "~wallets/router/router.types";
 
-export default function Connect() {
+export function ConnectAuthRequestView() {
   // active address
   const [activeAddress] = useStorage<string>({
     key: "active_address",
@@ -51,6 +50,16 @@ export default function Connect() {
   });
 
   const arweave = new Arweave(defaultGateway);
+
+  const { authRequest, acceptRequest, rejectRequest } =
+    useCurrentAuthRequest("connect");
+
+  const {
+    url = "",
+    permissions: authRequestPermissions = [],
+    appInfo = {},
+    gateway
+  } = authRequest;
 
   // wallet switcher open
   const [switcherOpen, setSwitcherOpen] = useState(false);
@@ -60,32 +69,14 @@ export default function Connect() {
 
   const allowanceInput = useInput();
 
-  // connect params
-  const params = useAuthParams<{
-    url: string;
-    permissions: PermissionType[];
-    appInfo: AppInfo;
-    gateway?: Gateway;
-  }>();
-
-  // app data
-  const appData = useMemo<AppInfo>(() => {
-    if (!params) return {};
-
-    return params.appInfo;
-  }, [params]);
-
-  // app url
-  const appUrl = useMemo(() => {
-    if (!params) return "";
-
-    return params.url;
-  }, [params]);
-
   // requested permissions
   const [requestedPermissions, setRequestedPermissions] = useState<
     PermissionType[]
   >([]);
+
+  const [requestedPermCopy, setRequestedPermCopy] = useState<PermissionType[]>(
+    []
+  );
 
   // allowance for permissions
   const [allowanceEnabled, setAllowanceEnabled] = useState(true);
@@ -95,13 +86,11 @@ export default function Connect() {
 
   useEffect(() => {
     (async () => {
-      if (!params) return;
-
-      const requested: PermissionType[] = params.permissions;
+      const requested: PermissionType[] = authRequestPermissions;
 
       // add existing permissions
-      if (params.url && params.url !== "") {
-        const app = new Application(params.url);
+      if (url) {
+        const app = new Application(url);
         const existing = await app.getPermissions();
 
         for (const existingP of existing) {
@@ -113,15 +102,12 @@ export default function Connect() {
       setRequestedPermissions(
         requested.filter((p) => Object.keys(permissionData).includes(p))
       );
-      setRequetedPermCopy(
+
+      setRequestedPermCopy(
         requested.filter((p) => Object.keys(permissionData).includes(p))
       );
     })();
-  }, [params]);
-
-  const [requestedPermCopy, setRequetedPermCopy] = useState<PermissionType[]>(
-    []
-  );
+  }, [url, authRequestPermissions]);
 
   // permissions to add
   const [permissions, setPermissions] = useState<PermissionType[]>([]);
@@ -133,9 +119,6 @@ export default function Connect() {
 
   // toasts
   const { setToast } = useToasts();
-
-  // get auth utils
-  const { closeWindow, cancel } = useAuthUtils("connect", params?.authID);
 
   // unlock
   async function unlock() {
@@ -161,7 +144,7 @@ export default function Connect() {
 
   // connect
   async function connect(alwaysAsk: boolean = false) {
-    if (appUrl === "") return;
+    if (!url) return;
 
     if (
       allowanceEnabled &&
@@ -176,16 +159,16 @@ export default function Connect() {
     }
 
     // get existing permissions
-    const app = new Application(appUrl);
+    const app = new Application(url);
     const existingPermissions = await app.getPermissions();
 
     if (existingPermissions.length === 0) {
       // add the app
       await addApp({
-        url: appUrl,
+        url,
         permissions,
-        name: appData.name,
-        logo: appData.logo,
+        name: appInfo.name,
+        logo: appInfo.logo,
         // alwaysAsk,
         allowance: {
           enabled: alwaysAsk || allowanceEnabled,
@@ -197,13 +180,14 @@ export default function Connect() {
           spent: "0" // in winstons
         },
         // TODO: wayfinder
-        gateway: params.gateway || defaultGateway
+        gateway: gateway || defaultGateway
       });
     } else {
       // update existing permissions, if the app
       // has already been added
 
       const allowance = await app.getAllowance();
+
       await app.updateSettings({
         permissions,
         // alwaysAsk,
@@ -219,17 +203,13 @@ export default function Connect() {
       });
     }
 
-    // send response
-    await replyToAuthRequest("connect", params.authID);
-
     // track connected app.
     await trackEvent(EventType.CONNECTED_APP, {
-      appName: appData.name,
-      appUrl
+      appName: appInfo.name,
+      appUrl: url
     });
 
-    // close the window
-    closeWindow();
+    acceptRequest();
   }
 
   useEffect(() => {
@@ -245,18 +225,19 @@ export default function Connect() {
   return (
     <Wrapper>
       <div>
-        <HeadV2
+        <HeadAuth
           title={!edit ? browser.i18n.getMessage("sign_in") : "Permissions"}
-          showOptions={false}
-          back={edit ? () => setEdit(false) : cancel}
+          back={edit ? () => setEdit(false) : undefined}
+          appInfo={appInfo}
         />
+
         <App
-          appName={appData.name || appUrl}
-          appUrl={appUrl}
+          appName={appInfo.name || url}
+          appUrl={url}
           showTitle={false}
           // TODO: wayfinder
-          gateway={params?.gateway || defaultGateway}
-          appIcon={appData.logo}
+          gateway={gateway || defaultGateway}
+          appIcon={appInfo.logo}
         />
 
         <ContentWrapper>
@@ -303,6 +284,7 @@ export default function Connect() {
                 </Section>
               </UnlockWrapper>
             )}
+
             {page === "permissions" && (
               <>
                 {!edit ? (
@@ -311,10 +293,10 @@ export default function Connect() {
                       <Description>
                         {browser.i18n.getMessage(
                           "allow_these_permissions",
-                          appData.name || appUrl
+                          appInfo.name || url
                         )}
                       </Description>
-                      <Url>{params.url}</Url>
+                      <Url>{url}</Url>
                       <StyledPermissions>
                         <PermissionsTitle>
                           <Description>
@@ -393,51 +375,47 @@ export default function Connect() {
                     </Section>
                   </PermissionsContent>
                 ) : (
-                  <>
-                    <Permissions
-                      requestedPermissions={requestedPermissions}
-                      update={setRequestedPermissions}
-                      closeEdit={setEdit}
-                    />
-                  </>
+                  <Permissions
+                    connectAuthRequest={authRequest}
+                    requestedPermissions={requestedPermissions}
+                    update={setRequestedPermissions}
+                    closeEdit={setEdit}
+                  />
                 )}
               </>
             )}
           </AnimatePresence>
         </ContentWrapper>
       </div>
+
       {!edit && (
         <Section>
-          <>
-            <ButtonV2
-              fullWidth
-              onClick={async () => {
-                if (page === "unlock") {
-                  await unlock();
-                } else {
-                  await connect();
-                }
-              }}
-            >
-              {browser.i18n.getMessage(
+          <AuthButtons
+            authRequest={authRequest}
+            primaryButtonProps={{
+              label: browser.i18n.getMessage(
                 page === "unlock"
                   ? "sign_in"
                   : removedPermissions.length > 0
                   ? "allow_selected_permissions"
                   : "always_allow"
-              )}
-            </ButtonV2>
-            <Spacer y={0.75} />
-            <ButtonV2
-              fullWidth
-              secondary
-              onClick={page === "unlock" ? cancel : () => connect(true)}
-            >
-              {browser.i18n.getMessage(
+              ),
+              onClick: async () => {
+                if (page === "unlock") {
+                  await unlock();
+                } else {
+                  await connect();
+                }
+              }
+            }}
+            secondaryButtonProps={{
+              label: browser.i18n.getMessage(
                 page === "unlock" ? "cancel" : "always_ask_permission"
-              )}
-            </ButtonV2>
-          </>
+              ),
+              onClick: () =>
+                page === "unlock" ? rejectRequest() : connect(true)
+            }}
+          />
         </Section>
       )}
     </Wrapper>

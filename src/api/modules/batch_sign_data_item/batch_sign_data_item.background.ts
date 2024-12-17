@@ -1,13 +1,12 @@
-import type { ModuleFunction } from "~api/module";
-import { isNotCancelError, isRawDataItem } from "~utils/assertions";
-import authenticate from "../connect/auth";
-import browser from "webextension-polyfill";
+import { isRawDataItem } from "~utils/assertions";
+import { requestUserAuthorization } from "../../../utils/auth/auth.utils";
 import { getActiveKeyfile } from "~wallets";
 import { freeDecryptedWallet } from "~wallets/encryption";
-import { ArweaveSigner, createData, DataItem } from "arbundles";
+import { ArweaveSigner, createData } from "arbundles";
 import type { RawDataItem } from "../sign_data_item/types";
+import type { BackgroundModuleFunction } from "~api/background/background-modules";
 
-const background: ModuleFunction<number[][]> = async (
+const background: BackgroundModuleFunction<number[][]> = async (
   appData,
   dataItems: unknown[]
 ) => {
@@ -22,21 +21,16 @@ const background: ModuleFunction<number[][]> = async (
 
   const results: number[][] = [];
 
-  await authenticate({
-    type: "batchSignDataItem",
-    data: dataItems,
+  await requestUserAuthorization(
+    {
+      type: "batchSignDataItem",
+      data: dataItems
+    },
     appData
-  });
+  );
 
   // grab the user's keyfile
-  const decryptedWallet = await getActiveKeyfile().catch((e) => {
-    isNotCancelError(e);
-
-    // if there are no wallets added, open the welcome page
-    browser.tabs.create({ url: browser.runtime.getURL("tabs/welcome.html") });
-
-    throw new Error("No wallets added");
-  });
+  const decryptedWallet = await getActiveKeyfile(appData);
 
   try {
     if (decryptedWallet.type !== "local") {

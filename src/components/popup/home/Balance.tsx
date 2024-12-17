@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState, type HTMLProps } from "react";
 import { useStorage } from "@plasmohq/storage/hook";
 import { ExtensionStorage } from "~utils/storage";
 import { useBalance } from "~wallets/hooks";
-import { getArPrice } from "~lib/coingecko";
+import { useArPrice } from "~lib/coingecko";
 import { getAppURL } from "~utils/format";
 import { useTheme } from "~utils/theme";
 import {
@@ -25,7 +25,10 @@ import Arweave from "arweave";
 import { removeDecryptionKey } from "~wallets/auth";
 import { findGateway } from "~gateways/wayfinder";
 import BigNumber from "bignumber.js";
-import { retryWithDelay, retryWithDelayAndTimeout } from "~utils/retry";
+import {
+  retryWithDelay,
+  retryWithDelayAndTimeout
+} from "~utils/promises/retry";
 
 export default function Balance() {
   const [loading, setLoading] = useState(false);
@@ -39,20 +42,9 @@ export default function Balance() {
   const balance = useBalance();
 
   // balance in local currency
-  const [fiat, setFiat] = useState(BigNumber("0"));
   const [currency] = useSetting<string>("currency");
-
-  useEffect(() => {
-    (async () => {
-      if (!currency) return;
-
-      // fetch price in currency
-      const arPrice = await getArPrice(currency);
-
-      // calculate fiat balance
-      setFiat(BigNumber(arPrice).multipliedBy(balance));
-    })();
-  }, [balance.toString(), currency]);
+  const { price } = useArPrice(currency);
+  const fiat = useMemo(() => price.multipliedBy(balance), [price, balance]);
 
   // balance display
   const [hideBalance, setHideBalance] = useStorage<boolean>(
@@ -133,12 +125,16 @@ export default function Balance() {
                 "*".repeat(balance.toFixed(2).length)}
               <Ticker>AR</Ticker>
             </BalanceText>
-            <FiatBalanceText noMargin>
-              {(!hideBalance &&
-                formatFiatBalance(fiat, currency.toLowerCase())) ||
-                "*".repeat(fiat.toFixed(2).length) +
-                  " " +
-                  currency.toUpperCase()}
+
+            <DivFiatBalanceRow>
+              <FiatBalanceText noMargin>
+                {(!hideBalance &&
+                  formatFiatBalance(fiat, currency.toLowerCase())) ||
+                  "*".repeat(fiat.toFixed(2).length) +
+                    " " +
+                    currency.toUpperCase()}
+              </FiatBalanceText>
+
               <IconButtons>
                 <TooltipV2
                   content={browser.i18n.getMessage(
@@ -161,7 +157,7 @@ export default function Balance() {
                   />
                 </TooltipV2>
               </IconButtons>
-            </FiatBalanceText>
+            </DivFiatBalanceRow>
           </div>
         )}
         {activeAppData && (
@@ -254,7 +250,7 @@ async function balanceHistory(address: string) {
             }
           }
         }
-      }    
+      }
     `,
         { owner: address, minHeight }
       )
@@ -316,10 +312,14 @@ const Ticker = styled.span`
   margin-left: 0.33rem;
 `;
 
-const FiatBalanceText = styled(GraphText)`
+const DivFiatBalanceRow = styled.div`
   display: flex;
   align-items: center;
   gap: 0.41rem;
+  font-size: 1rem;
+`;
+
+const FiatBalanceText = styled(GraphText)`
   font-weight: 400;
 `;
 

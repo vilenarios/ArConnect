@@ -6,12 +6,21 @@ import { Storage } from "@plasmohq/storage";
  * Default local extension storage, with values
  * that are NOT copied to window.localStorage
  */
-export const ExtensionStorage = new Storage({ area: "local" });
+export const ExtensionStorage = new Storage({
+  area: "local"
+  // This copies the data to localStorage:
+  // allCopied: true,
+});
 
 /**
- * Temporary storage for submitted transfers
+ * Temporary storage for submitted transfers, with values
+ * that are NOT copied to window.sessionStorage
  */
-export const TempTransactionStorage = new Storage({ area: "session" });
+export const TempTransactionStorage = new Storage({
+  area: "session"
+  // This copies the data to localStorage, NOT to sessionStorage:
+  // allCopied: true,
+});
 
 /**
  * Session storage raw transfer tx. This will

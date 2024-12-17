@@ -1,13 +1,9 @@
 import { arconfettiIcon, calculateReward, signNotification } from "./utils";
 import { allowanceAuth, getAllowance, updateAllowance } from "./allowance";
 import { freeDecryptedWallet } from "~wallets/encryption";
-import type { ModuleFunction } from "~api/background";
+import type { BackgroundModuleFunction } from "~api/background/background-modules";
 import { type JWKInterface } from "arweave/web/lib/wallet";
-import {
-  isNotCancelError,
-  isSignatureOptions,
-  isSplitTransaction
-} from "~utils/assertions";
+import { isSignatureOptions, isSplitTransaction } from "~utils/assertions";
 import { cleanUpChunks, getChunks } from "./chunks";
 import type { BackgroundResult } from "./index";
 import { getActiveKeyfile } from "~wallets";
@@ -24,7 +20,7 @@ import Arweave from "arweave";
 import { EventType, trackDirect } from "~utils/analytics";
 import BigNumber from "bignumber.js";
 
-const background: ModuleFunction<BackgroundResult> = async (
+const background: BackgroundModuleFunction<BackgroundResult> = async (
   appData,
   tx: unknown,
   options: unknown | undefined | null,
@@ -37,23 +33,16 @@ const background: ModuleFunction<BackgroundResult> = async (
   if (options) isSignatureOptions(options);
 
   // grab the user's keyfile
-  const activeWallet = await getActiveKeyfile().catch((e) => {
-    isNotCancelError(e);
-
-    // if there are no wallets added, open the welcome page
-    browser.tabs.create({ url: browser.runtime.getURL("tabs/welcome.html") });
-
-    throw new Error("No wallets added");
-  });
+  const activeWallet = await getActiveKeyfile(appData);
 
   // app instance
-  const app = new Application(appData.appURL);
+  const app = new Application(appData.url);
 
   // create arweave client
   const arweave = new Arweave(await app.getGatewayConfig());
 
   // get chunks for transaction
-  const chunks = getChunks(chunkCollectionID, appData.appURL);
+  const chunks = getChunks(chunkCollectionID, appData.url);
 
   // get keyfile for active wallet
   // @ts-expect-error
@@ -87,7 +76,7 @@ const background: ModuleFunction<BackgroundResult> = async (
   const price = BigNumber(transaction.reward).plus(transaction.quantity);
 
   // get allowance
-  const allowance = await getAllowance(appData.appURL);
+  const allowance = await getAllowance(appData.url);
 
   // always ask
   const alwaysAsk = allowance.enabled && allowance.limit.eq(BigNumber("0"));
@@ -104,7 +93,7 @@ const background: ModuleFunction<BackgroundResult> = async (
 
     try {
       // auth before signing
-      const res = await signAuth(appData.appURL, transaction, addr);
+      const res = await signAuth(appData, transaction, addr);
 
       if (res.data && activeWallet.type === "hardware") {
         transaction.setSignature({
@@ -124,7 +113,7 @@ const background: ModuleFunction<BackgroundResult> = async (
     // authenticate user if the allowance
     // limit is reached
     try {
-      await allowanceAuth(allowance, appData.appURL, price, alwaysAsk);
+      await allowanceAuth(appData, allowance, price, alwaysAsk);
     } catch (e) {
       freeDecryptedWallet(keyfile);
       throw new Error(e?.message || e);
@@ -135,16 +124,16 @@ const background: ModuleFunction<BackgroundResult> = async (
   if (activeWallet.type === "local") {
     await arweave.transactions.sign(transaction, keyfile, options);
 
-    browser.alarms.create(`scheduled-fee.${transaction.id}.${appData.appURL}`, {
+    browser.alarms.create(`scheduled-fee.${transaction.id}.${appData.url}`, {
       when: Date.now() + 2000
     });
   }
 
   // notify the user of the signing
-  await signNotification(price, transaction.id, appData.appURL);
+  await signNotification(price, transaction.id, appData.url);
 
   // update allowance spent amount (in winstons)
-  await updateAllowance(appData.appURL, price);
+  await updateAllowance(appData.url, price);
 
   // de-construct the transaction:
   // remove "tags" and "data", so we don't have to
@@ -159,7 +148,7 @@ const background: ModuleFunction<BackgroundResult> = async (
   }
   // analytics
   await trackDirect(EventType.SIGNED, {
-    appUrl: appData.appURL,
+    appUrl: appData.url,
     totalInAR: arweave.ar.winstonToAr(price.toString())
   });
 

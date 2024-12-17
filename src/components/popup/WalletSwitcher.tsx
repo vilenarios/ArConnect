@@ -16,7 +16,7 @@ import { type AnsUser, getAnsProfile } from "~lib/ans";
 import { ExtensionStorage } from "~utils/storage";
 import { formatAddress } from "~utils/format";
 import type { StoredWallet } from "~wallets";
-import { useEffect, useState, type MouseEventHandler } from "react";
+import { useEffect, useState } from "react";
 import HardwareWalletIcon from "~components/hardware/HardwareWalletIcon";
 import keystoneLogo from "url:/assets/hardware/keystone.png";
 import { findGateway } from "~gateways/wayfinder";
@@ -27,7 +27,7 @@ import Arweave from "arweave";
 import { svgie } from "~utils/svgies";
 import { Action } from "./WalletHeader";
 import copy from "copy-to-clipboard";
-import { useHistory } from "~utils/hash_router";
+import { useLocation } from "~wallets/router/router.utils";
 
 export default function WalletSwitcher({
   open,
@@ -36,6 +36,8 @@ export default function WalletSwitcher({
   exactTop = false,
   noPadding = false
 }: Props) {
+  const { navigate } = useLocation();
+
   // current address
   const [activeAddress, setActiveAddress] = useStorage<string>({
     key: "active_address",
@@ -58,7 +60,7 @@ export default function WalletSwitcher({
   useEffect(
     () =>
       setWallets(
-        storedWallets.map((wallet) => ({
+        (storedWallets || []).map((wallet) => ({
           name: wallet.nickname,
           address: wallet.address,
           balance: "0",
@@ -166,8 +168,6 @@ export default function WalletSwitcher({
   // toasts
   const { setToast } = useToasts();
 
-  const [push] = useHistory();
-
   return (
     <AnimatePresence>
       {open && (
@@ -265,7 +265,7 @@ export default function WalletSwitcher({
                       onClick={(e) => {
                         e.preventDefault();
 
-                        push(`/quick-settings/wallets/${activeAddress}`);
+                        navigate(`/quick-settings/wallets/${activeAddress}`);
                       }}
                     />
                   </TooltipV2>

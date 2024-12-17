@@ -14,8 +14,12 @@ import {
   useState,
   type MutableRefObject
 } from "react";
-import { useGateway } from "~gateways/wayfinder";
-import { useHistory } from "~utils/hash_router";
+import {
+  STAKED_GQL_FULL_HISTORY,
+  useGateway,
+  useGraphqlGateways
+} from "~gateways/wayfinder";
+import { useLocation, useSearchParams } from "~wallets/router/router.utils";
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -49,6 +53,10 @@ import BigNumber from "bignumber.js";
 import { fetchTokenByProcessId } from "~lib/transactions";
 import { useStorage } from "@plasmohq/storage/hook";
 import type { StoredWallet } from "~wallets";
+import type {
+  ArConnectRoutePath,
+  CommonRouteProps
+} from "~wallets/router/router.types";
 
 // pull contacts and check if to address is in contacts
 
@@ -58,10 +66,22 @@ interface ao {
   tokenId?: string | null;
 }
 
-export default function Transaction({ id: rawId, gw, message }: Props) {
-  // fixup id
-  const id = useMemo(() => rawId.split("?")[0], [rawId]);
+export interface TransactionViewParams {
+  id: string;
+  // encodeURIComponent transformed gateway url
+  gateway?: string;
+  message?: boolean;
+}
 
+export type TransactionViewProps = CommonRouteProps<TransactionViewParams>;
+
+export function TransactionView({
+  params: { id, gateway: gw, message }
+}: TransactionViewProps) {
+  const { navigate, back } = useLocation();
+  const { back: backPath } = useSearchParams<{ back?: string }>();
+
+  // TODO: Should this be a redirect?
   if (!id) return <></>;
 
   // fetch tx data
@@ -97,11 +117,7 @@ export default function Transaction({ id: rawId, gw, message }: Props) {
   const [showTags, setShowTags] = useState<boolean>(false);
 
   // arweave gateway
-  const defaultGateway = useGateway({
-    ensureStake: true,
-    startBlock: 0,
-    graphql: true
-  });
+  const defaultGateway = useGateway(STAKED_GQL_FULL_HISTORY);
   const gateway = useMemo(() => {
     if (!gw) {
       return defaultGateway;
@@ -110,19 +126,24 @@ export default function Transaction({ id: rawId, gw, message }: Props) {
     return urlToGateway(decodeURIComponent(gw));
   }, [gw, defaultGateway]);
 
+  const graphqlGateways = useGraphqlGateways(5);
+
   // arweave client
   const arweave = useMemo(() => new Arweave(gateway), [gateway]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !graphqlGateways.length) return;
 
     let timeoutID: number | undefined;
+    let fetchCount = 0;
 
     const fetchTx = async () => {
       const cachedTx = JSON.parse(localStorage.getItem("latest_tx") || "{}");
 
       // load cached tx
       if (cachedTx?.id === id) setTransaction(cachedTx);
+
+      const gateway = graphqlGateways[fetchCount % graphqlGateways.length];
 
       const { data } = await gql(
         `
@@ -158,6 +179,7 @@ export default function Transaction({ id: rawId, gw, message }: Props) {
       );
 
       if (!data.transaction) {
+        fetchCount++;
         timeoutID = setTimeout(fetchTx, 5000);
       } else {
         timeoutID = undefined;
@@ -183,7 +205,11 @@ export default function Transaction({ id: rawId, gw, message }: Props) {
                 id: data.transaction.recipient,
                 decimals: Number(tokenInfo.Denomination)
               });
-              setTicker(tokenInfo.Ticker);
+              setTicker(
+                tokenInfo?.type === "collectible"
+                  ? tokenInfo.Name!
+                  : tokenInfo.Ticker!
+              );
               data.transaction.quantity = { ar: amount.toFixed(), winston: "" };
               data.transaction.recipient = aoRecipient.value;
             }
@@ -201,7 +227,7 @@ export default function Transaction({ id: rawId, gw, message }: Props) {
     return () => {
       if (timeoutID) clearTimeout(timeoutID);
     };
-  }, [id, gateway]);
+  }, [id, graphqlGateways]);
 
   // transaction confirmations
   const [confirmations, setConfirmations] = useState(0);
@@ -289,28 +315,12 @@ export default function Transaction({ id: rawId, gw, message }: Props) {
     })();
   }, [id, transaction, gateway, isBinary, isPrintTx]);
 
-  // get custom back params
-  const [backPath, setBackPath] = useState<string>();
-
-  useEffect(() => {
-    const search = window.location.href.split("?");
-    const params = new URLSearchParams(search[search.length - 1]);
-    const back = params.get("back");
-
-    if (!back) return;
-
-    setBackPath(back);
-  }, []);
-
   // Clears out current transaction
   useEffect(() => {
     (async () => {
       await TempTransactionStorage.removeItem("send");
     })();
   }, []);
-
-  // router push
-  const [push, back] = useHistory();
 
   // interaction input
   const input = useMemo(() => {
@@ -329,10 +339,15 @@ export default function Transaction({ id: rawId, gw, message }: Props) {
             message ? "message" : "transaction_complete"
           )}
           back={() => {
+            // This is misleading and `backPath` is only used to indicate whether the back button actually navigates
+            // back or goes straight to Home. This is because this page is also accessed from the Home > Transactions
+            // tab items, which set `backPath = "/transactions"`, but pressing the back button would instead (but
+            // correctly) navigate Home. Also, in the `else` block it looks like there are other options, but actually
+            // there aren't; that branch always does `navigate("/")`:
             if (backPath === "/notifications" || backPath === "/transactions") {
               back();
             } else {
-              push("/");
+              navigate((backPath as ArConnectRoutePath) || "/");
             }
           }}
         />
@@ -394,7 +409,7 @@ export default function Transaction({ id: rawId, gw, message }: Props) {
                                     fromSendFlow: true
                                   });
 
-                                  push(
+                                  navigate(
                                     `/quick-settings/contacts/new?address=${fromAddress}`
                                   );
                                 }}
@@ -446,7 +461,7 @@ export default function Transaction({ id: rawId, gw, message }: Props) {
                                     fromSendFlow: true
                                   });
 
-                                  push(
+                                  navigate(
                                     `/quick-settings/contacts/new?address=${toAddress}`
                                   );
                                 }}
@@ -837,10 +852,3 @@ const opacityAnimation: Variants = {
   hidden: { opacity: 0 },
   shown: { opacity: 1 }
 };
-
-interface Props {
-  id: string;
-  // encodeURIComponent transformed gateway url
-  gw?: string;
-  message?: boolean;
-}
