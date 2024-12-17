@@ -7,11 +7,11 @@ import {
   useToasts,
   type DisplayTheme
 } from "@arconnect/components";
-import { resetStorage } from "~utils/storage";
 import { TrashIcon } from "@iconicicons/react";
 import browser from "webextension-polyfill";
 import styled from "styled-components";
 import { useTheme } from "~utils/theme";
+import { resetStorage } from "~utils/storage.utils";
 
 export function ResetDashboardView() {
   // reset modal

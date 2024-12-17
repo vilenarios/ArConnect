@@ -13,7 +13,7 @@ import {
 import {
   ARCONNECT_THEME_BACKGROUND_COLOR,
   ARCONNECT_THEME_TEXT_COLOR
-} from "~utils/storage";
+} from "~utils/storage.utils";
 
 /**
  * Modify the theme if the active wallet is a hardware wallet. We transform the

@@ -1,5 +1,5 @@
 import type { JWKInterface } from "arweave/node/lib/wallet";
-import { ExtensionStorage, resetStorage } from "~utils/storage";
+import { ExtensionStorage } from "~utils/storage";
 import type { HardwareWallet } from "./hardware";
 import browser from "webextension-polyfill";
 import Arweave from "arweave/web/common";
@@ -22,6 +22,7 @@ import {
 import type { ModuleAppData } from "~api/background/background-modules";
 import { isNotCancelError } from "~utils/assertions";
 import { log, LOG_GROUP } from "~utils/log/log.utils";
+import { resetStorage } from "~utils/storage.utils";
 
 /**
  * Locally stored wallet

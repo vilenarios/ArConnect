@@ -1,7 +1,6 @@
 import type Transaction from "arweave/web/lib/transaction";
 import { type Gateway } from "~gateways/gateway";
 import { Storage } from "@plasmohq/storage";
-import browser from "webextension-polyfill";
 
 /**
  * Default local extension storage, with values
@@ -42,28 +41,4 @@ export interface RawStoredTransfer {
   type: "native" | "token";
   gateway: Gateway;
   transaction: ReturnType<Transaction["toJSON"]>;
-}
-
-export const ARCONNECT_THEME_BACKGROUND_COLOR =
-  "ARCONNECT_THEME_BACKGROUND_COLOR";
-export const ARCONNECT_THEME_TEXT_COLOR = "ARCONNECT_THEME_TEXT_COLOR";
-
-/**
- * Clear all storage keys except for gateways.
- */
-export async function resetStorage() {
-  if (typeof localStorage !== "undefined") {
-    localStorage.removeItem(ARCONNECT_THEME_BACKGROUND_COLOR);
-    localStorage.removeItem(ARCONNECT_THEME_TEXT_COLOR);
-  }
-
-  // get all keys except gateways
-  const allStoredKeys = Object.keys(
-    (await browser.storage.local.get(null)) || {}
-  ).filter((key) => key !== "gateways");
-
-  // remove all keys except gateways
-  await Promise.allSettled(
-    allStoredKeys.map((key) => ExtensionStorage.remove(key))
-  );
 }
