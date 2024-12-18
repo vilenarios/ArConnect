@@ -8,6 +8,7 @@ import { WalletsProvider } from "~utils/wallets/wallets.provider";
 import { useExtensionStatusOverride } from "~wallets/router/extension/extension-router.hook";
 import { useEffect } from "react";
 import { handleSyncLabelsAlarm } from "~api/background/handlers/alarms/sync-labels/sync-labels-alarm.handler";
+import { ErrorBoundary } from "~utils/error/ErrorBoundary/errorBoundary";
 
 export function AuthApp() {
   useEffect(() => {
@@ -20,13 +21,15 @@ export function AuthApp() {
 export function AuthAppRoot() {
   return (
     <ArConnectThemeProvider>
-      <WalletsProvider redirectToWelcome>
-        <AuthRequestsProvider useStatusOverride={useExtensionStatusOverride}>
-          <Wouter hook={useAuthRequestsLocation}>
-            <AuthApp />
-          </Wouter>
-        </AuthRequestsProvider>
-      </WalletsProvider>
+      <ErrorBoundary fallback={<div>Something went wrong</div>}>
+        <WalletsProvider redirectToWelcome>
+          <AuthRequestsProvider useStatusOverride={useExtensionStatusOverride}>
+            <Wouter hook={useAuthRequestsLocation}>
+              <AuthApp />
+            </Wouter>
+          </AuthRequestsProvider>
+        </WalletsProvider>
+      </ErrorBoundary>
     </ArConnectThemeProvider>
   );
 }

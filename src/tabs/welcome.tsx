@@ -7,6 +7,7 @@ import { BodyScroller } from "~wallets/router/router.utils";
 import { AnimatePresence } from "framer-motion";
 import { Routes } from "~wallets/router/routes.component";
 import { WELCOME_ROUTES } from "~wallets/router/welcome/welcome.routes";
+import { ErrorBoundary } from "~utils/error/ErrorBoundary/errorBoundary";
 
 export function ArConnectWelcomeApp() {
   return <Routes routes={WELCOME_ROUTES} pageComponent={null} />;
@@ -17,13 +18,14 @@ export function ArConnectWelcomeAppRoot() {
 
   return (
     <ArConnectThemeProvider>
-      <Wouter hook={useHashLocation}>
-        <BodyScroller />
-
-        <AnimatePresence initial={false}>
-          <ArConnectWelcomeApp />
-        </AnimatePresence>
-      </Wouter>
+      <ErrorBoundary fallback={<div>Something went wrong</div>}>
+        <Wouter hook={useHashLocation}>
+          <BodyScroller />
+          <AnimatePresence initial={false}>
+            <ArConnectWelcomeApp />
+          </AnimatePresence>
+        </Wouter>
+      </ErrorBoundary>
     </ArConnectThemeProvider>
   );
 }
