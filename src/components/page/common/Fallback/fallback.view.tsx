@@ -11,7 +11,9 @@ interface FallbackViewProps {
 }
 
 function handleReload() {
-  browser.runtime.reload();
+  if (process.env.PLASMO_PUBLIC_APP_TYPE === "extension") {
+    browser.runtime.reload();
+  }
 }
 
 export const FallbackView: React.FC<FallbackViewProps> = ({
