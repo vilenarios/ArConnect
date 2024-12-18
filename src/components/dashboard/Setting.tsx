@@ -137,7 +137,11 @@ export function SettingDashboardView({ setting }: SettingDashboardViewProps) {
       );
 
     default:
-      throw new Error(ErrorTypes.SettingsTypeNotFound);
+      throw new Error(
+        setting.type
+          ? ErrorTypes.MissingSettingsType
+          : ErrorTypes.UnexpectedSettingsType
+      );
   }
 }
 

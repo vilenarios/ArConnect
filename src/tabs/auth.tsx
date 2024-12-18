@@ -22,7 +22,7 @@ export function AuthApp() {
 export function AuthAppRoot() {
   return (
     <ArConnectThemeProvider>
-      <ErrorBoundary fallback={<FallbackView />}>
+      <ErrorBoundary fallback={FallbackView}>
         <WalletsProvider redirectToWelcome>
           <AuthRequestsProvider useStatusOverride={useExtensionStatusOverride}>
             <Wouter hook={useAuthRequestsLocation}>

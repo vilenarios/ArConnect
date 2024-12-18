@@ -26,7 +26,7 @@ export function ArConnectBrowserExtensionApp() {
 export function ArConnectBrowserExtensionAppRoot() {
   return (
     <ArConnectThemeProvider>
-      <ErrorBoundary fallback={<FallbackView />}>
+      <ErrorBoundary fallback={FallbackView}>
         <WalletsProvider redirectToWelcome>
           <Wouter hook={useExtensionLocation}>
             <ArConnectBrowserExtensionApp />

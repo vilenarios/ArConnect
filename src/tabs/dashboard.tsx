@@ -22,7 +22,7 @@ export function DashboardApp() {
 export function DashboardAppRoot() {
   return (
     <ArConnectThemeProvider>
-      <ErrorBoundary fallback={<FallbackView />}>
+      <ErrorBoundary fallback={FallbackView}>
         <WalletsProvider>
           <Wouter hook={useHashLocation}>
             <DashboardApp />

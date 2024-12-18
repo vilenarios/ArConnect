@@ -83,7 +83,7 @@ export function TransactionView({
   const { back: backPath } = useSearchParams<{ back?: string }>();
 
   if (!id) {
-    throw new Error(ErrorTypes.TxIdNotFound);
+    throw new Error(ErrorTypes.MissingTxId);
   }
 
   // fetch tx data

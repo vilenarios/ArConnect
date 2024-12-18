@@ -19,7 +19,7 @@ export function ArConnectWelcomeAppRoot() {
 
   return (
     <ArConnectThemeProvider>
-      <ErrorBoundary fallback={<FallbackView />}>
+      <ErrorBoundary fallback={FallbackView}>
         <Wouter hook={useHashLocation}>
           <BodyScroller />
           <AnimatePresence initial={false}>

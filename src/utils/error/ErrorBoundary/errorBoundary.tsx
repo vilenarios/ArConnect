@@ -1,7 +1,10 @@
 import React, { Component, type ReactNode } from "react";
 
 interface ErrorBoundaryProps {
-  fallback: ReactNode;
+  fallback: React.ComponentType<{
+    error: Error | null;
+    errorInfo: React.ErrorInfo | null;
+  }>;
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
   children?: ReactNode;
 }
@@ -9,6 +12,7 @@ interface ErrorBoundaryProps {
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
+  errorInfo: React.ErrorInfo | null;
 }
 
 export class ErrorBoundary extends Component<
@@ -17,14 +21,15 @@ export class ErrorBoundary extends Component<
 > {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, errorInfo: null };
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
+    return { hasError: true, error, errorInfo: null };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+    this.setState({ error, errorInfo });
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     }
@@ -33,7 +38,9 @@ export class ErrorBoundary extends Component<
 
   render(): ReactNode {
     if (this.state.hasError) {
-      return this.props.fallback;
+      const { error, errorInfo } = this.state;
+      const FallbackComponent = this.props.fallback;
+      return <FallbackComponent error={error} errorInfo={errorInfo} />;
     }
 
     return this.props.children;
