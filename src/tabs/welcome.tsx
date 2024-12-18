@@ -8,6 +8,7 @@ import { AnimatePresence } from "framer-motion";
 import { Routes } from "~wallets/router/routes.component";
 import { WELCOME_ROUTES } from "~wallets/router/welcome/welcome.routes";
 import { ErrorBoundary } from "~utils/error/ErrorBoundary/errorBoundary";
+import { FallbackView } from "~components/page/common/Fallback/fallback.view";
 
 export function ArConnectWelcomeApp() {
   return <Routes routes={WELCOME_ROUTES} pageComponent={null} />;
@@ -18,7 +19,7 @@ export function ArConnectWelcomeAppRoot() {
 
   return (
     <ArConnectThemeProvider>
-      <ErrorBoundary fallback={<div>Something went wrong</div>}>
+      <ErrorBoundary fallback={<FallbackView />}>
         <Wouter hook={useHashLocation}>
           <BodyScroller />
           <AnimatePresence initial={false}>

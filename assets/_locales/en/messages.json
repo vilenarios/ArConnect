@@ -1,4 +1,8 @@
 {
+  "fallback": {
+    "message": "Oops, something isn't right. Try again later.",
+    "description": "Fallback error message"
+  },
   "extensionDescription": {
     "message": "Secure wallet management for Arweave",
     "description": "Extension description"

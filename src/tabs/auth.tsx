@@ -9,6 +9,7 @@ import { useExtensionStatusOverride } from "~wallets/router/extension/extension-
 import { useEffect } from "react";
 import { handleSyncLabelsAlarm } from "~api/background/handlers/alarms/sync-labels/sync-labels-alarm.handler";
 import { ErrorBoundary } from "~utils/error/ErrorBoundary/errorBoundary";
+import { FallbackView } from "~components/page/common/Fallback/fallback.view";
 
 export function AuthApp() {
   useEffect(() => {
@@ -21,7 +22,7 @@ export function AuthApp() {
 export function AuthAppRoot() {
   return (
     <ArConnectThemeProvider>
-      <ErrorBoundary fallback={<div>Something went wrong</div>}>
+      <ErrorBoundary fallback={<FallbackView />}>
         <WalletsProvider redirectToWelcome>
           <AuthRequestsProvider useStatusOverride={useExtensionStatusOverride}>
             <Wouter hook={useAuthRequestsLocation}>
